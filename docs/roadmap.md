@@ -32,25 +32,27 @@ rustc-style diagnostic for a real rule.
 
 ## M1: Walking skeleton (target: 2026-11-06)
 
-- [x] **M1-01** `kubelint_source`: `SourceFile` (path + text), `FileId`, re-export
+- [x] **M1-01** (#2) `kubelint_source`: `SourceFile` (path + text), `FileId`, re-export
   `TextRange`/`TextSize` from `text-size`, and `LineIndex` (byte offset ↔ 1-based line and
   column, with columns in UTF-8 bytes and UTF-16 code units). Tests: ASCII, non-ASCII,
   CRLF, empty file, offset at end of file. _Depends on: none._
-- [ ] **M1-02** `kubelint_yaml`: tree types (`Document`, `Node`, `NodeKind`, `Entry`,
-  `Scalar`, `ScalarStyle`) and a builder over `saphyr-parser` events. Converts character
-  indices to byte offsets. Multi-document streams. Parse errors as
-  `ParseError { message, range }`. Snapshot tests of a debug tree dump, including
-  non-ASCII, flow style, block scalars and empty documents. _Depends on: M1-01._
+- [x] **M1-02a** (#3) `kubelint_yaml`: tree types (`Document`, `Node`, `NodeKind`, `Entry`,
+  `Scalar`, `ScalarStyle`) and `Document::dump()` for snapshot tests. _Depends on: M1-01._
+- [ ] **M1-02b** `kubelint_yaml`: builder over `saphyr-parser` events. Converts character
+  indices to byte offsets. Collection ranges from first and last child (collection start
+  events have empty spans). Multi-document streams. Parse errors as
+  `ParseError { message, range }`. Snapshot tests of the dump, including non-ASCII, flow
+  style, block scalars and empty documents. _Depends on: M1-02a._
 - [ ] **M1-03** `kubelint_yaml`: navigation API: `get(key)`, `get_path(&[..])`,
   entry iteration, `as_str`/`as_mapping`/`as_sequence`, key ranges. Doc examples
-  (doctests) on every public method. _Depends on: M1-02._
+  (doctests) on every public method. _Depends on: M1-02b._
 - [ ] **M1-04** `kubelint_yaml`: Kubernetes scalar resolution (`null`/bool/int/float/string
   the way Kubernetes' YAML decoder sees them, YAML 1.1 style: `yes`/`no`/`on`/`off`/`y`/`n`
   are booleans). Table-driven tests. Cite the upstream source of the rules in the doc
-  comment. _Depends on: M1-02._
+  comment. _Depends on: M1-02b._
 - [ ] **M1-05** `kubelint_yaml`: comment extraction (`Comment { range, text }`) using the
   rule in `architecture.md`. Tests with `#` inside quoted strings and block scalars.
-  _Depends on: M1-02._
+  _Depends on: M1-02b._
 - [ ] **M1-06** `kubelint_diagnostics`: `Diagnostic`, `Severity`, `Label`, `Fix`, `Edit`,
   `Applicability`, with a small builder API. _Depends on: M1-01._
 - [ ] **M1-07** `kubelint_k8s`: `Object` view (apiVersion, kind, metadata name/namespace/
