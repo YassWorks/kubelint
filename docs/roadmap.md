@@ -32,7 +32,7 @@ rustc-style diagnostic for a real rule.
 
 ## M1: Walking skeleton (target: 2026-11-06)
 
-- [ ] **M1-01** `kubelint_source`: `SourceFile` (path + text), `FileId`, re-export
+- [x] **M1-01** `kubelint_source`: `SourceFile` (path + text), `FileId`, re-export
   `TextRange`/`TextSize` from `text-size`, and `LineIndex` (byte offset ↔ 1-based line and
   column, with columns in UTF-8 bytes and UTF-16 code units). Tests: ASCII, non-ASCII,
   CRLF, empty file, offset at end of file. _Depends on: none._

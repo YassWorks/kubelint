@@ -169,6 +169,11 @@ wrong.
 **Squash merge.** Merging a pull request as a single commit on `main`, whatever number of
 commits the PR had. Each roadmap task becomes exactly one commit in history.
 
+**UTF-8 and UTF-16 columns.** Text is stored as UTF-8 bytes, where one character takes 1
+to 4 bytes. The language server protocol counts columns in UTF-16 code units instead
+(characters outside the basic plane take 2). `LineIndex` in `kubelint_source` reports
+both so the terminal and, later, the editor point at the same character.
+
 **YAML.** The text format Kubernetes manifests are written in. Indentation defines
 structure, and unquoted values are guessed: `8080` becomes a number and `yes` becomes a
 boolean, which is behind rule KL1009.

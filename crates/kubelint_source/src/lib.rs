@@ -5,3 +5,10 @@
 //!
 //! Every other crate refers to locations through the types defined here. This crate has
 //! no internal dependencies. See `docs/architecture.md`.
+
+mod line_index;
+mod source_file;
+
+pub use line_index::{LineCol, LineIndex};
+pub use source_file::{FileId, SourceFile};
+pub use text_size::{TextRange, TextSize};
