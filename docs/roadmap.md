@@ -53,7 +53,7 @@ rustc-style diagnostic for a real rule.
 - [ ] **M1-05** `kubelint_yaml`: comment extraction (`Comment { range, text }`) using the
   rule in `architecture.md`. Tests with `#` inside quoted strings and block scalars.
   _Depends on: M1-02b._
-- [ ] **M1-06** `kubelint_diagnostics`: `Diagnostic`, `Severity`, `Label`, `Fix`, `Edit`,
+- [x] **M1-06** (#4) `kubelint_diagnostics`: `Diagnostic`, `Severity`, `Label`, `Fix`, `Edit`,
   `Applicability`, with a small builder API. _Depends on: M1-01._
 - [ ] **M1-07** `kubelint_k8s`: `Object` view (apiVersion, kind, metadata name/namespace/
   labels/annotations with ranges), `GroupVersionKind` parsing (`v1` is the core group),
