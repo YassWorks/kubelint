@@ -36,6 +36,9 @@ dependencies = [
 [[package]]
 name = "kubelint_yaml"
 version = "0.0.0"
+dependencies = [
+ "kubelint_source",
+]
 
 [[package]]
 name = "text-size"

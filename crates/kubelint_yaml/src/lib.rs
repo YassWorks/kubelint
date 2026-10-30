@@ -4,3 +4,7 @@
 //! byte range it came from. Built on `saphyr-parser` events (ADR 0002).
 //!
 //! Allowed internal dependencies: `kubelint_source`. See `docs/architecture.md`.
+
+mod tree;
+
+pub use tree::{Document, Entry, Node, NodeKind, Scalar, ScalarStyle};
