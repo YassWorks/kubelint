@@ -35,7 +35,7 @@ INSTA_UPDATE=always cargo test --workspace
   (table in `docs/architecture.md`).
 - `crates/kubelint`: the CLI binary. Keep it thin.
 - `docs/`: vision, roadmap, architecture, conventions, ADRs (`decisions/`), rule catalog
-  (`rules/`), agent memory (`agent/`).
+  (`rules/`), agent memory (`agent/`), learning notes for the owner (`learning/`).
 
 ## Rules of thumb
 

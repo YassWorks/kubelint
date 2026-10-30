@@ -32,6 +32,7 @@ Sections marked (required) are never deleted. Write "None" instead.
 - [ ] Roadmap checkbox ticked (or task split) in `docs/roadmap.md`
 - [ ] User-facing behavior change reflected in docs (README, `docs/`), or none
 - [ ] New architectural decision recorded as an ADR in `docs/decisions/`, or none
+- [ ] New Rust/Kubernetes concept added to `docs/learning/glossary.md`, or none
 
 ## Size check (required)
 
@@ -45,6 +46,6 @@ Over ~400 lines? Split the PR unless it is mechanical (renames, generated docs).
 ## Concepts (required)
 
 <!-- 2-4 plain-language bullets for the owner, who is learning Rust and Kubernetes.
-Explain the ideas this PR relies on, not the diff. -->
+Explain the ideas this PR relies on, not the diff. Link the glossary entry when one exists. -->
 
 -

@@ -64,7 +64,8 @@ See ADR 0006. In short:
 ## Documentation
 
 - **Where docs live:** user and contributor docs in `docs/`, rule catalog in
-  `docs/rules/`, decisions in `docs/decisions/`, agent memory in `docs/agent/`. The root keeps only `README.md`, `CLAUDE.md` and
+  `docs/rules/`, decisions in `docs/decisions/`, agent memory in `docs/agent/`, learning
+  material in `docs/learning/`. The root keeps only `README.md`, `CLAUDE.md` and
   `LICENSE`.
 - **Same PR rule:** a PR that changes behavior updates the docs that describe it.
 - **Prose style:**

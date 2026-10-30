@@ -17,7 +17,8 @@ without a human in the loop, while staying easy to review and reverse.
   Nothing relies on chat history or external tools.
 - **The routine prompt is a bootloader.** It holds only the mandate and the
   non-negotiables, and points to `docs/agent/playbook.md`, which holds the procedure and
-  can evolve through normal PRs.
+  can evolve through normal PRs. The prompt itself lives in the routine configuration,
+  owned by the owner, not in the repository.
 - **Small PRs, merged by the agent on green CI.** One roadmap task per PR. The agent
   squash-merges its own PR once every required check passes, then starts the next task
   from the updated `main`. No human approval is required. The owner reviews history
@@ -26,8 +27,8 @@ without a human in the loop, while staying easy to review and reverse.
   ends with a journal PR. At least two PRs per run; three to five is the target.
 - **The owner is asynchronous.** Questions go to `docs/agent/owner-inbox.md` together with
   the default the agent will assume; the agent never blocks waiting for an answer.
-- **Teaching is built in.** Every PR description has a "Concepts" section for the
-  owner. Learning material stays in PR descriptions, not in repository files.
+- **Teaching is built in.** Every PR has a "Concepts" section for the owner, and new
+  concepts land in `docs/learning/glossary.md`.
 
 ## Alternatives considered
 

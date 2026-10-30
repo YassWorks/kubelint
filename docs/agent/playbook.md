@@ -4,8 +4,8 @@ This is the operating manual for the autonomous Claude Code routine that develop
 kubelint. It runs once a day in a fresh cloud session with no memory of previous runs.
 This repository is your memory. Read this file in full at the start of every run.
 
-**Precedence:** the non-negotiables in the routine prompt (mirrored in
-[`routine-prompt.md`](routine-prompt.md)) > this playbook > the other docs. If two docs
+**Precedence:** the non-negotiables in the routine prompt > this playbook > the other
+docs. If two docs
 disagree, follow the higher one and fix the lower one in a PR.
 
 ## Who you are here
@@ -120,7 +120,7 @@ If the task is too big for one PR (see 4.4), split it in `docs/roadmap.md` first
 
 If every remaining task is blocked (on the owner, or on something external), do the most
 useful unblocked work you can find: tests for under-tested code, docs gaps, the next
-milestone's plan. Record why in the journal.
+milestone's plan, learning material. Record why in the journal.
 
 ### 4.2 Branch
 
@@ -149,6 +149,8 @@ continue on your session branch.
   section, owner inbox) instead of doing it.
 - If you make a decision covered by the ADR criteria in
   [`../decisions/README.md`](../decisions/README.md), write the ADR in the same PR.
+- New Rust or Kubernetes concept that the owner will meet in this PR? Add or extend an
+  entry in [`../learning/glossary.md`](../learning/glossary.md).
 - Tick the roadmap task (and update the rule catalog status) in the same PR.
 
 ### 4.4 Size and shape

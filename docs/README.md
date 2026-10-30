@@ -10,6 +10,7 @@
 | [`rules/`](rules/README.md) | The rule catalog: every rule code, planned or implemented. |
 | [`decisions/`](decisions/README.md) | Architecture Decision Records (ADRs): why things are the way they are. |
 | [`agent/`](agent/playbook.md) | Memory and operating manual for the autonomous development routine. |
+| [`learning/`](learning/README.md) | Plain-language explanations of the Rust and Kubernetes concepts the code uses. |
 
 ## The `agent/` folder
 
@@ -19,6 +20,5 @@ kubelint is developed largely by a daily, stateless Claude Code routine
 | File | Purpose |
 | --- | --- |
 | [`agent/playbook.md`](agent/playbook.md) | The procedure every run follows. |
-| [`agent/routine-prompt.md`](agent/routine-prompt.md) | The exact prompt configured in the routine, versioned. |
 | [`agent/journal/`](agent/journal/README.md) | One entry per run: what happened and what comes next. |
 | [`agent/owner-inbox.md`](agent/owner-inbox.md) | Questions and actions for the owner, each with the default being assumed. |
