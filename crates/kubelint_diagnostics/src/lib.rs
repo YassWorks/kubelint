@@ -4,3 +4,7 @@
 //! optional fixes. Contains no rendering code; renderers live in `kubelint_output`.
 //!
 //! Allowed internal dependencies: `kubelint_source`. See `docs/architecture.md`.
+
+mod diagnostic;
+
+pub use diagnostic::{Applicability, Diagnostic, Edit, Fix, Label, Severity};
