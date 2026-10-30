@@ -1,0 +1,12 @@
+# Build output
+/target
+
+# insta pending snapshots (review, then accept or delete)
+*.snap.new
+*.pending-snap
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store

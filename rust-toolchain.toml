@@ -1,0 +1,6 @@
+# Pinned so local runs, CI and every autonomous session see the same compiler and lints.
+# Bump deliberately in its own PR, together with `rust-version` in Cargo.toml (ADR 0007).
+[toolchain]
+channel = "1.97.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"
