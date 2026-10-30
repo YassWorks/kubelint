@@ -5,7 +5,7 @@
 
 ## Context
 
-The owner is new to Rust and Kubernetes and wants the project built mostly by a Claude
+The owner wants the project built mostly by a Claude
 Code routine that runs once a day in a fresh, stateless cloud session. The owner may be
 unavailable for a week or more. The workflow must keep making steady, coherent progress
 without a human in the loop, while staying easy to review and reverse.
@@ -27,8 +27,8 @@ without a human in the loop, while staying easy to review and reverse.
   ends with a journal PR. At least two PRs per run; three to five is the target.
 - **The owner is asynchronous.** Questions go to `docs/agent/owner-inbox.md` together with
   the default the agent will assume; the agent never blocks waiting for an answer.
-- **Teaching is built in.** Every PR has a "Concepts" section for the owner, and new
-  concepts land in `docs/learning/glossary.md`.
+- **Concepts are documented.** Every PR has a "Concepts" section explaining the ideas it
+  relies on, and new concepts land in `docs/learning/glossary.md`.
 
 ## Alternatives considered
 

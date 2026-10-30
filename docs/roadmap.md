@@ -28,7 +28,7 @@ rustc-style diagnostic for a real rule.
 - [x] **M0-01** Vision, architecture, ADRs, conventions, roadmap, rule catalog.
 - [x] **M0-02** Cargo workspace with one crate per layer, pinned toolchain, workspace lints.
 - [x] **M0-03** CI (fmt, clippy, tests on Linux/macOS/Windows, docs) and PR template.
-- [x] **M0-04** Agent playbook, owner inbox, journal, learning glossary.
+- [x] **M0-04** Agent playbook, owner inbox, journal, concept glossary.
 
 ## M1: Walking skeleton (target: 2026-11-06)
 

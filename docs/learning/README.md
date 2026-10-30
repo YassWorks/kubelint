@@ -1,7 +1,7 @@
 # Learning
 
-kubelint is built partly as a way for its owner to learn Rust and Kubernetes. This folder
-holds plain-language explanations of the concepts the code relies on.
+Plain-language explanations of the Rust, Kubernetes and tooling concepts kubelint's code
+relies on, for anyone contributing to or reviewing the project.
 
 - [`glossary.md`](glossary.md): short definitions of every Rust, Kubernetes and tooling
   concept that appears in the project, with pointers to where it shows up in the code.
@@ -10,7 +10,7 @@ Every pull request also ends with a **Concepts** section explaining the ideas it
 on. Reading the Concepts sections of merged PRs in order is a guided tour of how the
 project was built.
 
-## Suggested reading order for the owner
+## Suggested reading order
 
 1. Glossary, "Kubernetes basics": what a manifest is and why it goes wrong.
 2. [`../vision.md`](../vision.md): what kubelint does about it.

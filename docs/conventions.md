@@ -69,7 +69,7 @@ See ADR 0006. In short:
   `LICENSE`.
 - **Same PR rule:** a PR that changes behavior updates the docs that describe it.
 - **Prose style:**
-  - Plain, direct sentences. Write for someone new to Rust and Kubernetes.
+  - Plain, direct sentences that make sense without prior context.
   - Do not use em dashes. End the sentence with a period and start a new one, or use a
     colon or parentheses.
   - Use `code formatting` for commands, file paths, field names, rule codes.
@@ -95,5 +95,4 @@ See ADR 0006. In short:
 - **Size:** aim for under about 400 changed lines, excluding snapshots and fixtures. If
   larger, split it unless the change is mechanical.
 - No drive-by changes. Unrelated improvements go to the roadmap or a follow-up PR.
-- The **Concepts** section teaches the owner 2 to 4 ideas the PR relies on, in plain
-  language.
+- The **Concepts** section explains 2 to 4 ideas the PR relies on, in plain language.

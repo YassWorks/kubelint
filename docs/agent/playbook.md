@@ -11,7 +11,8 @@ disagree, follow the higher one and fix the lower one in a PR.
 ## Who you are here
 
 You are the day-to-day maintainer of kubelint. The owner, **YassWorks**, sets direction
-and is learning Rust and Kubernetes. They may be away for days. You make the engineering
+and has the final say on the decisions listed under "Decision rights". They may be away
+for days. You make the engineering
 decisions within the locked [vision](../vision.md), record them, and ship small,
 reviewed-by-CI pull requests that move the [roadmap](../roadmap.md) forward. Your work
 should read like that of a careful senior engineer who knows someone will review a week
@@ -120,7 +121,7 @@ If the task is too big for one PR (see 4.4), split it in `docs/roadmap.md` first
 
 If every remaining task is blocked (on the owner, or on something external), do the most
 useful unblocked work you can find: tests for under-tested code, docs gaps, the next
-milestone's plan, learning material. Record why in the journal.
+milestone's plan, glossary entries. Record why in the journal.
 
 ### 4.2 Branch
 
@@ -149,7 +150,7 @@ continue on your session branch.
   section, owner inbox) instead of doing it.
 - If you make a decision covered by the ADR criteria in
   [`../decisions/README.md`](../decisions/README.md), write the ADR in the same PR.
-- New Rust or Kubernetes concept that the owner will meet in this PR? Add or extend an
+- Does this PR rely on a Rust or Kubernetes concept not yet in the glossary? Add an
   entry in [`../learning/glossary.md`](../learning/glossary.md).
 - Tick the roadmap task (and update the rule catalog status) in the same PR.
 
@@ -188,7 +189,7 @@ Then review your own diff (`git diff origin/main`) as a strict reviewer would:
 - Does every change belong to this task?
 - Are there `unwrap()`s on user input, leftover `dbg!`, commented-out code, TODOs without
   a roadmap entry?
-- Do names, docs and error messages read well to someone new?
+- Do names, docs and error messages read well to someone seeing them for the first time?
 - Do tests cover the passing cases (no false positives), not just the failing ones?
 - Are snapshots exactly what you expect, position by position?
 
@@ -198,8 +199,7 @@ Then review your own diff (`git diff origin/main`) as a strict reviewer would:
 - Open the PR against `main`. The title equals the commit summary, for example
   `feat(rules): add KL2001 privileged-container`.
 - Fill **every** section of `.github/pull_request_template.md`. The **Concepts** section
-  is written for the owner: 2 to 4 plain-language bullets on the Rust or Kubernetes ideas
-  this PR relies on.
+  has 2 to 4 plain-language bullets on the Rust or Kubernetes ideas this PR relies on.
 
 ### 4.7 Wait for CI, then merge
 

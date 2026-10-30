@@ -45,7 +45,7 @@ Over ~400 lines? Split the PR unless it is mechanical (renames, generated docs).
 
 ## Concepts (required)
 
-<!-- 2-4 plain-language bullets for the owner, who is learning Rust and Kubernetes.
-Explain the ideas this PR relies on, not the diff. Link the glossary entry when one exists. -->
+<!-- 2-4 plain-language bullets on the Rust or Kubernetes ideas this PR relies on, not the diff.
+Link the glossary entry when one exists. -->
 
 -
