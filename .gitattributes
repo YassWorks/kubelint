@@ -1,0 +1,6 @@
+# Normalize to LF everywhere so fixtures and snapshots are byte-identical on Windows CI.
+* text=auto eol=lf
+
+# Fixtures that test CRLF or odd encodings must be committed byte-for-byte.
+# Name them *.crlf.yaml (or add a specific line here).
+*.crlf.yaml -text

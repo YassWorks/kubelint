@@ -1,0 +1,15 @@
+[package]
+name = "kubelint_yaml"
+description = "Span-preserving YAML tree for kubelint."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

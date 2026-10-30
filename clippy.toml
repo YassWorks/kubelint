@@ -1,0 +1,24 @@
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-dbg-in-tests = true
+
+# Kubernetes kinds and other proper nouns that `clippy::doc_markdown` would otherwise
+# ask us to wrap in backticks. ".." keeps clippy's default list.
+doc-valid-idents = [
+    "..",
+    "ConfigMap",
+    "CronJob",
+    "CustomResourceDefinition",
+    "DaemonSet",
+    "GitHub",
+    "HorizontalPodAutoscaler",
+    "NetworkPolicy",
+    "OpenAPI",
+    "PersistentVolumeClaim",
+    "PodDisruptionBudget",
+    "PodSpec",
+    "ReplicaSet",
+    "ReplicationController",
+    "ServiceAccount",
+    "StatefulSet",
+]
