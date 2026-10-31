@@ -6,6 +6,7 @@
 //! Allowed internal dependencies: `kubelint_source`. See `docs/architecture.md`.
 
 mod builder;
+mod nav;
 mod tree;
 
 pub use builder::{Parse, ParseError, parse};
