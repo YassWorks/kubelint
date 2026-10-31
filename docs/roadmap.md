@@ -43,7 +43,7 @@ rustc-style diagnostic for a real rule.
   events have empty spans). Multi-document streams. Parse errors as
   `ParseError { message, range }`. Snapshot tests of the dump, including non-ASCII, flow
   style, block scalars and empty documents. _Depends on: M1-02a._
-- [ ] **M1-03** `kubelint_yaml`: navigation API: `get(key)`, `get_path(&[..])`,
+- [x] **M1-03** (#7) `kubelint_yaml`: navigation API: `get(key)`, `get_path(&[..])`,
   entry iteration, `as_str`/`as_mapping`/`as_sequence`, key ranges. Doc examples
   (doctests) on every public method. _Depends on: M1-02b._
 - [ ] **M1-04** `kubelint_yaml`: Kubernetes scalar resolution (`null`/bool/int/float/string
