@@ -1,0 +1,15 @@
+---
+source: crates/kubelint_yaml/tests/parse.rs
+expression: "dump(\"name: \\\"é\\\"\\nkind: Pod\\nnote: ünï\\n\")"
+---
+document 0..32
+  mapping 0..32
+    entry
+      scalar Plain "name" 0..4
+      scalar DoubleQuoted "é" 6..10
+    entry
+      scalar Plain "kind" 11..15
+      scalar Plain "Pod" 17..20
+    entry
+      scalar Plain "note" 21..25
+      scalar Plain "ünï" 27..32

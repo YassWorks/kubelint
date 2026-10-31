@@ -11,6 +11,10 @@ homepage.workspace = true
 
 [dependencies]
 kubelint_source = { workspace = true }
+saphyr-parser = { workspace = true }
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+insta = { workspace = true }

@@ -1,0 +1,20 @@
+---
+source: crates/kubelint_yaml/tests/parse.rs
+expression: "dump(\"é: [80, 9]\\nm: {d: e, f: []}\\n\")"
+---
+document 0..28
+  mapping 0..28
+    entry
+      scalar Plain "é" 0..2
+      sequence 4..11
+        scalar Plain "80" 5..7
+        scalar Plain "9" 9..10
+    entry
+      scalar Plain "m" 12..13
+      mapping 15..28
+        entry
+          scalar Plain "d" 16..17
+          scalar Plain "e" 19..20
+        entry
+          scalar Plain "f" 22..23
+          sequence 25..27

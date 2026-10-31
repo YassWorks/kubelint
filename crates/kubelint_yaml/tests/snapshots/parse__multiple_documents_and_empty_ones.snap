@@ -1,0 +1,16 @@
+---
+source: crates/kubelint_yaml/tests/parse.rs
+expression: "dump(\"# é\\n---\\na: 1\\n---\\n---\\nb: 2\\n\")"
+---
+document 5..13
+  mapping 9..13
+    entry
+      scalar Plain "a" 9..10
+      scalar Plain "1" 12..13
+document 14..17
+  (empty)
+document 18..26
+  mapping 22..26
+    entry
+      scalar Plain "b" 22..23
+      scalar Plain "2" 25..26

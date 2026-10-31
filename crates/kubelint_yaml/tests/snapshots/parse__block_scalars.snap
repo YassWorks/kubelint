@@ -1,0 +1,12 @@
+---
+source: crates/kubelint_yaml/tests/parse.rs
+expression: "dump(\"é: |\\n  a\\n  b\\nf: >\\n  c\\n  d\\n\")"
+---
+document 0..27
+  mapping 0..27
+    entry
+      scalar Plain "é" 0..2
+      scalar Literal "a\nb\n" 8..14
+    entry
+      scalar Plain "f" 14..15
+      scalar Folded "c d\n" 21..27

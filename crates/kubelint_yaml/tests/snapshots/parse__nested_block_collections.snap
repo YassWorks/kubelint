@@ -1,0 +1,20 @@
+---
+source: crates/kubelint_yaml/tests/parse.rs
+expression: "dump(\"é: 1\\nitems:\\n- x\\n- b: 1\\n  c: 2\\n\")"
+---
+document 0..30
+  mapping 0..30
+    entry
+      scalar Plain "é" 0..2
+      scalar Plain "1" 4..5
+    entry
+      scalar Plain "items" 6..11
+      sequence 15..30
+        scalar Plain "x" 15..16
+        mapping 19..30
+          entry
+            scalar Plain "b" 19..20
+            scalar Plain "1" 22..23
+          entry
+            scalar Plain "c" 26..27
+            scalar Plain "2" 29..30
