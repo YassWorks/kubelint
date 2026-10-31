@@ -1,0 +1,16 @@
+---
+source: crates/kubelint_yaml/tests/parse.rs
+expression: "dump(\"é:\\nb: ~\\nc:\\n- \\n\")"
+---
+document 0..14
+  mapping 0..14
+    entry
+      scalar Plain "é" 0..2
+      null 2..2
+    entry
+      scalar Plain "b" 4..5
+      scalar Plain "~" 7..8
+    entry
+      scalar Plain "c" 9..10
+      sequence 14..14
+        null 14..14

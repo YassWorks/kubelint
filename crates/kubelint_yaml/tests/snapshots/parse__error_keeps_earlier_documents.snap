@@ -1,0 +1,10 @@
+---
+source: crates/kubelint_yaml/tests/parse.rs
+expression: "dump(\"é: 1\\n---\\na: 1\\n- bad\\n\")"
+---
+document 0..5
+  mapping 0..5
+    entry
+      scalar Plain "é" 0..2
+      scalar Plain "1" 4..5
+error "while parsing a block mapping, did not find expected key" at 17

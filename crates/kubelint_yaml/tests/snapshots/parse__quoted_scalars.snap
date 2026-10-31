@@ -1,0 +1,12 @@
+---
+source: crates/kubelint_yaml/tests/parse.rs
+expression: "dump(\"é: 'one'\\nb: \\\"t\\\\u00e9\\\"\\n\")"
+---
+document 0..22
+  mapping 0..22
+    entry
+      scalar Plain "é" 0..2
+      scalar SingleQuoted "one" 4..9
+    entry
+      scalar Plain "b" 10..11
+      scalar DoubleQuoted "té" 13..22

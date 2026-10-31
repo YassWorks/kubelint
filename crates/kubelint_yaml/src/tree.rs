@@ -29,7 +29,8 @@ pub enum NodeKind {
     Sequence(Vec<Node>),
     /// A string-like leaf. Its type (number, bool...) is decided later, see [`Scalar`].
     Scalar(Scalar),
-    /// An explicit `~` or `null`, or a missing value as in `key:`.
+    /// A missing value, as in `key:` or `- `. An explicit `~` or `null` is a plain
+    /// [`Scalar`], because Kubernetes decides what it means.
     Null,
 }
 
