@@ -7,8 +7,10 @@
 
 mod builder;
 mod nav;
+mod resolve;
 mod tree;
 
 pub use builder::{Parse, ParseError, parse};
+pub use resolve::ResolvedScalar;
 
 pub use tree::{Document, Entry, Node, NodeKind, Scalar, ScalarStyle};

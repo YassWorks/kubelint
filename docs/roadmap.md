@@ -46,7 +46,7 @@ rustc-style diagnostic for a real rule.
 - [x] **M1-03** (#7) `kubelint_yaml`: navigation API: `get(key)`, `get_path(&[..])`,
   entry iteration, `as_str`/`as_mapping`/`as_sequence`, key ranges. Doc examples
   (doctests) on every public method. _Depends on: M1-02b._
-- [ ] **M1-04** `kubelint_yaml`: Kubernetes scalar resolution (`null`/bool/int/float/string
+- [x] **M1-04** (#8) `kubelint_yaml`: Kubernetes scalar resolution (`null`/bool/int/float/string
   the way Kubernetes' YAML decoder sees them, YAML 1.1 style: `yes`/`no`/`on`/`off`/`y`/`n`
   are booleans). Table-driven tests. Cite the upstream source of the rules in the doc
   comment. _Depends on: M1-02b._
