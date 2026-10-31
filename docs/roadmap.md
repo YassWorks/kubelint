@@ -38,7 +38,7 @@ rustc-style diagnostic for a real rule.
   CRLF, empty file, offset at end of file. _Depends on: none._
 - [x] **M1-02a** (#3) `kubelint_yaml`: tree types (`Document`, `Node`, `NodeKind`, `Entry`,
   `Scalar`, `ScalarStyle`) and `Document::dump()` for snapshot tests. _Depends on: M1-01._
-- [x] **M1-02b** (#5) `kubelint_yaml`: builder over `saphyr-parser` events. Converts character
+- [x] **M1-02b** (#6) `kubelint_yaml`: builder over `saphyr-parser` events. Converts character
   indices to byte offsets. Collection ranges from first and last child (collection start
   events have empty spans). Multi-document streams. Parse errors as
   `ParseError { message, range }`. Snapshot tests of the dump, including non-ASCII, flow
