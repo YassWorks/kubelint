@@ -103,6 +103,12 @@ dependencies = [
 [[package]]
 name = "kubelint_linter"
 version = "0.0.0"
+dependencies = [
+ "kubelint_diagnostics",
+ "kubelint_k8s",
+ "kubelint_source",
+ "kubelint_yaml",
+]
 
 [[package]]
 name = "kubelint_output"
