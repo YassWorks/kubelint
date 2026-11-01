@@ -1,0 +1,7 @@
+---
+source: crates/kubelint_yaml/tests/comments.rs
+expression: comments(text)
+---
+6..14 "# header"
+74..82 "# folded"
+91..98 "# after"

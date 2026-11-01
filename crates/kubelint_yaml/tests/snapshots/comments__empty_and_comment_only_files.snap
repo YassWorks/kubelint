@@ -1,0 +1,6 @@
+---
+source: crates/kubelint_yaml/tests/comments.rs
+expression: "comments(\"# ünï only\\n#\\n\")"
+---
+0..12 "# ünï only"
+13..14 "#"

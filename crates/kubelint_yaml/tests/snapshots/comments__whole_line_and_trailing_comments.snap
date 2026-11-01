@@ -1,0 +1,7 @@
+---
+source: crates/kubelint_yaml/tests/comments.rs
+expression: comments(text)
+---
+0..7 "# ünï"
+14..24 "# trailing"
+27..37 "# indented"

@@ -1,0 +1,17 @@
+---
+source: crates/kubelint_yaml/tests/parse.rs
+expression: "dump(\"é: 'it''s' # c\\nb: \\\"q\\\\\\\"#\\\"  # d\\nc: [ 'x' , \\\"y\\\" ]\\n\")"
+---
+document 0..47
+  mapping 0..47
+    entry
+      scalar Plain "é" 0..2
+      scalar SingleQuoted "it's" 4..11
+    entry
+      scalar Plain "b" 16..17
+      scalar DoubleQuoted "q\"#" 19..25
+    entry
+      scalar Plain "c" 31..32
+      sequence 34..47
+        scalar SingleQuoted "x" 36..39
+        scalar DoubleQuoted "y" 42..45

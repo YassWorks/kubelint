@@ -1,0 +1,5 @@
+---
+source: crates/kubelint_yaml/tests/comments.rs
+expression: comments(text)
+---
+37..39 "#f"

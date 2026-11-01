@@ -177,3 +177,9 @@ both so the terminal and, later, the editor point at the same character.
 **YAML.** The text format Kubernetes manifests are written in. Indentation defines
 structure, and unquoted values are guessed: `8080` becomes a number and `yes` becomes a
 boolean, which is behind rule KL1009.
+
+**YAML comments and scalar styles.** A comment starts with `#` and runs to the end of the
+line, but only when the `#` begins the line or follows a space or tab: in `a#b` or
+`http://x/#top` it is part of the value. A `#` inside a quoted string (`'a #b'`) or a block
+scalar (`|` or `>` followed by indented lines) is text, not a comment. kubelint reads
+suppression comments such as `# kubelint-disable-next-line` from this list of comments.

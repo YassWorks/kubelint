@@ -50,7 +50,7 @@ rustc-style diagnostic for a real rule.
   the way Kubernetes' YAML decoder sees them, YAML 1.1 style: `yes`/`no`/`on`/`off`/`y`/`n`
   are booleans). Table-driven tests. Cite the upstream source of the rules in the doc
   comment. _Depends on: M1-02b._
-- [ ] **M1-05** `kubelint_yaml`: comment extraction (`Comment { range, text }`) using the
+- [x] **M1-05** (#10) `kubelint_yaml`: comment extraction (`Comment { range, text }`) using the
   rule in `architecture.md`. Tests with `#` inside quoted strings and block scalars.
   _Depends on: M1-02b._
 - [x] **M1-06** (#4) `kubelint_diagnostics`: `Diagnostic`, `Severity`, `Label`, `Fix`, `Edit`,

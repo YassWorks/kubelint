@@ -1,0 +1,6 @@
+---
+source: crates/kubelint_yaml/tests/comments.rs
+expression: comments(text)
+---
+6..11 "# tab"
+18..24 "# crlf"
