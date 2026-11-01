@@ -6,3 +6,12 @@
 //!
 //! Allowed internal dependencies: `kubelint_source`, `kubelint_yaml`, `kubelint_k8s`,
 //! `kubelint_diagnostics`, `kubelint_config`. See `docs/architecture.md`.
+
+mod context;
+mod engine;
+mod rule;
+pub mod rules;
+
+pub use context::{LintObject, ObjectContext, RunContext};
+pub use engine::{EnabledRule, LintResult, Linter};
+pub use rule::{Category, Rule, RuleMeta};
