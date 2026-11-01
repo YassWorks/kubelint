@@ -1,0 +1,18 @@
+---
+source: crates/kubelint_k8s/tests/workload.rs
+expression: describe(text)
+---
+Pod: pod spec 142..720
+  pod securityContext 163..181
+  containers "app" 328..670
+    image 351..358
+    securityContext 390..407
+    resources 433..456
+    env 478..503
+    livenessProbe 525..564
+    readinessProbe 587..624
+    startupProbe 645..670
+  initContainers "migrate" 273..307
+    image 300..307
+  ephemeralContainers "shell" 211..248
+    image 236..248

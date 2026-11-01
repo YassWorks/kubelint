@@ -1,0 +1,7 @@
+---
+source: crates/kubelint_k8s/tests/workload.rs
+expression: describe(text)
+---
+Service: no pod spec
+ConfigMap: no pod spec
+Pod: no pod spec

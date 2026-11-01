@@ -1,0 +1,8 @@
+---
+source: crates/kubelint_k8s/tests/workload.rs
+expression: describe(text)
+---
+CronJob: pod spec 227..381
+  containers "backup" 288..381
+    image 322..332
+    resources 358..381

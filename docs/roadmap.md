@@ -59,7 +59,7 @@ rustc-style diagnostic for a real rule.
   labels/annotations with ranges), `GroupVersionKind` parsing (`v1` is the core group),
   the "is this a Kubernetes object" rule, and `kind: List` expansion.
   _Depends on: M1-03._
-- [ ] **M1-08** `kubelint_k8s`: workload helpers: `pod_spec()` for Pod, Deployment,
+- [x] **M1-08** (#12) `kubelint_k8s`: workload helpers: `pod_spec()` for Pod, Deployment,
   StatefulSet, DaemonSet, ReplicaSet, ReplicationController, Job and CronJob;
   `containers()` over containers, initContainers and ephemeralContainers with
   `ContainerKind`; container accessors (name, image, securityContext, resources, env,

@@ -1,0 +1,14 @@
+# ReplicaSet: the pod spec is `spec.template.spec` (é).
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: wéb
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: init
+          image: busybox:1.36
+      containers:
+        - name: web
+          image: nginx:1.27

@@ -1,0 +1,9 @@
+---
+source: crates/kubelint_k8s/tests/workload.rs
+expression: describe(text)
+---
+DaemonSet: pod spec 149..281
+  containers "web" 244..281
+    image 271..281
+  initContainers "init" 175..215
+    image 203..215

@@ -46,6 +46,15 @@ their `apiVersion` is just `v1`.
 **`kind: List`.** A wrapper some tools output (for example `kubectl get -o yaml`): an
 object whose `items` are the real objects. kubelint lints each item, not the wrapper.
 
+**Init and ephemeral containers.** Besides its main `containers`, a pod can list
+`initContainers`, which run one after another to completion before the main ones start,
+and `ephemeralContainers`, added to a running pod for debugging. Security rules check all
+three, because each one runs code on the node.
+
+**Pod template.** Workload kinds do not list containers directly. They hold a template
+for the pods they create, at `spec.template.spec` (a CronJob nests it one level deeper,
+under `spec.jobTemplate`). `pod_spec()` in `kubelint_k8s` knows where each kind keeps it.
+
 **Labels and selectors.** Labels are key/value tags in `metadata.labels`. A selector picks
 objects by their labels: a Deployment finds its pods, a Service finds where to send
 traffic. If a Deployment's selector does not match its own pod template's labels, the API
