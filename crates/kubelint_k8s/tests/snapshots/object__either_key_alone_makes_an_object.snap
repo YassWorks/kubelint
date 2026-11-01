@@ -1,0 +1,14 @@
+---
+source: crates/kubelint_k8s/tests/object.rs
+expression: "describe(\"kind: Pod\\n---\\napiVersion: v1\\n---\\nkind:\\nmetadata: {name: é}\\n\")"
+---
+doc 0 object 0..9
+  kind "Pod" 6..9
+  gvk none
+doc 1 object 14..28
+  apiVersion "v1" 26..28
+  gvk none
+doc 2 object 33..59
+  kind <not a string> 37..37
+  name "é" 56..58
+  gvk none

@@ -55,7 +55,7 @@ rustc-style diagnostic for a real rule.
   _Depends on: M1-02b._
 - [x] **M1-06** (#4) `kubelint_diagnostics`: `Diagnostic`, `Severity`, `Label`, `Fix`, `Edit`,
   `Applicability`, with a small builder API. _Depends on: M1-01._
-- [ ] **M1-07** `kubelint_k8s`: `Object` view (apiVersion, kind, metadata name/namespace/
+- [x] **M1-07** (#11) `kubelint_k8s`: `Object` view (apiVersion, kind, metadata name/namespace/
   labels/annotations with ranges), `GroupVersionKind` parsing (`v1` is the core group),
   the "is this a Kubernetes object" rule, and `kind: List` expansion.
   _Depends on: M1-03._

@@ -6,3 +6,9 @@
 //!
 //! Allowed internal dependencies: `kubelint_source`, `kubelint_yaml`.
 //! See `docs/architecture.md`.
+
+mod gvk;
+mod object;
+
+pub use gvk::{GroupVersion, GroupVersionKind};
+pub use object::{Object, objects};

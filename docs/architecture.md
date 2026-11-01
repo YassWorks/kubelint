@@ -126,9 +126,10 @@ style). Typed structs throw away positions and fail on the very mistakes a linte
 report. Instead `kubelint_k8s` offers thin views over the YAML tree:
 
 ```rust
-let obj: Object = ...;
-obj.kind()            // Option<&Scalar> with its range
-obj.metadata_name()
+for obj in kubelint_k8s::objects(&document) { ... }   // expands `kind: List`
+obj.kind()            // Option<&Node>: the value node, with its range
+obj.gvk()             // Option<GroupVersionKind>, `v1` is the core group
+obj.name()            // metadata.name
 obj.pod_spec()        // Some(PodSpec) for Pod, Deployment, StatefulSet, DaemonSet,
                       // ReplicaSet, ReplicationController, Job, CronJob
 for c in pod_spec.containers() { c.kind(); c.name(); c.security_context(); }

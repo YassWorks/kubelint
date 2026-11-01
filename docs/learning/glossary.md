@@ -38,6 +38,14 @@ and storage, DaemonSets for one pod per node, Jobs for run-to-completion tasks, 
 for scheduled Jobs. kubelint finds the pod template inside each of them (`pod_spec()` in
 `kubelint_k8s`) so rules work on all of them at once.
 
+**Group, version, kind (GVK).** The type of an object. `apiVersion: apps/v1` names the
+API group `apps` and the version `v1`; `kind: Deployment` names the type inside it. The
+oldest types (Pod, Service, ConfigMap) live in the "core" group, which has no name, so
+their `apiVersion` is just `v1`.
+
+**`kind: List`.** A wrapper some tools output (for example `kubectl get -o yaml`): an
+object whose `items` are the real objects. kubelint lints each item, not the wrapper.
+
 **Labels and selectors.** Labels are key/value tags in `metadata.labels`. A selector picks
 objects by their labels: a Deployment finds its pods, a Service finds where to send
 traffic. If a Deployment's selector does not match its own pod template's labels, the API

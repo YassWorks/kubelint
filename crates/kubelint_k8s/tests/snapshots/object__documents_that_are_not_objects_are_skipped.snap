@@ -1,0 +1,5 @@
+---
+source: crates/kubelint_k8s/tests/object.rs
+expression: "describe(\"name: ci\\non: push\\n---\\njust text é\\n---\\n---\\n- kind: Pod\\n\")"
+---
+
