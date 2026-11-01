@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use kubelint_source::{TextRange, TextSize};
 use saphyr_parser::{Event, Parser, ScalarStyle as SaphyrStyle, Span};
 
+use crate::comments::{self, Comment};
 use crate::{Document, Entry, Node, NodeKind, Scalar, ScalarStyle};
 
 /// A YAML syntax error with the place it was found.
@@ -16,14 +17,18 @@ pub struct ParseError {
     pub range: TextRange,
 }
 
-/// The result of [`parse`]: every document that was read before the first error, plus
-/// that error if there was one.
+/// The result of [`parse`]: every document that was read before the first error, that
+/// error if there was one, and the comments.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Parse {
     /// Completed documents in source order.
     pub documents: Vec<Document>,
     /// Syntax errors. The parser cannot resume after one, so this has at most one entry.
     pub errors: Vec<ParseError>,
+    /// Comments in source order. After a syntax error, only comments before the error
+    /// are reported, because the parser never told us which `#` there were inside
+    /// scalars.
+    pub comments: Vec<Comment>,
 }
 
 /// Parses a YAML stream into documents.
@@ -36,11 +41,16 @@ pub struct Parse {
 /// let parse = kubelint_yaml::parse("a: 1\n---\nb: 2\n");
 /// assert_eq!(parse.documents.len(), 2);
 /// assert!(parse.errors.is_empty());
+///
+/// let parse = kubelint_yaml::parse("a: '#1' # note\n");
+/// assert_eq!(parse.comments.len(), 1);
+/// assert_eq!(parse.comments[0].text, " note");
 /// ```
 pub fn parse(text: &str) -> Parse {
     let offsets = ByteOffsets::new(text);
     let mut builder = Builder::new(text, &offsets);
     let mut out = Parse::default();
+    let mut limit = TextSize::new(u32::try_from(text.len()).unwrap_or(u32::MAX));
     for item in Parser::new_from_str(text) {
         match item {
             Ok((event, span)) => {
@@ -54,10 +64,12 @@ pub fn parse(text: &str) -> Parse {
                     message: err.info().to_owned(),
                     range: TextRange::empty(at),
                 });
+                limit = at;
                 break;
             }
         }
     }
+    out.comments = comments::extract(text, &mut builder.scalars, limit);
     out
 }
 
@@ -119,6 +131,8 @@ struct Builder<'a> {
     root: Option<Node>,
     doc_range: TextRange,
     anchors: HashMap<usize, Node>,
+    /// Ranges of every scalar seen so far, for comment extraction.
+    scalars: Vec<TextRange>,
 }
 
 impl<'a> Builder<'a> {
@@ -130,6 +144,7 @@ impl<'a> Builder<'a> {
             root: None,
             doc_range: TextRange::default(),
             anchors: HashMap::new(),
+            scalars: Vec::new(),
         }
     }
 
@@ -157,7 +172,14 @@ impl<'a> Builder<'a> {
                 } else {
                     range.start()
                 };
-                let range = TextRange::new(start, range.end().max(start));
+                let end = match style {
+                    SaphyrStyle::SingleQuoted | SaphyrStyle::DoubleQuoted => {
+                        self.closing_quote_end(start, style)
+                    }
+                    _ => None,
+                };
+                let range = TextRange::new(start, end.unwrap_or(range.end()).max(start));
+                self.scalars.push(range);
                 let node = if style == SaphyrStyle::Plain && value.is_empty() {
                     Node {
                         kind: NodeKind::Null,
@@ -235,6 +257,40 @@ impl<'a> Builder<'a> {
             }
         }
         TextSize::new(u32::try_from(pos).unwrap_or(u32::MAX))
+    }
+
+    /// The end of a quoted scalar starting at `start`: just past its closing quote.
+    ///
+    /// The parser's span for a quoted scalar runs on over trailing spaces and a trailing
+    /// comment (`'x' # c` spans to the end of the line), so the end is found here. Inside
+    /// single quotes `''` is an escaped quote; inside double quotes `\` escapes the next
+    /// character. Returns `None` if no closing quote is found.
+    fn closing_quote_end(&self, start: TextSize, style: SaphyrStyle) -> Option<TextSize> {
+        let bytes = self.text.as_bytes();
+        let quote = if style == SaphyrStyle::SingleQuoted {
+            b'\''
+        } else {
+            b'"'
+        };
+        if bytes.get(usize::from(start)) != Some(&quote) {
+            return None;
+        }
+        let mut pos = usize::from(start) + 1;
+        loop {
+            match (style, bytes.get(pos)?) {
+                (SaphyrStyle::SingleQuoted, b'\'') => {
+                    if bytes.get(pos + 1) == Some(&b'\'') {
+                        pos += 2;
+                    } else {
+                        break;
+                    }
+                }
+                (SaphyrStyle::DoubleQuoted, b'\\') => pos += 2,
+                (SaphyrStyle::DoubleQuoted, b'"') => break,
+                _ => pos += 1,
+            }
+        }
+        u32::try_from(pos + 1).ok().map(TextSize::new)
     }
 
     /// Attaches a finished node to its parent (or makes it the document root).

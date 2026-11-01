@@ -48,6 +48,13 @@ fn quoted_scalars() {
 }
 
 #[test]
+fn quoted_scalars_end_at_their_closing_quote() {
+    insta::assert_snapshot!(dump(
+        "é: 'it''s' # c\nb: \"q\\\"#\"  # d\nc: [ 'x' , \"y\" ]\n"
+    ));
+}
+
+#[test]
 fn missing_values_are_null() {
     insta::assert_snapshot!(dump("é:\nb: ~\nc:\n- \n"));
 }

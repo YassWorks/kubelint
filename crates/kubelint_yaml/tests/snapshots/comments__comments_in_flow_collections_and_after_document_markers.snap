@@ -1,0 +1,8 @@
+---
+source: crates/kubelint_yaml/tests/comments.rs
+expression: comments(text)
+---
+4..11 "# first"
+20..25 "# one"
+35..44 "# between"
+59..64 "# map"

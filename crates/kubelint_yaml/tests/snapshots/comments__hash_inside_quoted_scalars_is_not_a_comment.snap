@@ -1,0 +1,5 @@
+---
+source: crates/kubelint_yaml/tests/comments.rs
+expression: comments(text)
+---
+21..27 "# real"

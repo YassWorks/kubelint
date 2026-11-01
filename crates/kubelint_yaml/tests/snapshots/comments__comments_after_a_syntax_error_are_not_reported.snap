@@ -1,0 +1,6 @@
+---
+source: crates/kubelint_yaml/tests/comments.rs
+expression: comments(text)
+---
+6..12 "# kept"
+23..30 "# lost?"
