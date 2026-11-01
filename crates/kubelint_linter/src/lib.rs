@@ -11,6 +11,8 @@ mod context;
 mod engine;
 mod rule;
 pub mod rules;
+#[cfg(test)]
+mod testing;
 
 pub use context::{LintObject, ObjectContext, RunContext};
 pub use engine::{EnabledRule, LintResult, Linter};

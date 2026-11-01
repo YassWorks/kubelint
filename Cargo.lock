@@ -104,6 +104,7 @@ dependencies = [
 name = "kubelint_linter"
 version = "0.0.0"
 dependencies = [
+ "insta",
  "kubelint_diagnostics",
  "kubelint_k8s",
  "kubelint_source",

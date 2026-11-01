@@ -67,7 +67,7 @@ rustc-style diagnostic for a real rule.
 - [x] **M1-09a** (#13) `kubelint_linter`: `Rule` trait, `RuleMeta`, `Category`, static
   registry (with a consistency test), `ObjectContext`/`RunContext`, and a sequential
   engine (`Linter`) that sorts findings. _Depends on: M1-06, M1-07._
-- [ ] **M1-09b** `kubelint_linter`: the rule snapshot test harness (fixture path in,
+- [x] **M1-09b** (#14) `kubelint_linter`: the rule snapshot test harness (fixture path in,
   plain-text rendered diagnostics snapshot out, one rule enabled). _Depends on: M1-09a._
 - [ ] **M1-10** First rules: KL1001 `missing-api-version` and KL1002 `missing-kind`
   (one PR, they are mirror images). Establishes the rule file layout, fixture layout and

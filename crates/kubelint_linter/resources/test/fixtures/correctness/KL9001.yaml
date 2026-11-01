@@ -1,0 +1,8 @@
+# Harness self-test fixture for the test-only rule KL9001 (kind-reporter) in
+# src/testing.rs. KL9xxx codes are never allocated to real rules.
+# Reported: an object with a kind (é).
+apiVersion: apps/v1
+kind: Deployment
+---
+# Not reported: not a Kubernetes object.
+name: build
