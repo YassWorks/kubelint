@@ -1,0 +1,16 @@
+# Kinds without a pod spec (é).
+apiVersion: v1
+kind: Service
+spec:
+  template:
+    spec:
+      containers: [{name: not-a-container}]
+---
+apiVersion: v1
+kind: ConfigMap
+data: {a: b}
+---
+# A pod spec that is not a mapping.
+apiVersion: v1
+kind: Pod
+spec: [containers]

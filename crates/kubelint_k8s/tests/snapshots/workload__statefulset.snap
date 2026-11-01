@@ -1,0 +1,9 @@
+---
+source: crates/kubelint_k8s/tests/workload.rs
+expression: describe(text)
+---
+StatefulSet: pod spec 153..285
+  containers "web" 248..285
+    image 275..285
+  initContainers "init" 179..219
+    image 207..219

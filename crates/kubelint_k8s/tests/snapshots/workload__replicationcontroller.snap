@@ -1,0 +1,9 @@
+---
+source: crates/kubelint_k8s/tests/workload.rs
+expression: describe(text)
+---
+ReplicationController: pod spec 168..300
+  containers "web" 263..300
+    image 290..300
+  initContainers "init" 194..234
+    image 222..234

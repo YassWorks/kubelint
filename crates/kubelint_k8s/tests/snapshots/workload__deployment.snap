@@ -1,0 +1,16 @@
+---
+source: crates/kubelint_k8s/tests/workload.rs
+expression: describe(text)
+---
+Deployment: pod spec 151..283
+  containers "web" 246..283
+    image 273..283
+  initContainers "init" 177..217
+    image 205..217
+Deployment: pod spec 407..453
+  containers "legacy" 420..452
+    image 442..451
+Deployment: no pod spec
+Deployment: pod spec 744..780
+  containers "no-api-version" 757..779
+Deployment: no pod spec

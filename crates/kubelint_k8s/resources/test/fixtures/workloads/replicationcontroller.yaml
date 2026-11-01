@@ -1,0 +1,14 @@
+# ReplicationController: the pod spec is `spec.template.spec` (é).
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: wéb
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: init
+          image: busybox:1.36
+      containers:
+        - name: web
+          image: nginx:1.27
