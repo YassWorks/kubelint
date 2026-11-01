@@ -94,6 +94,11 @@ dependencies = [
 [[package]]
 name = "kubelint_k8s"
 version = "0.0.0"
+dependencies = [
+ "insta",
+ "kubelint_source",
+ "kubelint_yaml",
+]
 
 [[package]]
 name = "kubelint_linter"

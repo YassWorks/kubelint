@@ -10,6 +10,11 @@ repository.workspace = true
 homepage.workspace = true
 
 [dependencies]
+kubelint_source = { workspace = true }
+kubelint_yaml = { workspace = true }
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+insta = { workspace = true }
