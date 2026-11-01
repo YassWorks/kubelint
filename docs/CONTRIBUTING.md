@@ -64,7 +64,8 @@ INSTA_UPDATE=always cargo test --workspace
    severity, default enabled, summary, explanation). Use the `kubelint_k8s` helpers
    (for example `pod_spec().containers()`) instead of walking YAML by hand.
 4. **Register it** with one line in `crates/kubelint_linter/src/rules/mod.rs`.
-5. **Add the snapshot test** in the rule's `tests` module, run
+5. **Add the snapshot test** in the rule's `tests` module
+   (`insta::assert_snapshot!(crate::testing::check_fixture(&RuleStruct))`), run
    `INSTA_UPDATE=always cargo test -p kubelint_linter`, and read the snapshot: every
    reported position and message should be exactly what you expect.
 6. **Update the catalog row** status to `implemented` and tick the roadmap task.

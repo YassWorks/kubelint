@@ -1,0 +1,23 @@
+---
+source: crates/kubelint_linter/src/testing.rs
+expression: "check_source(&KindReporter, &file)"
+---
+warning[KL9001]: kind Pöd
+ --> correctness/KL9001.yaml:3:7
+  |
+3 | kind: Pöd
+  |       ^^^ the kind
+ --> correctness/KL9001.yaml:2:13
+  |
+2 | apiVersion: v1
+  |             -- its apiVersion
+  = help: this is only a test
+
+warning[KL9001]: kind Con figMap
+ --> correctness/KL9001.yaml:9:8
+  |
+9 | {kind: "Con
+  |        ^^^^ the kind
+  = help: this is only a test
+
+2 finding(s) in 2 object(s)
