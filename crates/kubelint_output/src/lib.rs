@@ -5,3 +5,7 @@
 //!
 //! Allowed internal dependencies: `kubelint_source`, `kubelint_diagnostics`.
 //! See `docs/architecture.md`.
+
+mod human;
+
+pub use human::{HumanRenderer, Summary};

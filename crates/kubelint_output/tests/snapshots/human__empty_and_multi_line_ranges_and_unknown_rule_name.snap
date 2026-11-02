@@ -1,0 +1,22 @@
+---
+source: crates/kubelint_output/tests/human.rs
+expression: "render(&files, &diagnostics, summary)"
+---
+error[KL0001]: invalid YAML: did not find expected key
+ --> deploy/web.yaml:1:21
+  |
+1 | # Web frontend: café
+  |                     ^
+
+info[KL9999]: a range over several lines
+  --> deploy/web.yaml:6:1
+   |
+ 6 | / spec:
+ 7 | |   template:
+ 8 | |     spec:
+ 9 | |       containers:
+10 | |       - name: web
+11 | |         image: nginx:1.27
+   | |_________________________^ this spec
+
+Found 1 error and 1 info. Checked 1 file and 0 objects.

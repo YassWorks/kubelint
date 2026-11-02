@@ -1,0 +1,29 @@
+---
+source: crates/kubelint_output/tests/human.rs
+expression: "render(&files, &diagnostics, summary)"
+---
+error[KL1004]: `Deployment` `web` is defined twice
+ --> deploy/copy.yaml:3:9
+  |
+3 |   name: web
+  |         ^^^ defined again here
+  |
+ ::: deploy/web.yaml:5:9
+  |
+5 |   name: web
+  |         --- first defined here
+  |
+  = note: rule `duplicate-object`
+
+warning[KL3001]: container `web` has no memory limit
+  --> deploy/web.yaml:10:7
+   |
+ 3 | kind: Deployment
+   | ---------------- in this Deployment
+...
+10 |       - name: web
+   |       ^^^^^^^^^^^
+   |
+   = note: rule `missing-memory-limit`
+
+Found 1 error and 1 warning. Checked 2 files and 2 objects.
