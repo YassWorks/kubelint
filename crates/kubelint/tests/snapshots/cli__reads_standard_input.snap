@@ -1,0 +1,17 @@
+---
+source: crates/kubelint/tests/cli.rs
+expression: "run(&[\"check\", \"-\", \"--color=never\"], Some(\"kind: Pod\\n\"))"
+---
+exit: 1
+--- stdout
+error[KL1001]: `Pod` object has no `apiVersion`
+ --> <stdin>:1:1
+  |
+1 | kind: Pod
+  | ^^^^^^^^^
+  |
+  = help: add `apiVersion: v1`
+  = note: rule `missing-api-version`
+
+Found 1 error. Checked 1 file and 1 object in [TIME].
+--- stderr

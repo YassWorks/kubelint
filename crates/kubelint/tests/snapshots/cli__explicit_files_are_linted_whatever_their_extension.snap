@@ -1,0 +1,26 @@
+---
+source: crates/kubelint/tests/cli.rs
+expression: "run(&[\"check\", \"notes.txt\", \"deploy\", \"deploy/web.yaml\"], None)"
+---
+exit: 1
+--- stdout
+error[KL1001]: `Service` object has no `apiVersion`
+ --> deploy/broken.yml:1:1
+  |
+1 | kind: Service
+  | ^^^^^^^^^^^^^
+  |
+  = help: add `apiVersion: v1`
+  = note: rule `missing-api-version`
+
+error[KL0001]: invalid YAML: while parsing a block mapping, did not find expected key
+ --> deploy/broken.yml:9:2
+  |
+9 |  b: 2
+  |  ^
+  |
+  = help: fix the YAML syntax; kubelint skips this document until it parses
+  = note: rule `invalid-yaml`
+
+Found 2 errors. Checked 3 files and 2 objects in [TIME].
+--- stderr

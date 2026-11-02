@@ -1,0 +1,2 @@
+# `.ignore` works like `.gitignore` for kubelint, but git still commits the files.
+generated/
