@@ -1,0 +1,66 @@
+//! `KL1xxx`: objects the Kubernetes API server would reject, or that cannot work as
+//! written.
+
+mod missing_api_version;
+mod missing_kind;
+
+pub use missing_api_version::MissingApiVersion;
+pub use missing_kind::MissingKind;
+
+use kubelint_k8s::Object;
+use kubelint_source::TextRange;
+use kubelint_yaml::{Entry, Node, NodeKind, ResolvedScalar};
+
+/// What is wrong with one of the two type fields, `apiVersion` and `kind`.
+enum TypeField<'a> {
+    /// The key is absent.
+    Missing,
+    /// The key is there, but its value is null, empty or only whitespace. Kubernetes
+    /// treats this exactly like a missing field.
+    Empty(&'a Entry),
+}
+
+/// Checks the type field `key` of `object`. `None` when it has a usable value.
+///
+/// A value of the wrong type (a number, a mapping) is not reported here: that is a
+/// schema problem, and the rule that cannot decide stays silent.
+fn check_type_field<'a>(object: Object<'a>, key: &str) -> Option<TypeField<'a>> {
+    let Some(entry) = object.node().get_entry(key) else {
+        return Some(TypeField::Missing);
+    };
+    is_empty(&entry.value).then_some(TypeField::Empty(entry))
+}
+
+fn is_empty(value: &Node) -> bool {
+    match &value.kind {
+        NodeKind::Null => true,
+        NodeKind::Scalar(scalar) => {
+            scalar.resolve_kubernetes() == ResolvedScalar::Null || scalar.value.trim().is_empty()
+        }
+        NodeKind::Mapping(_) | NodeKind::Sequence(_) => false,
+    }
+}
+
+/// The range a diagnostic about `entry` points at: the whole `key: value` pair, or just
+/// the key when the value is missing (its range is empty and sits after the colon).
+fn entry_range(entry: &Entry) -> TextRange {
+    if entry.value.is_null() {
+        entry.key.range
+    } else {
+        entry.key.range.cover(entry.value.range)
+    }
+}
+
+/// Where a diagnostic about a missing field of `object` points: the `other` type field
+/// when present (`kind: Deployment` for a missing `apiVersion`), otherwise the object's
+/// first key.
+fn missing_field_range(object: Object<'_>, other: &str) -> TextRange {
+    if let Some(entry) = object.node().get_entry(other) {
+        return entry_range(entry);
+    }
+    object
+        .node()
+        .entries()
+        .next()
+        .map_or(object.range(), |entry| entry.key.range)
+}

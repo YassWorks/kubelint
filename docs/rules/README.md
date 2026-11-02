@@ -32,8 +32,8 @@ is the default severity. *Task* is the roadmap task that implements it.
 
 | Code | Name | Default | Severity | Status | Task | What it catches |
 | --- | --- | --- | --- | --- | --- | --- |
-| KL1001 | `missing-api-version` | on | error | planned | M1-10 | Object has `kind` but no `apiVersion`. |
-| KL1002 | `missing-kind` | on | error | planned | M1-10 | Object has `apiVersion` but no `kind`. |
+| KL1001 | `missing-api-version` | on | error | implemented | M1-10 | Object has no `apiVersion`, or an empty one. |
+| KL1002 | `missing-kind` | on | error | implemented | M1-10 | Object has no `kind`, or an empty one. |
 | KL1003 | `missing-object-name` | on | error | planned | M2-11 | No `metadata.name` (and no `metadata.generateName`). |
 | KL1004 | `duplicate-object` | on | error | planned | M2-12 | The same kind/namespace/name is defined more than once across the linted files. |
 | KL1005 | `selector-mismatch` | on | error | planned | M2-13 | A workload's `spec.selector` does not match its pod template labels. |

@@ -48,6 +48,56 @@ impl<'a> GroupVersion<'a> {
     }
 }
 
+/// The stable `apiVersion` of a built-in kind, for help texts such as "add
+/// `apiVersion: apps/v1`". `None` for custom resources and kinds not in the table.
+///
+/// The table lists the GA (non-beta) versions served by every Kubernetes release since
+/// 1.25. Kind names are case-sensitive, as in Kubernetes.
+///
+/// ```
+/// use kubelint_k8s::stable_api_version;
+///
+/// assert_eq!(stable_api_version("Deployment"), Some("apps/v1"));
+/// assert_eq!(stable_api_version("Pod"), Some("v1"));
+/// assert_eq!(stable_api_version("Certificate"), None);
+/// ```
+pub fn stable_api_version(kind: &str) -> Option<&'static str> {
+    let api_version = match kind {
+        "ConfigMap"
+        | "Endpoints"
+        | "LimitRange"
+        | "Namespace"
+        | "PersistentVolume"
+        | "PersistentVolumeClaim"
+        | "Pod"
+        | "PodTemplate"
+        | "ReplicationController"
+        | "ResourceQuota"
+        | "Secret"
+        | "Service"
+        | "ServiceAccount" => "v1",
+        "ControllerRevision" | "DaemonSet" | "Deployment" | "ReplicaSet" | "StatefulSet" => {
+            "apps/v1"
+        }
+        "CronJob" | "Job" => "batch/v1",
+        "HorizontalPodAutoscaler" => "autoscaling/v2",
+        "Ingress" | "IngressClass" | "NetworkPolicy" => "networking.k8s.io/v1",
+        "ClusterRole" | "ClusterRoleBinding" | "Role" | "RoleBinding" => {
+            "rbac.authorization.k8s.io/v1"
+        }
+        "PodDisruptionBudget" => "policy/v1",
+        "CSIDriver" | "StorageClass" | "VolumeAttachment" => "storage.k8s.io/v1",
+        "PriorityClass" => "scheduling.k8s.io/v1",
+        "CustomResourceDefinition" => "apiextensions.k8s.io/v1",
+        "MutatingWebhookConfiguration" | "ValidatingWebhookConfiguration" => {
+            "admissionregistration.k8s.io/v1"
+        }
+        "Lease" => "coordination.k8s.io/v1",
+        _ => return None,
+    };
+    Some(api_version)
+}
+
 impl fmt::Display for GroupVersion<'_> {
     /// Formats back to the `apiVersion` spelling.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

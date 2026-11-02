@@ -135,6 +135,10 @@ keeps things private unless another crate needs them.
 kubelint rule is a type that implements the `Rule` trait, which is how the engine can run
 any rule without knowing its details.
 
+**Raw string literals (`r#"..."#`).** A string where backslashes and quotes need no
+escaping, ending at the matching `"#`. Rule explanations are written as raw strings so
+their Markdown, including YAML examples with quotes, reads exactly as it will be printed.
+
 **Trait objects (`dyn Trait`).** A reference like `&dyn Rule` points at any value whose
 type implements `Rule`, chosen at run time. kubelint keeps its rule registry as a list of
 `&'static dyn Rule`, so rules of different types sit in one list and the engine calls them

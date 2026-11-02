@@ -1,0 +1,49 @@
+# Reported: no apiVersion; the help names the stable version of a built-in kind.
+kind: Deployment
+metadata:
+  name: web
+---
+# Reported: no apiVersion on a custom resource; the help cannot name a version.
+metadata:
+  name: café-certificate
+kind: Certificate
+---
+# Reported: apiVersion with no value.
+apiVersion:
+kind: Service
+---
+# Reported: explicit null and an empty quoted string.
+apiVersion: null
+kind: ConfigMap
+---
+apiVersion: ""
+kind: Secret
+---
+# Reported: flow style.
+{kind: Pod, metadata: {name: inline}}
+---
+# Reported: an item of a kind: List with neither field points at its first key.
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: Service
+- kind: Pod
+- metadata:
+    name: bare
+---
+# Not reported: both fields set.
+apiVersion: apps/v1
+kind: Deployment
+---
+# Not reported: apiVersion only (KL1002 reports the missing kind).
+apiVersion: v1
+---
+# Not reported: an apiVersion of the wrong type is a schema problem.
+apiVersion: 1
+kind: Pod
+---
+# Not reported: not a Kubernetes object.
+name: build
+on: push
+---
