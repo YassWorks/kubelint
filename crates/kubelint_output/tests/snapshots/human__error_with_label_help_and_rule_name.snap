@@ -1,0 +1,14 @@
+---
+source: crates/kubelint_output/tests/human.rs
+expression: "render(&files, &diagnostics, summary)"
+---
+error[KL1001]: `Deployment` object has no `apiVersion`
+ --> deploy/copy.yaml:1:1
+  |
+1 | kind: Deployment
+  | ^^^^^^^^^^^^^^^^ this object
+  |
+  = help: add `apiVersion: apps/v1`
+  = note: rule `missing-api-version`
+
+Found 1 error. Checked 2 files and 2 objects.

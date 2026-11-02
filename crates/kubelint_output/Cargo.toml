@@ -10,6 +10,12 @@ repository.workspace = true
 homepage.workspace = true
 
 [dependencies]
+annotate-snippets = { workspace = true }
+kubelint_diagnostics = { workspace = true }
+kubelint_source = { workspace = true }
+
+[dev-dependencies]
+insta = { workspace = true }
 
 [lints]
 workspace = true

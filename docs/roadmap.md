@@ -77,7 +77,7 @@ rustc-style diagnostic for a real rule.
   _Depends on: M1-02b._
 - [x] **M1-11b** (#18) KL0001 `invalid-yaml`: parse errors become diagnostics, reported by
   the engine whatever rules are enabled. _Depends on: M1-09b, M1-11a._
-- [ ] **M1-12** `kubelint_output`: human renderer with `annotate-snippets` (snippet,
+- [x] **M1-12** (#19) `kubelint_output`: human renderer with `annotate-snippets` (snippet,
   labels, help, rule code and name, summary line with counts and timing). Color on/off as a
   parameter. Snapshot tests without color. _Depends on: M1-06._
 - [ ] **M1-13** `kubelint` CLI: `kubelint check [PATHS]...` with `clap`; file discovery

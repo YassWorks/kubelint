@@ -157,6 +157,11 @@ defines the workspace.
 **ADR (Architecture Decision Record).** A short document recording one design decision
 and why it was made. They live in `docs/decisions/`.
 
+**ANSI escape codes.** Invisible character sequences such as `ESC[31m` that tell a
+terminal to switch color. They make output readable in a terminal and garbage in a file
+or CI log, so the human renderer takes color on or off as a parameter and the CLI decides
+(`--color auto` turns it on only when output goes to a terminal).
+
 **CI (Continuous Integration).** Automated checks that run on every pull request: here,
 formatting, lints, tests on three operating systems, and docs. The PR can only merge when
 the `ci-success` check is green.
