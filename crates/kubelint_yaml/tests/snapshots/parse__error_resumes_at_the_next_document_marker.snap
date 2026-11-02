@@ -1,0 +1,21 @@
+---
+source: crates/kubelint_yaml/tests/parse.rs
+expression: "dump(\"a: 1\\n---\\nb: [1\\nc: 2\\n---\\nd: é\\n---\\ne: 1\\n- bad\\n----\\n---x\\n--- # é\\nf: 1\\n\")"
+---
+document 0..4
+  mapping 0..4
+    entry
+      scalar Plain "a" 0..1
+      scalar Plain "1" 3..4
+document 20..29
+  mapping 24..29
+    entry
+      scalar Plain "d" 24..25
+      scalar Plain "é" 27..29
+document 55..68
+  mapping 64..68
+    entry
+      scalar Plain "f" 64..65
+      scalar Plain "1" 67..68
+error "illegal placement of ':' indicator" at 16
+error "while parsing a block mapping, did not find expected key" at 41

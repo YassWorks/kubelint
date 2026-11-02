@@ -69,3 +69,10 @@ fn empty_and_comment_only_files() {
     assert_eq!(comments(""), "");
     insta::assert_snapshot!(comments("# ünï only\n#\n"));
 }
+
+#[test]
+fn comments_resume_after_the_next_document_marker() {
+    // The error is reported at the `---` line, so parsing resumes there.
+    let text = "a: 1 # kept\n---\nb: [1 # kept too\n--- # é kept\nc: 2 # kept\n";
+    insta::assert_snapshot!(comments(text));
+}
