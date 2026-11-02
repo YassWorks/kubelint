@@ -162,6 +162,18 @@ terminal to switch color. They make output readable in a terminal and garbage in
 or CI log, so the human renderer takes color on or off as a parameter and the CLI decides
 (`--color auto` turns it on only when output goes to a terminal).
 
+**Exit code.** The number a program returns to the shell when it ends; `0` means
+success. CI systems fail a step when a command exits non-zero. kubelint returns `0` when
+nothing at or above the fail threshold was found, `1` when something was, and `2` when it
+could not do its job (ADR 0003).
+
+**`.gitignore` and `.ignore`.** Files listing paths that tools should skip. kubelint's
+directory search honors both, through the `ignore` crate from ripgrep. `.ignore` uses the
+same syntax but only affects search tools, not git.
+
+**Standard input (stdin).** The stream a program reads when data is piped into it, as in
+`helm template ./chart | kubelint check -`. The `-` path means "read standard input".
+
 **CI (Continuous Integration).** Automated checks that run on every pull request: here,
 formatting, lints, tests on three operating systems, and docs. The PR can only merge when
 the `ci-success` check is green.

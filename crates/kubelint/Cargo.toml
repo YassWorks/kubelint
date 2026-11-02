@@ -13,6 +13,17 @@ keywords = ["kubernetes", "k8s", "linter", "yaml", "cli"]
 categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
+anyhow = { workspace = true }
+clap = { workspace = true }
+ignore = { workspace = true }
+kubelint_diagnostics = { workspace = true }
+kubelint_linter = { workspace = true }
+kubelint_output = { workspace = true }
+kubelint_source = { workspace = true }
+
+[dev-dependencies]
+assert_cmd = { workspace = true }
+insta = { workspace = true }
 
 [lints]
 workspace = true

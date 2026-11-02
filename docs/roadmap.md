@@ -80,7 +80,7 @@ rustc-style diagnostic for a real rule.
 - [x] **M1-12** (#19) `kubelint_output`: human renderer with `annotate-snippets` (snippet,
   labels, help, rule code and name, summary line with counts and timing). Color on/off as a
   parameter. Snapshot tests without color. _Depends on: M1-06._
-- [ ] **M1-13** `kubelint` CLI: `kubelint check [PATHS]...` with `clap`; file discovery
+- [x] **M1-13** (#20) `kubelint` CLI: `kubelint check [PATHS]...` with `clap`; file discovery
   via `ignore` (`*.yaml`, `*.yml`, honors `.gitignore`); `-` reads stdin;
   `--color auto|always|never`; exit codes 0/1/2. CLI snapshot tests with `assert_cmd`.
   _Depends on: M1-10, M1-11b, M1-12._
