@@ -3,11 +3,13 @@
 //! Adding a rule: one file under the category's module, one line in [`ALL`]. See
 //! `docs/CONTRIBUTING.md`.
 
+pub mod correctness;
+
 use crate::Rule;
 
 /// Every built-in rule, in code order. Tests check that codes and names are unique and
 /// well-formed.
-pub static ALL: &[&dyn Rule] = &[];
+pub static ALL: &[&dyn Rule] = &[&correctness::MissingApiVersion, &correctness::MissingKind];
 
 #[cfg(test)]
 mod tests {

@@ -11,6 +11,6 @@ mod gvk;
 mod object;
 mod workload;
 
-pub use gvk::{GroupVersion, GroupVersionKind};
+pub use gvk::{GroupVersion, GroupVersionKind, stable_api_version};
 pub use object::{Object, objects};
 pub use workload::{Container, ContainerKind, PodSpec};

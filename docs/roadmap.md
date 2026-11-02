@@ -69,7 +69,7 @@ rustc-style diagnostic for a real rule.
   engine (`Linter`) that sorts findings. _Depends on: M1-06, M1-07._
 - [x] **M1-09b** (#14) `kubelint_linter`: the rule snapshot test harness (fixture path in,
   plain-text rendered diagnostics snapshot out, one rule enabled). _Depends on: M1-09a._
-- [ ] **M1-10** First rules: KL1001 `missing-api-version` and KL1002 `missing-kind`
+- [x] **M1-10** (#16) First rules: KL1001 `missing-api-version` and KL1002 `missing-kind`
   (one PR, they are mirror images). Establishes the rule file layout, fixture layout and
   snapshot style that every later rule copies. _Depends on: M1-09b._
 - [ ] **M1-11** KL0001 `invalid-yaml`: parse errors become diagnostics; a file with a YAML

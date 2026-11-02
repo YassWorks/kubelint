@@ -1,0 +1,49 @@
+# Reported: no kind.
+apiVersion: apps/v1
+metadata:
+  name: web
+---
+# Reported: no kind, apiVersion not first; the object's name is non-ASCII.
+metadata:
+  name: café
+apiVersion: v1
+---
+# Reported: kind with no value.
+apiVersion: v1
+kind:
+---
+# Reported: an explicit null and a whitespace-only string.
+apiVersion: v1
+kind: ~
+---
+apiVersion: v1
+kind: "  "
+---
+# Reported: flow style.
+{apiVersion: v1, metadata: {name: inline}}
+---
+# Reported: an item of a kind: List with neither field points at its first key.
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: Service
+- apiVersion: v1
+- metadata:
+    name: bare
+---
+# Not reported: both fields set.
+apiVersion: apps/v1
+kind: Deployment
+---
+# Not reported: kind only (KL1001 reports the missing apiVersion).
+kind: Pod
+---
+# Not reported: a kind of the wrong type is a schema problem.
+apiVersion: v1
+kind: [Pod]
+---
+# Not reported: not a Kubernetes object.
+name: build
+on: push
+---
