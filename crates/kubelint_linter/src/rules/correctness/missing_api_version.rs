@@ -72,11 +72,15 @@ impl Rule for MissingApiVersion {
                 format!("{subject} has an empty `apiVersion`"),
             ),
         };
+        let has_kind = kind.is_some_and(|kind| !kind.trim().is_empty());
         let help = match kind.and_then(kubelint_k8s::stable_api_version) {
             Some(api_version) => format!("add `apiVersion: {api_version}`"),
-            None => {
+            None if has_kind => {
                 "add the `apiVersion` of this kind; `kubectl api-resources` lists them".to_owned()
             }
+            None => "add `apiVersion` and `kind`, such as `apiVersion: apps/v1` and \
+                     `kind: Deployment`"
+                .to_owned(),
         };
         let diagnostic = cx.diagnostic(range, message).with_help(help);
         cx.report(diagnostic);
