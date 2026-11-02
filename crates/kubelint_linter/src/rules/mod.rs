@@ -4,12 +4,17 @@
 //! `docs/CONTRIBUTING.md`.
 
 pub mod correctness;
+pub mod syntax;
 
 use crate::Rule;
 
 /// Every built-in rule, in code order. Tests check that codes and names are unique and
 /// well-formed.
-pub static ALL: &[&dyn Rule] = &[&correctness::MissingApiVersion, &correctness::MissingKind];
+pub static ALL: &[&dyn Rule] = &[
+    &syntax::InvalidYaml,
+    &correctness::MissingApiVersion,
+    &correctness::MissingKind,
+];
 
 #[cfg(test)]
 mod tests {

@@ -75,8 +75,8 @@ rustc-style diagnostic for a real rule.
 - [x] **M1-11a** (#17) `kubelint_yaml`: recover from syntax errors: drop the broken document and
   resume parsing at the next document marker, so every other document is still linted.
   _Depends on: M1-02b._
-- [ ] **M1-11b** KL0001 `invalid-yaml`: parse errors become diagnostics, reported by the
-  engine whatever rules are enabled. _Depends on: M1-09b, M1-11a._
+- [x] **M1-11b** (#18) KL0001 `invalid-yaml`: parse errors become diagnostics, reported by
+  the engine whatever rules are enabled. _Depends on: M1-09b, M1-11a._
 - [ ] **M1-12** `kubelint_output`: human renderer with `annotate-snippets` (snippet,
   labels, help, rule code and name, summary line with counts and timing). Color on/off as a
   parameter. Snapshot tests without color. _Depends on: M1-06._
@@ -98,7 +98,8 @@ Engine and user experience:
 
 - [ ] **M2-01** KL0002 `duplicate-key`. _Depends on: M1-13._
 - [ ] **M2-02** Rule selection: resolve selectors (code, code prefix like `KL2`, category,
-  rule name) against the registry; default set; per-rule severity overrides; `fail-on`.
+  rule name) against the registry; default set (KL0001 cannot be deselected); per-rule
+  severity overrides; `fail-on`.
   Pure logic with exhaustive tests. _Depends on: M1-13._
 - [ ] **M2-03** `kubelint_config`: discover `kubelint.toml`/`.kubelint.toml` walking up
   from the working directory; parse with precise errors for unknown keys; `--config
