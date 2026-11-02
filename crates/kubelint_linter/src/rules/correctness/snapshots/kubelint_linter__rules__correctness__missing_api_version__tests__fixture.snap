@@ -56,6 +56,6 @@ error[KL1001]: object has no `apiVersion`
    |
 32 | - metadata:
    |   ^^^^^^^^
-  = help: add the `apiVersion` of this kind; `kubectl api-resources` lists them
+  = help: add `apiVersion` and `kind`, such as `apiVersion: apps/v1` and `kind: Deployment`
 
 8 finding(s) in 12 object(s)
