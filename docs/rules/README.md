@@ -25,7 +25,7 @@ is the default severity. *Task* is the roadmap task that implements it.
 
 | Code | Name | Default | Severity | Status | Task | What it catches |
 | --- | --- | --- | --- | --- | --- | --- |
-| KL0001 | `invalid-yaml` | on (cannot be disabled) | error | planned | M1-11 | The file cannot be parsed as YAML. |
+| KL0001 | `invalid-yaml` | on (cannot be disabled) | error | implemented | M1-11b | The file cannot be parsed as YAML. |
 | KL0002 | `duplicate-key` | on | error | planned | M2-01 | The same key appears twice in one mapping; Kubernetes rejects it or silently keeps the last one. |
 
 ## Correctness

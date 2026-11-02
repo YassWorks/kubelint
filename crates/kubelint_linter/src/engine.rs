@@ -4,6 +4,7 @@ use kubelint_diagnostics::{Diagnostic, Severity};
 use kubelint_source::{FileId, SourceFile};
 
 use crate::context::{LintObject, ObjectContext, RunContext};
+use crate::rules::syntax::InvalidYaml;
 use crate::{Rule, rules};
 
 /// A rule switched on for a run, with the severity it reports at.
@@ -75,8 +76,8 @@ impl Linter {
     /// Lints `files`. A file's [`FileId`] is its index in the slice.
     ///
     /// Files are linted one after another; parallel linting is roadmap task M2-06.
-    /// Syntax errors are not reported yet (M1-11): objects in documents before the first
-    /// error are still checked.
+    /// YAML syntax errors are always reported as KL0001, whatever rules are enabled;
+    /// the other documents of a file with an error are still checked.
     pub fn lint(&self, files: &[SourceFile]) -> LintResult {
         let parses: Vec<_> = files
             .iter()
@@ -95,7 +96,17 @@ impl Linter {
             })
             .collect();
 
-        let mut diagnostics = Vec::new();
+        let mut diagnostics: Vec<Diagnostic> = parses
+            .iter()
+            .enumerate()
+            .flat_map(|(index, parse)| {
+                let file = FileId(u32::try_from(index).unwrap_or(u32::MAX));
+                parse
+                    .errors
+                    .iter()
+                    .map(move |error| InvalidYaml::diagnostic(file, error))
+            })
+            .collect();
         for enabled in &self.rules {
             let meta = enabled.rule.meta();
             for lint_object in &objects {
@@ -258,6 +269,24 @@ mod tests {
         assert_eq!(result.objects_checked, 4);
         let result = Linter::new(vec![EnabledRule::new(&CountReporter)]).lint(&[]);
         assert!(result.diagnostics.is_empty());
+    }
+
+    #[test]
+    fn syntax_errors_are_reported_without_any_rule_enabled() {
+        let files = [
+            SourceFile::new("ok.yaml", "kind: Pod\n"),
+            SourceFile::new("bad.yaml", "a: [\n---\nkind: Service\n---\nb: ]\n"),
+        ];
+        let linter = Linter::new(Vec::new());
+        assert_eq!(linter.lint(&files).objects_checked, 2);
+        let summary = summary(&linter, &files);
+        assert_eq!(summary.len(), 2, "{summary:?}");
+        assert!(
+            summary
+                .iter()
+                .all(|line| line.starts_with("1:") && line.contains(" KL0001 error invalid YAML: ")),
+            "{summary:?}"
+        );
     }
 
     #[test]

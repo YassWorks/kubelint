@@ -1,0 +1,31 @@
+# Not reported: a valid document before the errors is still checked.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: café
+---
+# Reported: a key indented between two levels.
+apiVersion: v1
+kind: ConfigMap
+data:
+  greeting: hello
+ farewell: bye
+---
+# Not reported: parsing resumes at the `---` above, so this document is checked.
+apiVersion: v1
+kind: Service
+---
+# Reported: an unclosed flow sequence; the error is found at the next `---`.
+apiVersion: v1
+kind: Pod
+spec:
+  containers: [{name: web, image: nginx}
+---
+# Reported: a sequence item where a mapping key belongs.
+apiVersion: v1
+kind: Secret
+- item
+---
+# Not reported: the last document is valid.
+apiVersion: apps/v1
+kind: Deployment
