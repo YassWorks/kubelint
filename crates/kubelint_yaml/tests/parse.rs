@@ -87,3 +87,32 @@ fn error_position_is_a_byte_offset() {
     // The error is after the 2-byte `é`, so a character index would be smaller.
     assert!(at >= 7, "error at {at}");
 }
+
+#[test]
+fn error_resumes_at_the_next_document_marker() {
+    // The second and fourth documents are broken; `----` and `---x` are not markers, so
+    // the fourth document runs until `--- # é` and recovery resumes there.
+    insta::assert_snapshot!(dump(
+        "a: 1\n---\nb: [1\nc: 2\n---\nd: é\n---\ne: 1\n- bad\n----\n---x\n--- # é\nf: 1\n"
+    ));
+}
+
+#[test]
+fn error_in_the_last_document_stops_parsing() {
+    let parse = parse("a: 1\n---\nb: [1\nc: 2\n");
+    assert_eq!(parse.documents.len(), 1);
+    assert_eq!(parse.errors.len(), 1);
+}
+
+#[test]
+fn every_broken_document_reports_one_error() {
+    let parse = parse("a: [\n---\nb: ]\n---\nc: 1\n");
+    assert_eq!(parse.errors.len(), 2);
+    assert_eq!(parse.documents.len(), 1);
+    let starts: Vec<u32> = parse
+        .errors
+        .iter()
+        .map(|e| e.range.start().into())
+        .collect();
+    assert!(starts.is_sorted() && starts[1] >= 5, "{starts:?}");
+}

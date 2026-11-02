@@ -1,0 +1,8 @@
+---
+source: crates/kubelint_yaml/tests/comments.rs
+expression: comments(text)
+---
+5..11 "# kept"
+22..32 "# kept too"
+37..46 "# é kept"
+52..58 "# kept"

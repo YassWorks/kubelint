@@ -112,9 +112,12 @@ The exact shape will evolve in M1, but the principles are fixed:
   rarely use anchors, so this is simple and good enough until proven otherwise.
 - **Comments are extracted separately.** The parser does not emit comments. A `#` that
   starts a line or follows whitespace, and is not inside any scalar's range, starts a
-  comment to the end of the line. Suppression comments are read from that list. After
-  a syntax error only comments before the error are reported, because scalar ranges past
-  it are unknown.
+  comment to the end of the line. Suppression comments are read from that list.
+- **Recovery after a syntax error.** `saphyr-parser` cannot continue after an error, so
+  the document containing it is dropped and parsing restarts at the next document marker
+  (`---` at the start of a line, which YAML never allows inside a scalar). Every other
+  document of the file is still linted. Comments between the error and that marker are
+  not reported, because scalar ranges there are unknown.
 - **Quoted scalar ranges end at the closing quote.** `saphyr-parser` reports a quoted
   scalar's span running on over trailing spaces and a trailing comment, so the builder
   finds the closing quote itself.

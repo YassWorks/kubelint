@@ -1,6 +1,6 @@
 use std::fmt::Write as _;
 
-use kubelint_source::TextRange;
+use kubelint_source::{TextRange, TextSize};
 
 /// One YAML document of a stream (`---` separates documents).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -96,7 +96,37 @@ impl Document {
     }
 }
 
+impl Document {
+    /// Moves every range `delta` bytes later, for documents parsed from a suffix of the
+    /// text.
+    pub(crate) fn shifted(mut self, delta: TextSize) -> Self {
+        self.range += delta;
+        if let Some(root) = &mut self.root {
+            root.shift(delta);
+        }
+        self
+    }
+}
+
 impl Node {
+    fn shift(&mut self, delta: TextSize) {
+        self.range += delta;
+        match &mut self.kind {
+            NodeKind::Mapping(entries) => {
+                for entry in entries {
+                    entry.key.shift(delta);
+                    entry.value.shift(delta);
+                }
+            }
+            NodeKind::Sequence(items) => {
+                for item in items {
+                    item.shift(delta);
+                }
+            }
+            NodeKind::Scalar(_) | NodeKind::Null => {}
+        }
+    }
+
     fn dump_into(&self, out: &mut String, depth: usize) {
         let pad = "  ".repeat(depth);
         let range = fmt_range(self.range);

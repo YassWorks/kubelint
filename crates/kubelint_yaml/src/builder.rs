@@ -17,36 +17,96 @@ pub struct ParseError {
     pub range: TextRange,
 }
 
-/// The result of [`parse`]: every document that was read before the first error, that
-/// error if there was one, and the comments.
+/// The result of [`parse`]: every document that could be read, the syntax errors, and
+/// the comments.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Parse {
     /// Completed documents in source order.
     pub documents: Vec<Document>,
-    /// Syntax errors. The parser cannot resume after one, so this has at most one entry.
+    /// Syntax errors in source order, at most one per broken document.
     pub errors: Vec<ParseError>,
-    /// Comments in source order. After a syntax error, only comments before the error
-    /// are reported, because the parser never told us which `#` there were inside
-    /// scalars.
+    /// Comments in source order. Comments between a syntax error and the next document
+    /// marker are not reported, because the parser never told us which `#` there were
+    /// inside scalars.
     pub comments: Vec<Comment>,
 }
 
 /// Parses a YAML stream into documents.
 ///
-/// A syntax error ends parsing: documents before it are kept (so a file with one broken
-/// document still gets linted up to that point), the document containing the error is
-/// dropped.
+/// A syntax error drops the document that contains it. Parsing resumes at the next
+/// document marker (`---` at the start of a line), so a file with one broken document
+/// still gets its other documents linted. A marker at column 0 always starts a new
+/// document in YAML, even inside a block or quoted scalar, which makes this safe.
 ///
 /// ```
 /// let parse = kubelint_yaml::parse("a: 1\n---\nb: 2\n");
 /// assert_eq!(parse.documents.len(), 2);
 /// assert!(parse.errors.is_empty());
 ///
+/// let parse = kubelint_yaml::parse("a: [1\n---\nb: 2\n");
+/// assert_eq!(parse.errors.len(), 1);
+/// assert_eq!(parse.documents.len(), 1);
+///
 /// let parse = kubelint_yaml::parse("a: '#1' # note\n");
 /// assert_eq!(parse.comments.len(), 1);
 /// assert_eq!(parse.comments[0].text, " note");
 /// ```
 pub fn parse(text: &str) -> Parse {
+    let mut out = Parse::default();
+    let mut base = 0;
+    while let Some(segment) = text.get(base..) {
+        let part = parse_segment(segment);
+        let delta = TextSize::new(u32::try_from(base).unwrap_or(u32::MAX));
+        let error_at = part
+            .errors
+            .first()
+            .map(|e| base + usize::from(e.range.start()));
+        out.documents
+            .extend(part.documents.into_iter().map(|d| d.shifted(delta)));
+        out.errors
+            .extend(part.errors.into_iter().map(|e| ParseError {
+                message: e.message,
+                range: e.range + delta,
+            }));
+        out.comments
+            .extend(part.comments.into_iter().map(|c| Comment {
+                range: c.range + delta,
+                text: c.text,
+            }));
+        match error_at.and_then(|at| next_document_marker(text, base, at)) {
+            Some(next) => base = next,
+            None => break,
+        }
+    }
+    out
+}
+
+/// The byte offset of the first document marker (`---` at the start of a line, followed
+/// by whitespace or the end of the text) after `base`, starting with the line that
+/// contains `offset`. The parser often reports an error at the marker that ends the broken
+/// document, so that line counts too.
+fn next_document_marker(text: &str, base: usize, offset: usize) -> Option<usize> {
+    let bytes = text.as_bytes();
+    let offset = offset.min(bytes.len());
+    let mut line_start = bytes[..offset]
+        .iter()
+        .rposition(|&b| b == b'\n')
+        .map_or(0, |i| i + 1);
+    loop {
+        let rest = &bytes[line_start..];
+        let is_marker = rest.starts_with(b"---")
+            && rest
+                .get(3)
+                .is_none_or(|b| matches!(b, b' ' | b'\t' | b'\r' | b'\n'));
+        if is_marker && line_start > base {
+            return Some(line_start);
+        }
+        line_start += rest.iter().position(|&b| b == b'\n')? + 1;
+    }
+}
+
+/// Parses `text` until the end or its first syntax error.
+fn parse_segment(text: &str) -> Parse {
     let offsets = ByteOffsets::new(text);
     let mut builder = Builder::new(text, &offsets);
     let mut out = Parse::default();

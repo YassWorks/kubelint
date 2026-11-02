@@ -72,16 +72,18 @@ rustc-style diagnostic for a real rule.
 - [x] **M1-10** (#16) First rules: KL1001 `missing-api-version` and KL1002 `missing-kind`
   (one PR, they are mirror images). Establishes the rule file layout, fixture layout and
   snapshot style that every later rule copies. _Depends on: M1-09b._
-- [ ] **M1-11** KL0001 `invalid-yaml`: parse errors become diagnostics; a file with a YAML
-  error still reports findings for its other valid documents where possible.
-  _Depends on: M1-09b._
+- [x] **M1-11a** (#17) `kubelint_yaml`: recover from syntax errors: drop the broken document and
+  resume parsing at the next document marker, so every other document is still linted.
+  _Depends on: M1-02b._
+- [ ] **M1-11b** KL0001 `invalid-yaml`: parse errors become diagnostics, reported by the
+  engine whatever rules are enabled. _Depends on: M1-09b, M1-11a._
 - [ ] **M1-12** `kubelint_output`: human renderer with `annotate-snippets` (snippet,
   labels, help, rule code and name, summary line with counts and timing). Color on/off as a
   parameter. Snapshot tests without color. _Depends on: M1-06._
 - [ ] **M1-13** `kubelint` CLI: `kubelint check [PATHS]...` with `clap`; file discovery
   via `ignore` (`*.yaml`, `*.yml`, honors `.gitignore`); `-` reads stdin;
   `--color auto|always|never`; exit codes 0/1/2. CLI snapshot tests with `assert_cmd`.
-  _Depends on: M1-10, M1-11, M1-12._
+  _Depends on: M1-10, M1-11b, M1-12._
 - [ ] **M1-14** CLI: skip Helm chart templates (a directory with `Chart.yaml` has its
   `templates/` skipped with one friendly note suggesting `helm template ... | kubelint
   check -`); summary line reports files checked, objects checked, files skipped.
