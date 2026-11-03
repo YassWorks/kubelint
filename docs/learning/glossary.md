@@ -232,3 +232,9 @@ line, but only when the `#` begins the line or follows a space or tab: in `a#b` 
 `http://x/#top` it is part of the value. A `#` inside a quoted string (`'a #b'`) or a block
 scalar (`|` or `>` followed by indented lines) is text, not a comment. kubelint reads
 suppression comments such as `# kubelint-disable-next-line` from this list of comments.
+
+**YAML anchors and aliases.** `&name` marks a node (an anchor) and `*name` repeats it
+elsewhere (an alias), so `x: &base {a: 1}` and `y: *base` give `y` the same mapping as
+`x`. kubelint copies the anchored node to each alias, keeping the anchor's positions, so
+a finding inside an aliased node points at the original text. The merge key `<<: *base`
+copies the keys of `base` into the current mapping.
