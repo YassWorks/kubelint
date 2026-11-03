@@ -1,0 +1,6 @@
+{{- if .Values.service }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+{{- end }}

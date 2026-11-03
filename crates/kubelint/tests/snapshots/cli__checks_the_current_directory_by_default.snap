@@ -22,5 +22,7 @@ error[KL0001]: invalid YAML: while parsing a block mapping, did not find expecte
   = help: fix the YAML syntax; kubelint skips this document until it parses
   = note: rule `invalid-yaml`
 
-Found 2 errors. Checked 2 files and 2 objects in [TIME].
+Found 2 errors. Checked 3 files and 2 objects, skipped 3 files in [TIME].
 --- stderr
+note: skipped 3 files of the Helm chart `charts/web`; kubelint checks rendered manifests, not templates
+  = help: run `helm template charts/web | kubelint check -`
