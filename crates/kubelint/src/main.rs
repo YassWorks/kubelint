@@ -112,10 +112,7 @@ fn check(args: &CheckArgs) -> anyhow::Result<ExitCode> {
         .context("cannot write the output")?;
 
     // `fail-on` is `warning` until configuration exists (M2-02).
-    let failed = result
-        .diagnostics
-        .iter()
-        .any(|d| d.severity >= Severity::Warning);
+    let failed = kubelint_linter::fails(&result.diagnostics, Severity::Warning);
     Ok(ExitCode::from(if failed { EXIT_FINDINGS } else { 0 }))
 }
 

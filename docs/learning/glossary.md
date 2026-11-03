@@ -207,6 +207,11 @@ way it would format it.
 **SARIF.** A standard JSON format for static analysis results. GitHub reads it to show
 findings in the "Code scanning" tab and inline on pull requests.
 
+**Rule selector.** A string that names one or more rules in configuration: a category
+(`security`), a code prefix (`KL2`), a code (`KL2001`) or a name. Categories and prefixes
+only cover rules enabled by default; a rule that ships disabled must be named by its code
+or name (ADR 0009).
+
 **Snapshot test.** A test that saves the output of some code to a file (a "snapshot") and
 fails if the output ever changes. kubelint uses the `insta` crate for this. When output
 changes on purpose, you review the new snapshot and accept it.
