@@ -12,6 +12,7 @@ use crate::Rule;
 /// well-formed.
 pub static ALL: &[&dyn Rule] = &[
     &syntax::InvalidYaml,
+    &syntax::DuplicateKey,
     &correctness::MissingApiVersion,
     &correctness::MissingKind,
 ];

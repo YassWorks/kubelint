@@ -97,7 +97,7 @@ file, suppressions and machine-readable output that make kubelint useful in CI.
 
 Engine and user experience:
 
-- [ ] **M2-01** KL0002 `duplicate-key`. _Depends on: M1-13._
+- [x] **M2-01** KL0002 `duplicate-key`. _Depends on: M1-13._
 - [ ] **M2-02** Rule selection: resolve selectors (code, code prefix like `KL2`, category,
   rule name) against the registry; default set (KL0001 cannot be deselected); per-rule
   severity overrides; `fail-on`.

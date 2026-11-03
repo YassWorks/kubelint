@@ -1,0 +1,70 @@
+# Reported: a top-level key given twice.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: settings
+data:
+  mode: fast
+data:
+  mode: slow
+---
+# Reported: a nested key given twice; the message names the path to its mapping.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  template:
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.27
+          image: nginx:latest
+---
+# Reported twice: a key given three times; both repeats point back at the first.
+apiVersion: v1
+kind: Service
+metadata:
+  name: café
+  labels:
+    app: a
+    app: b
+    app: c
+---
+# Reported: quoting does not make a key different, and empty values count.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quoted
+  annotations:
+    "example.com/owner": team-a
+    example.com/owner: team-b
+data:
+  empty:
+  empty:
+---
+# Reported: flow style.
+apiVersion: v1
+kind: Pod
+metadata: {name: flow, name: flow2}
+---
+# Not reported: the same key in different mappings, and keys that differ in case.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sidecars
+  labels:
+    App: web
+    app: web
+spec:
+  containers:
+    - name: web
+      image: nginx:1.27
+    - name: proxy
+      image: envoy:1.31
+---
+# Not reported: not a Kubernetes object, kubelint does not check it.
+build:
+  steps: [compile]
+build:
+  steps: [test]
