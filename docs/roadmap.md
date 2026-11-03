@@ -18,8 +18,8 @@ Rules for editing this file:
 
 ## Current focus
 
-**M1: Walking skeleton.** Goal: `kubelint check <path>` runs end to end and prints a
-rustc-style diagnostic for a real rule.
+**M2: Configuration, output formats and the v0.1 rule set.** Goal: the rules, config
+file, suppressions and machine-readable output that make kubelint useful in CI.
 
 ---
 
@@ -30,7 +30,7 @@ rustc-style diagnostic for a real rule.
 - [x] **M0-03** CI (fmt, clippy, tests on Linux/macOS/Windows, docs) and PR template.
 - [x] **M0-04** Agent playbook, owner inbox, journal, concept glossary.
 
-## M1: Walking skeleton (target: 2026-11-06)
+## M1: Walking skeleton (done, 2026-11-03)
 
 - [x] **M1-01** (#2) `kubelint_source`: `SourceFile` (path + text), `FileId`, re-export
   `TextRange`/`TextSize` from `text-size`, and `LineIndex` (byte offset ↔ 1-based line and
@@ -89,7 +89,7 @@ rustc-style diagnostic for a real rule.
   template ... | kubelint check -`); summary line reports files checked, objects checked,
   files skipped.
   _Depends on: M1-13._
-- [ ] **M1-15** Docs: README quickstart with real output from the binary; verify
+- [x] **M1-15** Docs: README quickstart with real output from the binary; verify
   `CONTRIBUTING.md` "Adding a rule" against the real code and fix any drift.
   _Depends on: M1-13._
 
