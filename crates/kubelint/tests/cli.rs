@@ -15,8 +15,13 @@ fn project() -> &'static Path {
 /// Runs `kubelint` in the fixture project and renders exit code, stdout and stderr, with
 /// the timing replaced so snapshots are stable.
 fn run(args: &[&str], stdin: Option<&str>) -> String {
+    run_in(project(), args, stdin)
+}
+
+/// Like [`run`], with `dir` as the working directory.
+fn run_in(dir: &Path, args: &[&str], stdin: Option<&str>) -> String {
     let mut cmd = Command::cargo_bin("kubelint").expect("binary is built");
-    cmd.current_dir(project()).args(args).env_remove("NO_COLOR");
+    cmd.current_dir(dir).args(args).env_remove("NO_COLOR");
     if let Some(stdin) = stdin {
         cmd.write_stdin(stdin);
     }
@@ -108,4 +113,32 @@ fn color_always_and_never() {
     assert!(!run(&["check", "deploy", "--color", "never"], None).contains('\u{1b}'));
     // Output to a pipe is not a terminal, so `auto` means no color.
     assert!(!run(&["check", "deploy"], None).contains('\u{1b}'));
+}
+
+#[test]
+fn helm_chart_templates_and_chart_yaml_are_skipped_even_when_named() {
+    insta::assert_snapshot!(run(
+        &["check", "charts/web/Chart.yaml", "charts/web/templates/service.yaml"],
+        None
+    ), @r"
+    exit: 0
+    --- stdout
+    All checks passed. Checked 0 files and 0 objects, skipped 2 files in [TIME].
+    --- stderr
+    note: skipped 2 files of the Helm chart `charts/web`; kubelint checks rendered manifests, not templates
+      = help: run `helm template charts/web | kubelint check -`
+    ");
+}
+
+#[test]
+fn helm_chart_is_found_from_inside_its_templates() {
+    let templates = project().join("charts/web/templates");
+    insta::assert_snapshot!(run_in(&templates, &["check"], None), @r"
+    exit: 0
+    --- stdout
+    All checks passed. Checked 0 files and 0 objects, skipped 2 files in [TIME].
+    --- stderr
+    note: skipped 2 files of the Helm chart `..`; kubelint checks rendered manifests, not templates
+      = help: run `helm template .. | kubelint check -`
+    ");
 }

@@ -14,6 +14,8 @@ pub struct Summary {
     pub files_checked: usize,
     /// How many Kubernetes objects were linted.
     pub objects_checked: usize,
+    /// How many files were found but deliberately not linted (Helm chart templates).
+    pub files_skipped: usize,
     /// How long the run took. `None` leaves the timing out, which keeps test output
     /// stable.
     pub elapsed: Option<Duration>,
@@ -50,7 +52,7 @@ impl HumanRenderer {
     ///     "`Pod` object has no `apiVersion`",
     ///     Label::new(FileId(0), range),
     /// )];
-    /// let summary = Summary { files_checked: 1, objects_checked: 1, elapsed: None };
+    /// let summary = Summary { files_checked: 1, objects_checked: 1, files_skipped: 0, elapsed: None };
     /// let out = HumanRenderer::new(false).render(&files, &diagnostics, |_| None, &summary);
     /// assert!(out.starts_with("error[KL1001]: `Pod` object has no `apiVersion`\n"));
     /// assert!(out.ends_with("Found 1 error. Checked 1 file and 1 object.\n"));
@@ -159,7 +161,8 @@ fn path_string(file: &SourceFile) -> String {
 }
 
 /// `Found 2 errors and 1 warning. Checked 3 files and 12 objects in 42ms.`, or `All
-/// checks passed.` first when there is nothing to report.
+/// checks passed.` first when there is nothing to report. Skipped files, if any, come
+/// before the timing: `Checked 3 files and 12 objects, skipped 2 files in 42ms.`
 fn summary_line(diagnostics: &[Diagnostic], summary: &Summary) -> String {
     let parts: Vec<String> = [
         (Severity::Error, "error"),
@@ -186,6 +189,9 @@ fn summary_line(diagnostics: &[Diagnostic], summary: &Summary) -> String {
         plural(summary.files_checked, "file"),
         plural(summary.objects_checked, "object")
     );
+    if summary.files_skipped > 0 {
+        let _ = write!(line, ", skipped {}", plural(summary.files_skipped, "file"));
+    }
     if let Some(elapsed) = summary.elapsed {
         let _ = write!(line, " in {}", format_duration(elapsed));
     }

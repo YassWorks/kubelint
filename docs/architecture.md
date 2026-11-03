@@ -56,7 +56,7 @@ All crates live in `crates/` and are named `kubelint_*` (the CLI binary is just
 | `kubelint_config` | Config file discovery and parsing (`kubelint.toml`, `.kubelint.toml`), CLI overrides, resolved `Settings`. Knows rule *selectors* as strings, not the rule registry. | source |
 | `kubelint_linter` | `Rule` trait, `RuleMeta`, `Category`, the static rule registry, selector resolution, suppression comments, the lint engine, all built-in rules, and the rule test harness. | source, yaml, k8s, diagnostics, config |
 | `kubelint_output` | Renderers: `human` (`annotate-snippets`), `json`, `sarif`, `github`. | source, diagnostics |
-| `kubelint` | CLI: `clap` argument parsing, file discovery (`ignore` crate), stdin, orchestration, exit codes. Thin. | all of the above |
+| `kubelint` | CLI: `clap` argument parsing, file discovery (`ignore` crate, Helm chart detection), stdin, orchestration, exit codes. Thin. | all of the above |
 
 **Layering rule:** dependencies point downward in the table only. Lower crates never know
 about higher ones. If a lower crate seems to need something from a higher one, the type

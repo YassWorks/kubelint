@@ -84,9 +84,10 @@ rustc-style diagnostic for a real rule.
   via `ignore` (`*.yaml`, `*.yml`, honors `.gitignore`); `-` reads stdin;
   `--color auto|always|never`; exit codes 0/1/2. CLI snapshot tests with `assert_cmd`.
   _Depends on: M1-10, M1-11b, M1-12._
-- [ ] **M1-14** CLI: skip Helm chart templates (a directory with `Chart.yaml` has its
-  `templates/` skipped with one friendly note suggesting `helm template ... | kubelint
-  check -`); summary line reports files checked, objects checked, files skipped.
+- [x] **M1-14** CLI: skip Helm chart templates (a directory with `Chart.yaml` has its
+  `templates/` and its `Chart.yaml` skipped with one friendly note suggesting `helm
+  template ... | kubelint check -`); summary line reports files checked, objects checked,
+  files skipped.
   _Depends on: M1-13._
 - [ ] **M1-15** Docs: README quickstart with real output from the binary; verify
   `CONTRIBUTING.md` "Adding a rule" against the real code and fix any drift.

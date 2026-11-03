@@ -18,7 +18,7 @@ use kubelint_linter::{Linter, rules};
 use kubelint_output::{HumanRenderer, Summary};
 use kubelint_source::SourceFile;
 
-use crate::discover::Input;
+use crate::discover::{Input, SkippedChart};
 
 /// A fast, friendly linter for Kubernetes manifests.
 #[derive(Debug, Parser)]
@@ -84,12 +84,17 @@ fn main() -> ExitCode {
 
 fn check(args: &CheckArgs) -> anyhow::Result<ExitCode> {
     let start = Instant::now();
-    let files = read_inputs(&discover::inputs(&args.paths)?)?;
+    let discovery = discover::inputs(&args.paths)?;
+    if let Some(note) = helm_note(&discovery.skipped_charts) {
+        eprintln!("{note}");
+    }
+    let files = read_inputs(&discovery.inputs)?;
     let linter = Linter::with_default_rules();
     let result = linter.lint(&files);
     let summary = Summary {
         files_checked: files.len(),
         objects_checked: result.objects_checked,
+        files_skipped: discovery.files_skipped(),
         elapsed: Some(start.elapsed()),
     };
     let color = match args.color {
@@ -133,6 +138,30 @@ fn read_inputs(inputs: &[Input]) -> anyhow::Result<Vec<SourceFile>> {
             }
         })
         .collect()
+}
+
+/// One note for all skipped Helm charts, telling the user how to lint them anyway.
+fn helm_note(charts: &[SkippedChart]) -> Option<String> {
+    let files: usize = charts.iter().map(|chart| chart.files).sum();
+    let files = if files == 1 {
+        "1 file".to_owned()
+    } else {
+        format!("{files} files")
+    };
+    let dir = |chart: &SkippedChart| chart.dir.to_string_lossy().replace('\\', "/");
+    let (what, chart) = match charts {
+        [] => return None,
+        [one] => (format!("the Helm chart `{}`", dir(one)), dir(one)),
+        many => {
+            let dirs: Vec<String> = many.iter().map(|c| format!("`{}`", dir(c))).collect();
+            let what = format!("{} Helm charts ({})", many.len(), dirs.join(", "));
+            (what, "<chart>".to_owned())
+        }
+    };
+    Some(format!(
+        "note: skipped {files} of {what}; kubelint checks rendered manifests, not templates\n  \
+         = help: run `helm template {chart} | kubelint check -`"
+    ))
 }
 
 fn rule_name(code: &str) -> Option<&'static str> {

@@ -1,7 +1,7 @@
 //! Turns the paths given on the command line into the files to lint.
 
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::collections::{HashMap, HashSet};
+use std::path::{Component, Path, PathBuf};
 
 use anyhow::{Context as _, bail};
 
@@ -14,6 +14,31 @@ pub enum Input {
     File(PathBuf),
 }
 
+/// What [`inputs`] found.
+#[derive(Debug, Default)]
+pub struct Discovery {
+    /// The inputs to lint, in order, without duplicates.
+    pub inputs: Vec<Input>,
+    /// Helm charts whose files were skipped, in the order they were first met.
+    pub skipped_charts: Vec<SkippedChart>,
+}
+
+impl Discovery {
+    /// How many files were skipped, over all charts.
+    pub fn files_skipped(&self) -> usize {
+        self.skipped_charts.iter().map(|chart| chart.files).sum()
+    }
+}
+
+/// A Helm chart whose files were not linted.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SkippedChart {
+    /// The chart directory (the one holding `Chart.yaml`), as the user would write it.
+    pub dir: PathBuf,
+    /// How many of its files were skipped.
+    pub files: usize,
+}
+
 /// Expands `paths` into inputs, in order, without duplicates.
 ///
 /// - `-` is standard input (at most once).
@@ -21,32 +46,45 @@ pub enum Input {
 /// - A directory is searched recursively for `*.yaml` and `*.yml` files, skipping hidden
 ///   files and whatever `.gitignore`, `.ignore` and global git excludes list (also outside
 ///   a git repository). The files of one directory are sorted by path.
+/// - Helm chart files are skipped, even when named: a chart's `Chart.yaml` and everything
+///   under its `templates/` directory. Templates are not valid YAML until `helm template`
+///   renders them, and `Chart.yaml` is not a Kubernetes object.
 /// - A path that does not exist is an error.
-pub fn inputs(paths: &[PathBuf]) -> anyhow::Result<Vec<Input>> {
-    let mut inputs = Vec::new();
+pub fn inputs(paths: &[PathBuf]) -> anyhow::Result<Discovery> {
+    let mut discovery = Discovery::default();
     let mut seen = HashSet::new();
-    let mut add = |inputs: &mut Vec<Input>, file: PathBuf| {
-        if seen.insert(file.clone()) {
-            inputs.push(Input::File(file));
+    let mut helm = HelmDetector::new();
+    let mut add = |discovery: &mut Discovery, file: PathBuf| {
+        if !seen.insert(file.clone()) {
+            return;
+        }
+        match helm.chart_of(&file) {
+            Some(dir) => match discovery.skipped_charts.iter_mut().find(|c| c.dir == dir) {
+                Some(chart) => chart.files += 1,
+                None => discovery
+                    .skipped_charts
+                    .push(SkippedChart { dir, files: 1 }),
+            },
+            None => discovery.inputs.push(Input::File(file)),
         }
     };
     for path in paths {
         if path.as_os_str() == "-" {
-            if inputs.contains(&Input::Stdin) {
+            if discovery.inputs.contains(&Input::Stdin) {
                 bail!("`-` (standard input) can only be given once");
             }
-            inputs.push(Input::Stdin);
+            discovery.inputs.push(Input::Stdin);
         } else if path.is_dir() {
             for file in yaml_files(path)? {
-                add(&mut inputs, file);
+                add(&mut discovery, file);
             }
         } else if path.exists() {
-            add(&mut inputs, path.clone());
+            add(&mut discovery, path.clone());
         } else {
             bail!("{}: no such file or directory", path.display());
         }
     }
-    Ok(inputs)
+    Ok(discovery)
 }
 
 fn yaml_files(dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
@@ -70,4 +108,166 @@ fn yaml_files(dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
 fn is_yaml(path: &Path) -> bool {
     path.extension()
         .is_some_and(|ext| ext.eq_ignore_ascii_case("yaml") || ext.eq_ignore_ascii_case("yml"))
+}
+
+/// Finds the Helm chart a file belongs to, remembering which directories are charts.
+///
+/// A chart is a directory holding a `Chart.yaml` file (Helm accepts no other name). Its
+/// files kubelint skips are `Chart.yaml` itself and everything under `templates/`, at any
+/// depth. Other chart files (`values.yaml`, `crds/`) are linted as usual: they hold no
+/// templates, and documents that are not Kubernetes objects are ignored anyway.
+struct HelmDetector {
+    /// The working directory, to look above relative paths (`kubelint check .` run inside
+    /// `templates/`). `None` if it cannot be read, then only the path itself is searched.
+    cwd: Option<PathBuf>,
+    /// Whether a directory (absolute when `cwd` is known) holds a `Chart.yaml`.
+    is_chart: HashMap<PathBuf, bool>,
+}
+
+impl HelmDetector {
+    fn new() -> Self {
+        Self {
+            cwd: std::env::current_dir().ok(),
+            is_chart: HashMap::new(),
+        }
+    }
+
+    /// The chart directory if `file` is a chart file kubelint skips, written relative to
+    /// the same base as `file`.
+    fn chart_of(&mut self, file: &Path) -> Option<PathBuf> {
+        // Without `.` components, `file` and `full` end in the same components, so the
+        // n-th ancestor of one is the n-th ancestor of the other.
+        let file: PathBuf = file
+            .components()
+            .filter(|c| *c != Component::CurDir)
+            .collect();
+        let full = match &self.cwd {
+            Some(cwd) => cwd.join(&file),
+            None => file.clone(),
+        };
+        let chart_depth = if full.file_name().is_some_and(|name| name == "Chart.yaml") {
+            Some(1)
+        } else {
+            self.templates_chart_depth(&full)
+        }?;
+        // Show the chart relative to the same base as `file`. A relative `file` has
+        // `known` ancestors before the empty path; a chart above that is `..`, `../..`.
+        let known = file.ancestors().count() - 1;
+        let dir = match file.ancestors().nth(chart_depth) {
+            Some(dir) if dir.as_os_str().is_empty() => PathBuf::from("."),
+            Some(dir) => dir.to_path_buf(),
+            None => (known..chart_depth).map(|_| "..").collect(),
+        };
+        Some(dir)
+    }
+
+    /// For a file under `<chart>/templates/`, how many levels up the chart directory is.
+    fn templates_chart_depth(&mut self, full: &Path) -> Option<usize> {
+        for (depth, dir) in full.ancestors().enumerate().skip(1) {
+            if dir.file_name().is_some_and(|name| name == "templates") {
+                let chart = dir.parent()?;
+                if self.is_chart(chart) {
+                    return Some(depth + 1);
+                }
+            }
+        }
+        None
+    }
+
+    fn is_chart(&mut self, dir: &Path) -> bool {
+        *self
+            .is_chart
+            .entry(dir.to_path_buf())
+            .or_insert_with(|| dir.join("Chart.yaml").is_file())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A temporary directory with the given files (empty), removed on drop.
+    struct Tree(PathBuf);
+
+    impl Tree {
+        fn new(name: &str, files: &[&str]) -> Self {
+            let root = std::env::temp_dir().join(format!("kubelint-discover-{name}"));
+            let _ = std::fs::remove_dir_all(&root);
+            for file in files {
+                let path = root.join(file);
+                std::fs::create_dir_all(path.parent().expect("has a parent")).expect("mkdir");
+                std::fs::write(path, "").expect("write");
+            }
+            Self(root)
+        }
+    }
+
+    impl Drop for Tree {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    fn detector() -> HelmDetector {
+        HelmDetector {
+            cwd: None,
+            is_chart: HashMap::new(),
+        }
+    }
+
+    #[test]
+    fn templates_and_chart_yaml_of_a_chart_are_skipped() {
+        let tree = Tree::new(
+            "chart",
+            &[
+                "web/Chart.yaml",
+                "web/values.yaml",
+                "web/templates/deploy.yaml",
+                "web/templates/sub/svc.yaml",
+                "web/crds/crd.yaml",
+            ],
+        );
+        let web = tree.0.join("web");
+        let mut helm = detector();
+        assert_eq!(helm.chart_of(&web.join("Chart.yaml")), Some(web.clone()));
+        let deploy = web.join("templates/deploy.yaml");
+        assert_eq!(helm.chart_of(&deploy), Some(web.clone()));
+        let nested = web.join("templates/sub/svc.yaml");
+        assert_eq!(helm.chart_of(&nested), Some(web.clone()));
+        assert_eq!(helm.chart_of(&web.join("values.yaml")), None);
+        assert_eq!(helm.chart_of(&web.join("crds/crd.yaml")), None);
+    }
+
+    #[test]
+    fn templates_outside_a_chart_are_linted() {
+        let tree = Tree::new("no-chart", &["app/templates/deploy.yaml"]);
+        let mut helm = detector();
+        assert_eq!(
+            helm.chart_of(&tree.0.join("app/templates/deploy.yaml")),
+            None
+        );
+    }
+
+    #[test]
+    fn chart_is_shown_relative_to_the_working_directory() {
+        let tree = Tree::new("relative", &["web/Chart.yaml", "web/templates/a.yaml"]);
+        let mut helm = HelmDetector {
+            cwd: Some(tree.0.clone()),
+            is_chart: HashMap::new(),
+        };
+        let chart = helm.chart_of(Path::new("./web/templates/a.yaml"));
+        assert_eq!(chart, Some(PathBuf::from("web")));
+        assert_eq!(
+            helm.chart_of(Path::new("web/Chart.yaml")),
+            Some("web".into())
+        );
+
+        // Run from inside the chart, and from inside `templates/`.
+        helm.cwd = Some(tree.0.join("web"));
+        let chart = helm.chart_of(Path::new("templates/a.yaml"));
+        assert_eq!(chart, Some(PathBuf::from(".")));
+        helm.cwd = Some(tree.0.join("web/templates"));
+        let chart = helm.chart_of(Path::new("a.yaml"));
+        assert_eq!(chart, Some(PathBuf::from("..")));
+    }
 }

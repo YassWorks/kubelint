@@ -53,6 +53,7 @@ fn error_with_label_help_and_rule_name() {
     let summary = Summary {
         files_checked: 2,
         objects_checked: 2,
+        files_skipped: 0,
         elapsed: None,
     };
     insta::assert_snapshot!(render(&files, &diagnostics, summary));
@@ -85,6 +86,7 @@ fn secondary_labels_in_the_same_and_another_file() {
     let summary = Summary {
         files_checked: 2,
         objects_checked: 2,
+        files_skipped: 0,
         elapsed: None,
     };
     insta::assert_snapshot!(render(&files, &diagnostics, summary));
@@ -115,6 +117,7 @@ fn empty_and_multi_line_ranges_and_unknown_rule_name() {
     let summary = Summary {
         files_checked: 1,
         objects_checked: 0,
+        files_skipped: 0,
         elapsed: None,
     };
     insta::assert_snapshot!(render(&files, &diagnostics, summary));
@@ -128,6 +131,7 @@ fn summary_lines() {
     let summary = |elapsed| Summary {
         files_checked: 3,
         objects_checked: 1,
+        files_skipped: 0,
         elapsed,
     };
     let last_line = |diagnostics: &[Diagnostic], elapsed| {
@@ -159,6 +163,27 @@ fn summary_lines() {
             None
         ),
         "Found 1 error, 1 warning and 2 info. Checked 3 files and 1 object."
+    );
+    let skipped = |files_skipped| Summary {
+        files_checked: 1,
+        objects_checked: 2,
+        files_skipped,
+        elapsed: Some(Duration::from_millis(5)),
+    };
+    let last_line = |summary| {
+        render(&files, &[], summary)
+            .lines()
+            .last()
+            .unwrap_or_default()
+            .to_owned()
+    };
+    assert_eq!(
+        last_line(skipped(1)),
+        "All checks passed. Checked 1 file and 2 objects, skipped 1 file in 5ms."
+    );
+    assert_eq!(
+        last_line(skipped(4)),
+        "All checks passed. Checked 1 file and 2 objects, skipped 4 files in 5ms."
     );
 }
 

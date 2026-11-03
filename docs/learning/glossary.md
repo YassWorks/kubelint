@@ -93,6 +93,12 @@ user, forbid privilege escalation, drop Linux capabilities, read-only filesystem
 **Spec.** The `spec` block: the desired state of the object. Its shape depends on the
 `kind`.
 
+**Helm chart.** A package of Kubernetes manifests for the Helm tool: a directory with a
+`Chart.yaml` (the chart's name and version), a `values.yaml` (settings) and a
+`templates/` directory. Templates contain `{{ ... }}` placeholders, so they are not valid
+Kubernetes YAML until `helm template` renders them. kubelint skips a chart's templates and
+its `Chart.yaml` and suggests piping the rendered output in instead.
+
 ## Rust basics
 
 **Cargo, `Cargo.toml`, `Cargo.lock`.** Cargo is Rust's build tool and package manager.
