@@ -11,9 +11,11 @@ mod context;
 mod engine;
 mod rule;
 pub mod rules;
+mod selection;
 #[cfg(test)]
 mod testing;
 
 pub use context::{LintObject, ObjectContext, RunContext};
 pub use engine::{EnabledRule, LintResult, Linter};
 pub use rule::{Category, Rule, RuleMeta};
+pub use selection::{RuleSelection, SelectionError, SelectionErrorKind, SelectorList, fails};

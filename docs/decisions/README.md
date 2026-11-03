@@ -44,3 +44,4 @@ deliberately instead of drifting.
 | 0006 | [Testing strategy](0006-testing-strategy.md) | Accepted |
 | 0007 | [Toolchain and lint policy](0007-toolchain-and-lint-policy.md) | Accepted |
 | 0008 | [Autonomous development workflow](0008-autonomous-workflow.md) | Accepted |
+| 0009 | [Rule selection semantics](0009-rule-selection-semantics.md) | Accepted |
