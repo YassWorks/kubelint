@@ -49,38 +49,56 @@ INSTA_UPDATE=always cargo test --workspace
 
 ## Adding a rule
 
-> This walkthrough describes the intended pattern. It becomes exact once roadmap task
-> M1-10 lands the first rule; M1-15 checks this section against the real code.
+KL1001 `missing-api-version`
+(`crates/kubelint_linter/src/rules/correctness/missing_api_version.rs`) is a complete,
+small example to copy.
 
 1. **Find or allocate the code.** Look the rule up in [`rules/README.md`](rules/README.md).
    If it is not there, add a row with the next free code in the right category and
    status `planned`.
 2. **Write the fixture first:**
-   `crates/kubelint_linter/resources/test/fixtures/<category>/<CODE>.yaml`. Put each case
-   in its own YAML document (`---`) with a comment above it. Include cases that must be
-   reported and cases that must not.
-3. **Write the rule** in `crates/kubelint_linter/src/rules/<category>/<rule_name>.rs`:
-   a unit struct implementing `Rule`, with a `RuleMeta` (code, name, category, default
-   severity, default enabled, summary, explanation). Use the `kubelint_k8s` helpers
-   (for example `pod_spec().containers()`) instead of walking YAML by hand.
-4. **Register it** with one line in `crates/kubelint_linter/src/rules/mod.rs`.
-5. **Add the snapshot test** in the rule's `tests` module
-   (`insta::assert_snapshot!(crate::testing::check_fixture(&RuleStruct))`), run
-   `INSTA_UPDATE=always cargo test -p kubelint_linter`, and read the snapshot: every
-   reported position and message should be exactly what you expect.
+   `crates/kubelint_linter/resources/test/fixtures/<category>/<CODE>.yaml`, where
+   `<category>` is `syntax`, `correctness`, `security` or `reliability`. Put each case in
+   its own YAML document (`---`) with a comment above it saying `Reported: ...` or
+   `Not reported: ...` and why. Include cases that must be reported and cases that must
+   not.
+3. **Write the rule** in `crates/kubelint_linter/src/rules/<category>/<rule_name>.rs`
+   (the name in snake case): a unit struct implementing `Rule`, with a `static META:
+   RuleMeta` (code, name, category, default severity, default enabled, summary,
+   explanation). `check_object` gets an `ObjectContext`: read the object with
+   `cx.object()`, build a finding with `cx.diagnostic(range, message)` plus
+   `.with_help(...)`, and hand it to `cx.report(...)`. The context fills in the code and
+   the configured severity. Use the `kubelint_k8s` helpers (for example
+   `pod_spec().containers()`) instead of walking YAML by hand.
+4. **Register it** in two places: `mod <rule_name>;` and `pub use` of the struct in the
+   category module (`src/rules/<category>/mod.rs`), and one line in `ALL` in
+   `src/rules/mod.rs`, which is kept in code order (a test checks it).
+5. **Add the snapshot test** in the rule's `tests` module:
+
+   ```rust
+   #[test]
+   fn fixture() {
+       insta::assert_snapshot!(crate::testing::check_fixture(&RuleStruct));
+   }
+   ```
+
+   Run `INSTA_UPDATE=always cargo test -p kubelint_linter` and read the new file under
+   `src/rules/<category>/snapshots/`: every reported position and message should be
+   exactly what you expect, and every `Not reported` case should be absent.
 6. **Update the catalog row** status to `implemented` and tick the roadmap task.
 
-A good diagnostic message names the object and the field, says what is wrong, and the
-help text says how to fix it:
+A good diagnostic message names the object and the field and says what is wrong; the
+help says how to fix it. This is how `kubelint check` prints one:
 
 ```text
-error[KL2001]: container "api" runs in privileged mode (privileged-container)
-  --> deploy.yaml:24:23
-   |
-24 |             privileged: true
-   |                         ^^^^ this gives the container full access to the node
-   |
-   = help: remove `privileged: true`, or grant only the capabilities it needs
+error[KL1001]: `Deployment` object has no `apiVersion`
+ --> k8s/web.yaml:1:1
+  |
+1 | kind: Deployment
+  | ^^^^^^^^^^^^^^^^
+  |
+  = help: add `apiVersion: apps/v1`
+  = note: rule `missing-api-version`
 ```
 
 ## Pull requests

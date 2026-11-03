@@ -3,31 +3,75 @@
 **A fast, friendly linter for Kubernetes manifests.** The Ruff/ESLint experience, for
 Kubernetes YAML.
 
-> **Status: pre-alpha.** Nothing to install yet. The first release (v0.1) is planned for
-> late November 2026. Follow progress in [`docs/roadmap.md`](docs/roadmap.md).
+> **Status: pre-alpha.** No release yet: build it from source (below). The first release
+> (v0.1) is planned for late November 2026. Follow progress in
+> [`docs/roadmap.md`](docs/roadmap.md).
 
-```text
-$ kubelint check deploy.yaml
-error[KL2001]: container "api" runs in privileged mode (privileged-container)
-  --> deploy.yaml:24:23
-   |
-24 |             privileged: true
-   |                         ^^^^ this gives the container full access to the node
-   |
-   = help: remove `privileged: true`, or grant only the capabilities it needs
+## Quickstart
 
-warning[KL3001]: container "api" has no memory limit (missing-memory-limit)
-  --> deploy.yaml:18:13
-   |
-18 |           - name: api
-   |             ^^^^^^^^^ add `resources.limits.memory`
-   |
-   = help: without a limit, one pod can use all the memory on its node
+Build and install the binary from a clone of this repository (you need
+[rustup](https://rustup.rs); the pinned toolchain installs itself):
 
-Checked 14 files (31 objects) in 3ms. 1 error, 1 warning.
+```bash
+cargo install --path crates/kubelint
 ```
 
-_(Planned output. This is the target the project is building toward.)_
+Lint every Kubernetes YAML file under the current directory:
+
+```bash
+kubelint check .
+```
+
+kubelint searches directories for `*.yaml` and `*.yml` files, honoring `.gitignore`, and
+ignores YAML that is not a Kubernetes object (CI files, Helm values). For a directory
+`k8s/` with two broken files, the output looks like this:
+
+```text
+$ kubelint check k8s
+error[KL1002]: object `web-config` has no `kind`
+ --> k8s/config.yaml:1:1
+  |
+1 | apiVersion: v1
+  | ^^^^^^^^^^^^^^
+  |
+  = help: add the object's type, such as `kind: Deployment`
+  = note: rule `missing-kind`
+
+error[KL1001]: `Deployment` object has no `apiVersion`
+ --> k8s/web.yaml:1:1
+  |
+1 | kind: Deployment
+  | ^^^^^^^^^^^^^^^^
+  |
+  = help: add `apiVersion: apps/v1`
+  = note: rule `missing-api-version`
+
+error[KL0001]: invalid YAML: while parsing a block collection, did not find expected '-' indicator
+  --> k8s/web.yaml:14:6
+   |
+14 |      targetPort: 8080
+   |      ^
+   |
+   = help: fix the YAML syntax; kubelint skips this document until it parses
+   = note: rule `invalid-yaml`
+
+Found 3 errors. Checked 2 files and 2 objects in 2ms.
+```
+
+A few more things worth knowing:
+
+- **Exit codes:** `0` when nothing was found, `1` when there are findings, `2` when
+  kubelint could not run (a missing file, bad arguments). Use it as a CI gate as is.
+- **Standard input:** `-` reads a manifest from stdin, for generated YAML:
+  `kustomize build overlays/prod | kubelint check -`.
+- **Helm charts:** a chart's `templates/` are not valid YAML before rendering, so
+  kubelint skips them (and `Chart.yaml`) with a note. Lint the rendered output instead:
+  `helm template charts/web | kubelint check -`.
+- **Colors:** `--color auto|always|never`. `auto` colors a terminal and honors
+  `NO_COLOR`.
+
+Only a handful of rules exist so far; see the [rule catalog](docs/rules/README.md) for
+what is implemented and what is planned.
 
 ## What it catches
 
