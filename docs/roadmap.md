@@ -102,10 +102,15 @@ Engine and user experience:
   rule name) against the registry; default set (KL0001 cannot be deselected); per-rule
   severity overrides; `fail-on`.
   Pure logic with exhaustive tests. _Depends on: M1-13._
-- [ ] **M2-03** `kubelint_config`: discover `kubelint.toml`/`.kubelint.toml` walking up
-  from the working directory; parse with precise errors for unknown keys; `--config
-  <path>`, `--isolated`; CLI `--select`, `--ignore`, `--fail-on` override the file.
-  _Depends on: M2-02._
+- [x] **M2-03a** `kubelint_config`: discover `kubelint.toml`/`.kubelint.toml` walking up
+  from the working directory; parse with precise errors (byte ranges) for unknown keys and
+  wrong values; every value keeps its range. _Depends on: M2-02._
+- [ ] **M2-03b** CLI: load the config (`--config <path>`, `--isolated`), resolve it with
+  `RuleSelection`; CLI `--select`, `--ignore`, `--fail-on` override the file; config and
+  selector errors are rendered as snippets of the config file and exit with code 2.
+  _Depends on: M2-03a._
+- [ ] **M2-03c** CLI: `[files] exclude` globs (`globset`), matched against paths relative
+  to the config file's directory. _Depends on: M2-03b._
 - [ ] **M2-04** Suppression comments: `kubelint-disable-next-line`,
   `kubelint-disable-line`, `kubelint-disable-file`, codes or names, optional
   `-- reason`. Unknown codes in a suppression produce a warning. _Depends on: M1-05, M2-02._
@@ -119,7 +124,7 @@ Engine and user experience:
   code scanning upload. _Depends on: M2-07._
 - [ ] **M2-09** `--format github` (workflow commands) with docs. _Depends on: M2-07._
 - [ ] **M2-10** "Did you mean" suggestions for unknown rule codes or names in config, CLI
-  and suppressions (`strsim`). _Depends on: M2-03, M2-04._
+  and suppressions (`strsim`). _Depends on: M2-03b, M2-04._
 
 Correctness rules (one PR each):
 

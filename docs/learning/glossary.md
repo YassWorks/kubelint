@@ -212,6 +212,10 @@ findings in the "Code scanning" tab and inline on pull requests.
 only cover rules enabled by default; a rule that ships disabled must be named by its code
 or name (ADR 0009).
 
+**TOML.** A configuration file format with `[tables]` and `key = value` lines, used by
+Cargo (`Cargo.toml`) and by kubelint (`kubelint.toml`). kubelint reads it with `serde`
+and the `toml` crate, which report the byte range of every value and of every error.
+
 **Snapshot test.** A test that saves the output of some code to a file (a "snapshot") and
 fails if the output ever changes. kubelint uses the `insta` crate for this. When output
 changes on purpose, you review the new snapshot and accept it.
