@@ -1,0 +1,17 @@
+---
+source: crates/kubelint/tests/cli.rs
+expression: "run(&[\"check\", \"-\", \"--color\", \"never\"], Some(manifest))"
+---
+exit: 1
+--- stdout
+error[KL1001]: `ConfigMap` object has no `apiVersion`
+  --> <stdin>:10:1
+   |
+10 | kind: ConfigMap
+   | ^^^^^^^^^^^^^^^
+   |
+   = help: add `apiVersion: v1`
+   = note: rule `missing-api-version`
+
+Found 1 error. Checked 1 file and 4 objects in [TIME].
+--- stderr

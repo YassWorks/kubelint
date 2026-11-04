@@ -27,6 +27,7 @@ is the default severity. *Task* is the roadmap task that implements it.
 | --- | --- | --- | --- | --- | --- | --- |
 | KL0001 | `invalid-yaml` | on (cannot be disabled) | error | implemented | M1-11b | The file cannot be parsed as YAML. |
 | KL0002 | `duplicate-key` | on | error | implemented | M2-01 | The same key appears twice in one mapping; Kubernetes rejects it or silently keeps the last one. |
+| KL0003 | `invalid-suppression` | on | warning | planned | M2-04b | A `# kubelint-disable-...` comment names an unknown rule, names KL0001 (which cannot be suppressed) or names no rule, so it silences nothing. |
 
 ## Correctness
 

@@ -111,9 +111,11 @@ Engine and user experience:
   _Depends on: M2-03a._
 - [x] **M2-03c** (#30) CLI: `[files] exclude` globs (`globset`), matched against paths relative
   to the config file's directory. _Depends on: M2-03b._
-- [ ] **M2-04** Suppression comments: `kubelint-disable-next-line`,
+- [x] **M2-04a** (#31) Suppression comments: `kubelint-disable-next-line`,
   `kubelint-disable-line`, `kubelint-disable-file`, codes or names, optional
-  `-- reason`. Unknown codes in a suppression produce a warning. _Depends on: M1-05, M2-02._
+  `-- reason`. _Depends on: M1-05, M2-02._
+- [ ] **M2-04b** KL0003 `invalid-suppression`: a warning for a suppression comment that
+  names an unknown rule, names KL0001, or names no rule at all. _Depends on: M2-04a._
 - [ ] **M2-05** `kubelint rules` (table; `--format json`) and `kubelint rule <code|name>`
   (prints the explanation). _Depends on: M2-02._
 - [ ] **M2-06** Parallel linting with `rayon` and deterministic output order (path, offset,
@@ -124,7 +126,7 @@ Engine and user experience:
   code scanning upload. _Depends on: M2-07._
 - [ ] **M2-09** `--format github` (workflow commands) with docs. _Depends on: M2-07._
 - [ ] **M2-10** "Did you mean" suggestions for unknown rule codes or names in config, CLI
-  and suppressions (`strsim`). _Depends on: M2-03b, M2-04._
+  and suppressions (`strsim`). _Depends on: M2-03b, M2-04b._
 
 Correctness rules (one PR each):
 
@@ -171,7 +173,7 @@ Reliability rules (one PR each):
 - [ ] **M3-01** `xtask` crate with `cargo xtask gen-rule-docs` writing `docs/rules/<CODE>.md`
   from `RuleMeta`; CI job that fails if generated docs are stale. _Depends on: M2-05._
 - [ ] **M3-02** User docs: `docs/user/getting-started.md`, `configuration.md`,
-  `suppressions.md`, `ci-integration.md`; README links to them. _Depends on: M2-04, M2-08._
+  `suppressions.md`, `ci-integration.md`; README links to them. _Depends on: M2-04b, M2-08._
 - [ ] **M3-03** Benchmark corpus generator (`cargo xtask gen-corpus`) and a documented
   measurement against the 10,000-objects-under-1-second budget; fix hotspots if over.
   _Depends on: M2-06._

@@ -5,6 +5,7 @@ use kubelint_source::{FileId, SourceFile};
 
 use crate::context::{LintObject, ObjectContext, RunContext};
 use crate::rules::syntax::InvalidYaml;
+use crate::suppression::Suppressions;
 use crate::{Rule, rules};
 
 /// A rule switched on for a run, with the severity it reports at.
@@ -77,7 +78,8 @@ impl Linter {
     ///
     /// Files are linted one after another; parallel linting is roadmap task M2-06.
     /// YAML syntax errors are always reported as KL0001, whatever rules are enabled;
-    /// the other documents of a file with an error are still checked.
+    /// the other documents of a file with an error are still checked. Findings silenced
+    /// by suppression comments (`# kubelint-disable-line KL1001`) are dropped.
     pub fn lint(&self, files: &[SourceFile]) -> LintResult {
         let parses: Vec<_> = files
             .iter()
@@ -126,6 +128,19 @@ impl Linter {
             let mut cx = RunContext::new(files, &objects, meta, enabled.severity, &mut diagnostics);
             enabled.rule.check_all(&mut cx);
         }
+
+        let suppressions: Vec<Suppressions> = files
+            .iter()
+            .zip(&parses)
+            .map(|(file, parse)| Suppressions::new(file, &parse.comments))
+            .collect();
+        diagnostics.retain(|diagnostic| {
+            let index = diagnostic.primary.file.0 as usize;
+            match (files.get(index), suppressions.get(index)) {
+                (Some(file), Some(suppressions)) => !suppressions.suppresses(file, diagnostic),
+                _ => true,
+            }
+        });
 
         diagnostics.sort_by(|a, b| {
             (a.primary.file, a.primary.range.start(), a.code).cmp(&(
