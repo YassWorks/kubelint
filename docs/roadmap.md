@@ -116,7 +116,7 @@ Engine and user experience:
   `-- reason`. _Depends on: M1-05, M2-02._
 - [x] **M2-04b** (#32) KL0003 `invalid-suppression`: a warning for a suppression comment that
   names an unknown rule, names KL0001, or names no rule at all. _Depends on: M2-04a._
-- [ ] **M2-05** `kubelint rules` (table; `--format json`) and `kubelint rule <code|name>`
+- [x] **M2-05** (#33) `kubelint rules` (table; `--format json`) and `kubelint rule <code|name>`
   (prints the explanation). _Depends on: M2-02._
 - [ ] **M2-06** Parallel linting with `rayon` and deterministic output order (path, offset,
   code). Test that output is identical across runs. _Depends on: M1-13._

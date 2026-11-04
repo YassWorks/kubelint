@@ -47,3 +47,4 @@ deliberately instead of drifting.
 | 0009 | [Rule selection semantics](0009-rule-selection-semantics.md) | Accepted |
 | 0010 | [Command-line configuration flags](0010-cli-configuration-flags.md) | Accepted |
 | 0011 | [`[files] exclude` pattern semantics](0011-exclude-patterns.md) | Accepted |
+| 0012 | [`kubelint rules` and `kubelint rule` output](0012-rules-command-output.md) | Accepted |
