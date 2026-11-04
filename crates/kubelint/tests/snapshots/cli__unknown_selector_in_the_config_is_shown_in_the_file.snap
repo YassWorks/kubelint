@@ -1,0 +1,12 @@
+---
+source: crates/kubelint/tests/cli.rs
+expression: "run_in(configured(),\n&[\"check\", \"--config\", \"bad/unknown-selector.toml\", \"--color\", \"never\"], None)"
+---
+exit: 2
+--- stdout
+--- stderr
+error: unknown rule selector `secrity` in `select`: expected a rule code (`KL2001`), a code prefix (`KL2`), a category (`security`) or a rule name
+ --> bad/unknown-selector.toml:2:26
+  |
+2 | select = ["correctness", "secrity"]
+  |                          ^^^^^^^^^

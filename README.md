@@ -69,6 +69,21 @@ A few more things worth knowing:
   `helm template charts/web | kubelint check -`.
 - **Colors:** `--color auto|always|never`. `auto` colors a terminal and honors
   `NO_COLOR`.
+- **Configuration:** a `kubelint.toml` (or `.kubelint.toml`) in the current directory or
+  a parent picks the rules and the fail threshold:
+
+  ```toml
+  [lint]
+  select = ["correctness", "security"]  # categories, code prefixes, codes or names
+  ignore = ["KL2004"]
+  fail-on = "error"                     # error | warning | info
+
+  [lint.severity]
+  KL3003 = "error"
+  ```
+
+  `--select`, `--ignore` and `--fail-on` replace the file's values for one run,
+  `--config <path>` picks another file and `--isolated` ignores it.
 
 Only a handful of rules exist so far; see the [rule catalog](docs/rules/README.md) for
 what is implemented and what is planned.

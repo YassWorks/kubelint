@@ -5,7 +5,7 @@ use std::time::Duration;
 
 use annotate_snippets::{Annotation, AnnotationKind, Group, Level, Renderer, Snippet};
 use kubelint_diagnostics::{Diagnostic, Label, Severity};
-use kubelint_source::{FileId, SourceFile};
+use kubelint_source::{FileId, SourceFile, TextRange};
 
 /// Counts for the summary line printed after the diagnostics.
 #[derive(Debug, Clone, Copy, Default)]
@@ -76,6 +76,52 @@ impl HumanRenderer {
             out.push_str("\n\n");
         }
         out.push_str(&summary_line(diagnostics, summary));
+        out.push('\n');
+        out
+    }
+}
+
+impl HumanRenderer {
+    /// Renders an error that stops the run before linting, such as an invalid
+    /// configuration file: a snippet of `file` pointing at `range`, or just the path and
+    /// the message when the position is unknown.
+    ///
+    /// ```
+    /// use kubelint_output::HumanRenderer;
+    /// use kubelint_source::{SourceFile, TextRange};
+    ///
+    /// let file = SourceFile::new("kubelint.toml", "[lnt]\n");
+    /// let range = TextRange::new(1.into(), 4.into());
+    /// let out = HumanRenderer::new(false).render_error(&file, "unknown field `lnt`", Some(range));
+    /// assert!(out.starts_with("error: unknown field `lnt`\n --> kubelint.toml:1:2\n"));
+    /// ```
+    pub fn render_error(
+        &self,
+        file: &SourceFile,
+        message: &str,
+        range: Option<TextRange>,
+    ) -> String {
+        let path = path_string(file);
+        let Some(range) = range else {
+            return format!("error: {path}: {message}\n");
+        };
+        let renderer = if self.color {
+            Renderer::styled()
+        } else {
+            Renderer::plain()
+        };
+        let len = file.text().len();
+        let start = usize::from(range.start()).min(len);
+        let end = usize::from(range.end()).clamp(start, len);
+        let report = [
+            Group::with_title(Level::ERROR.primary_title(message)).element(
+                Snippet::source(file.text())
+                    .path(path)
+                    .fold(true)
+                    .annotation(AnnotationKind::Primary.span(start..end)),
+            ),
+        ];
+        let mut out = renderer.render(&report);
         out.push('\n');
         out
     }

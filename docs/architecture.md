@@ -202,7 +202,8 @@ the user's files rather than in kubelint.
 ### Configuration and suppressions
 
 See [ADR 0005](decisions/0005-configuration-and-suppressions.md) for the format and
-[ADR 0009](decisions/0009-rule-selection-semantics.md) for how selectors combine. In short:
+[ADR 0009](decisions/0009-rule-selection-semantics.md) for how selectors combine, and
+[ADR 0010](decisions/0010-cli-configuration-flags.md) for the command-line flags. In short:
 
 ```toml
 # kubelint.toml (or .kubelint.toml), found by walking up from the current directory

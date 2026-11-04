@@ -1,0 +1,9 @@
+# No `apiVersion`: KL1001, ignored by the configuration.
+kind: Pod
+metadata:
+  name: web
+---
+# No `kind`: KL1002, a warning through the configuration.
+apiVersion: v1
+metadata:
+  name: api

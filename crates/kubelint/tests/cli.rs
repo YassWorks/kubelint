@@ -142,3 +142,108 @@ fn helm_chart_is_found_from_inside_its_templates() {
       = help: run `helm template .. | kubelint check -`
     ");
 }
+
+/// A project with a `kubelint.toml` that ignores KL1001, downgrades KL1002 to a warning
+/// and fails only on errors.
+fn configured() -> &'static Path {
+    Path::new(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/fixtures/configured"
+    ))
+}
+
+#[test]
+fn the_config_file_is_found_and_applied() {
+    insta::assert_snapshot!(run_in(configured(), &["check", "--color", "never"], None));
+}
+
+#[test]
+fn isolated_ignores_the_config_file() {
+    let out = run_in(
+        configured(),
+        &["check", "--isolated", "--color", "never"],
+        None,
+    );
+    assert!(out.starts_with("exit: 1\n"), "{out}");
+    assert!(
+        out.contains("error[KL1001]") && out.contains("error[KL1002]"),
+        "{out}"
+    );
+}
+
+#[test]
+fn flags_replace_the_config_file_values() {
+    // `--ignore` replaces the file's list, so KL1001 runs again; `--fail-on warning` makes
+    // KL1002, still a warning through the file's `[lint.severity]`, fail the run.
+    let out = run_in(
+        configured(),
+        &[
+            "check",
+            "--select=KL1001,missing-kind",
+            "--ignore=KL0002",
+            "--fail-on",
+            "warning",
+        ],
+        None,
+    );
+    assert!(out.starts_with("exit: 1\n"), "{out}");
+    assert!(
+        out.contains("error[KL1001]") && out.contains("warning[KL1002]"),
+        "{out}"
+    );
+}
+
+#[test]
+fn unknown_config_key_is_shown_in_the_file() {
+    insta::assert_snapshot!(run_in(
+        configured(),
+        &[
+            "check",
+            "--config",
+            "bad/unknown-key.toml",
+            "--color",
+            "never"
+        ],
+        None
+    ));
+}
+
+#[test]
+fn unknown_selector_in_the_config_is_shown_in_the_file() {
+    insta::assert_snapshot!(run_in(
+        configured(),
+        &[
+            "check",
+            "--config",
+            "bad/unknown-selector.toml",
+            "--color",
+            "never"
+        ],
+        None
+    ));
+}
+
+#[test]
+fn unknown_selector_in_a_flag_exits_two() {
+    insta::assert_snapshot!(run_in(configured(), &["check", "--select", "KL9"], None));
+}
+
+#[test]
+fn missing_config_file_exits_two() {
+    let out = run_in(configured(), &["check", "--config", "nope.toml"], None);
+    assert!(out.starts_with("exit: 2\n"), "{out}");
+    assert!(
+        out.contains("cannot read the configuration nope.toml"),
+        "{out}"
+    );
+}
+
+#[test]
+fn config_and_isolated_conflict() {
+    let out = run_in(
+        configured(),
+        &["check", "--config", "kubelint.toml", "--isolated"],
+        None,
+    );
+    assert!(out.starts_with("exit: 2\n"), "{out}");
+}

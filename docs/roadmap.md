@@ -105,7 +105,7 @@ Engine and user experience:
 - [x] **M2-03a** `kubelint_config`: discover `kubelint.toml`/`.kubelint.toml` walking up
   from the working directory; parse with precise errors (byte ranges) for unknown keys and
   wrong values; every value keeps its range. _Depends on: M2-02._
-- [ ] **M2-03b** CLI: load the config (`--config <path>`, `--isolated`), resolve it with
+- [x] **M2-03b** (#29) CLI: load the config (`--config <path>`, `--isolated`), resolve it with
   `RuleSelection`; CLI `--select`, `--ignore`, `--fail-on` override the file; config and
   selector errors are rendered as snippets of the config file and exit with code 2.
   _Depends on: M2-03a._
