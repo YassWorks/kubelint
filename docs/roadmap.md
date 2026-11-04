@@ -109,7 +109,7 @@ Engine and user experience:
   `RuleSelection`; CLI `--select`, `--ignore`, `--fail-on` override the file; config and
   selector errors are rendered as snippets of the config file and exit with code 2.
   _Depends on: M2-03a._
-- [ ] **M2-03c** CLI: `[files] exclude` globs (`globset`), matched against paths relative
+- [x] **M2-03c** (#30) CLI: `[files] exclude` globs (`globset`), matched against paths relative
   to the config file's directory. _Depends on: M2-03b._
 - [ ] **M2-04** Suppression comments: `kubelint-disable-next-line`,
   `kubelint-disable-line`, `kubelint-disable-file`, codes or names, optional

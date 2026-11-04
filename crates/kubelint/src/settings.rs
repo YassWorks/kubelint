@@ -10,6 +10,8 @@ use kubelint_linter::{EnabledRule, RuleSelection, SelectionError, SelectorList};
 use kubelint_output::HumanRenderer;
 use kubelint_source::{SourceFile, TextRange};
 
+use crate::exclude::Exclude;
+
 /// Where the configuration comes from.
 #[derive(Debug, Clone)]
 pub enum ConfigSource {
@@ -40,6 +42,8 @@ pub struct Settings {
     pub rules: Vec<EnabledRule>,
     /// The lowest severity that fails the run.
     pub fail_on: Severity,
+    /// The configuration's `[files] exclude` patterns, if any.
+    pub exclude: Option<Exclude>,
 }
 
 /// Why the settings could not be built.
@@ -70,8 +74,8 @@ pub fn load(
         ConfigSource::File(path) => Some(path.clone()),
         ConfigSource::None => None,
     };
-    let (file, config) = match path {
-        None => (None, Config::default()),
+    let (file, config, dir) = match path {
+        None => (None, Config::default(), None),
         Some(path) => {
             let text = std::fs::read_to_string(&path)
                 .with_context(|| format!("cannot read the configuration {}", path.display()))
@@ -84,19 +88,28 @@ pub fn load(
                     err.range,
                 ))
             })?;
-            (Some(file), config)
+            let dir = path.parent().map(Path::to_path_buf);
+            (Some(file), config, dir)
         }
     };
-    resolve(&config, overrides).map_err(|(err, range)| {
-        let message = err.to_string();
+    let invalid = |message: &str, range: Option<TextRange>| {
         SettingsError::Invalid(match (&file, range) {
             (Some(file), Some(range)) => {
-                HumanRenderer::new(color).render_error(file, &message, Some(range))
+                HumanRenderer::new(color).render_error(file, message, Some(range))
             }
             // The selector was given on the command line.
             _ => format!("error: {message}\n"),
         })
-    })
+    };
+    let mut settings =
+        resolve(&config, overrides).map_err(|(err, range)| invalid(&err.to_string(), range))?;
+    let patterns = &config.files.exclude;
+    if let (Some(dir), false) = (dir, patterns.is_empty()) {
+        let exclude = Exclude::new(&dir, cwd, patterns)
+            .map_err(|err| invalid(&err.message, patterns.get(err.index).map(|p| p.range)))?;
+        settings.exclude = Some(exclude);
+    }
+    Ok(settings)
 }
 
 /// Combines the configuration and the flags. On error, also returns where the bad
@@ -139,7 +152,11 @@ fn resolve(
         .fail_on
         .or_else(|| lint.fail_on.as_ref().map(|level| severity(level.value)))
         .unwrap_or(Severity::Warning);
-    Ok(Settings { rules, fail_on })
+    Ok(Settings {
+        rules,
+        fail_on,
+        exclude: None,
+    })
 }
 
 fn values(list: &[Spanned<String>]) -> Vec<String> {

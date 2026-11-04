@@ -80,6 +80,9 @@ A few more things worth knowing:
 
   [lint.severity]
   KL3003 = "error"
+
+  [files]
+  exclude = ["vendor/**"]               # globs, relative to this file's directory
   ```
 
   `--select`, `--ignore` and `--fail-on` replace the file's values for one run,

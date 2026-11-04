@@ -5,6 +5,7 @@
 //! See `docs/architecture.md`.
 
 mod discover;
+mod exclude;
 mod settings;
 
 use std::io::{IsTerminal as _, Read as _, Write as _};
@@ -158,7 +159,7 @@ fn check(args: &CheckArgs) -> anyhow::Result<ExitCode> {
             return Ok(ExitCode::from(EXIT_FAILURE));
         }
     };
-    let discovery = discover::inputs(&args.paths)?;
+    let discovery = discover::inputs(&args.paths, settings.exclude.as_ref())?;
     if let Some(note) = helm_note(&discovery.skipped_charts) {
         eprintln!("{note}");
     }

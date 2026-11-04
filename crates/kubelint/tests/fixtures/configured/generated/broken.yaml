@@ -1,0 +1,4 @@
+# Excluded by the configuration, so its missing `kind` is never reported.
+apiVersion: v1
+metadata:
+  name: generated

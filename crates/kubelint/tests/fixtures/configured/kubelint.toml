@@ -5,3 +5,6 @@ fail-on = "error"
 
 [lint.severity]
 missing-kind = "warning"
+
+[files]
+exclude = ["generated/**"]

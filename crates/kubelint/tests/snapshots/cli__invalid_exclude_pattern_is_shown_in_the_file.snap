@@ -1,0 +1,12 @@
+---
+source: crates/kubelint/tests/cli.rs
+expression: "run_in(configured(),\n&[\"check\", \"--config\", \"bad/invalid-glob.toml\", \"--color\", \"never\"], None)"
+---
+exit: 2
+--- stdout
+--- stderr
+error: invalid glob pattern `[abc`: unclosed character class; missing ']'
+ --> bad/invalid-glob.toml:2:25
+  |
+2 | exclude = ["vendor/**", "[abc"]
+  |                         ^^^^^^

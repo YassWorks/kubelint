@@ -5,6 +5,8 @@ use std::path::{Component, Path, PathBuf};
 
 use anyhow::{Context as _, bail};
 
+use crate::exclude::Exclude;
+
 /// One thing to lint.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Input {
@@ -49,13 +51,15 @@ pub struct SkippedChart {
 /// - Helm chart files are skipped, even when named: a chart's `Chart.yaml` and everything
 ///   under its `templates/` directory. Templates are not valid YAML until `helm template`
 ///   renders them, and `Chart.yaml` is not a Kubernetes object.
+/// - Files matching the configuration's `[files] exclude` patterns are left out, even when
+///   named, so tools that pass file names (pre-commit) respect them too.
 /// - A path that does not exist is an error.
-pub fn inputs(paths: &[PathBuf]) -> anyhow::Result<Discovery> {
+pub fn inputs(paths: &[PathBuf], exclude: Option<&Exclude>) -> anyhow::Result<Discovery> {
     let mut discovery = Discovery::default();
     let mut seen = HashSet::new();
     let mut helm = HelmDetector::new();
     let mut add = |discovery: &mut Discovery, file: PathBuf| {
-        if !seen.insert(file.clone()) {
+        if exclude.is_some_and(|exclude| exclude.matches(&file)) || !seen.insert(file.clone()) {
             return;
         }
         match helm.chart_of(&file) {

@@ -143,8 +143,8 @@ fn helm_chart_is_found_from_inside_its_templates() {
     ");
 }
 
-/// A project with a `kubelint.toml` that ignores KL1001, downgrades KL1002 to a warning
-/// and fails only on errors.
+/// A project with a `kubelint.toml` that ignores KL1001, downgrades KL1002 to a warning,
+/// fails only on errors and excludes `generated/`.
 fn configured() -> &'static Path {
     Path::new(concat!(
         env!("CARGO_MANIFEST_DIR"),
@@ -165,6 +165,7 @@ fn isolated_ignores_the_config_file() {
         None,
     );
     assert!(out.starts_with("exit: 1\n"), "{out}");
+    assert!(out.contains("generated/broken.yaml"), "{out}");
     assert!(
         out.contains("error[KL1001]") && out.contains("error[KL1002]"),
         "{out}"
@@ -246,4 +247,40 @@ fn config_and_isolated_conflict() {
         None,
     );
     assert!(out.starts_with("exit: 2\n"), "{out}");
+}
+
+#[test]
+fn excluded_files_are_skipped_even_when_named() {
+    insta::assert_snapshot!(run_in(
+        configured(),
+        &["check", "generated/broken.yaml", "generated"],
+        None
+    ), @r"
+    exit: 0
+    --- stdout
+    All checks passed. Checked 0 files and 0 objects in [TIME].
+    --- stderr
+    ");
+}
+
+#[test]
+fn exclude_patterns_are_relative_to_the_config_file() {
+    // Run from `generated/`, the file is still excluded by `generated/**`.
+    let out = run_in(&configured().join("generated"), &["check"], None);
+    assert!(out.contains("Checked 0 files"), "{out}");
+}
+
+#[test]
+fn invalid_exclude_pattern_is_shown_in_the_file() {
+    insta::assert_snapshot!(run_in(
+        configured(),
+        &[
+            "check",
+            "--config",
+            "bad/invalid-glob.toml",
+            "--color",
+            "never"
+        ],
+        None
+    ));
 }
