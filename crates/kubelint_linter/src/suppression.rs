@@ -11,7 +11,8 @@
 //! A diagnostic is suppressed when its primary label starts on a suppressed line, or when
 //! its rule is disabled for the whole file. Rules are named by code or name, separated by
 //! commas; an optional `-- reason` follows. KL0001 `invalid-yaml` cannot be suppressed,
-//! like it cannot be ignored in configuration (ADR 0009).
+//! like it cannot be ignored in configuration (ADR 0009). Rules that cannot be resolved
+//! silence nothing; KL0003 `invalid-suppression` reports them.
 
 use std::collections::HashMap;
 
@@ -92,16 +93,30 @@ fn range(start: usize, end: usize) -> TextRange {
     TextRange::new(size(start), size(end))
 }
 
-/// The rule code a suppression selector names: a code or a name of any built-in rule.
-/// `None` for anything else, and for KL0001, which cannot be suppressed.
-fn rule_code(selector: &str) -> Option<&'static str> {
+/// What a rule named in a suppression comment refers to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum Target {
+    /// A built-in rule (by code or name), with its code.
+    Rule(&'static str),
+    /// KL0001 `invalid-yaml`, which cannot be suppressed.
+    AlwaysOn,
+    /// Not a code or name of any built-in rule.
+    Unknown,
+}
+
+/// Resolves a rule named in a suppression comment. Any built-in rule can be named, even
+/// one that is not enabled; codes and names only, not categories or prefixes.
+pub(crate) fn target(selector: &str) -> Target {
     let always_on = InvalidYaml.meta().code;
-    rules::ALL
+    match rules::ALL
         .iter()
         .map(|rule| rule.meta())
         .find(|meta| meta.code == selector || meta.name == selector)
-        .map(|meta| meta.code)
-        .filter(|&code| code != always_on)
+    {
+        Some(meta) if meta.code == always_on => Target::AlwaysOn,
+        Some(meta) => Target::Rule(meta.code),
+        None => Target::Unknown,
+    }
 }
 
 /// The suppressions of one file.
@@ -139,7 +154,10 @@ impl Suppressions {
             let codes = directive
                 .rules
                 .iter()
-                .filter_map(|(selector, _)| rule_code(selector));
+                .filter_map(|(selector, _)| match target(selector) {
+                    Target::Rule(code) => Some(code),
+                    Target::AlwaysOn | Target::Unknown => None,
+                });
             let line = line_of(comment.range.start());
             match directive.kind {
                 DirectiveKind::File => suppressions.file.extend(codes),

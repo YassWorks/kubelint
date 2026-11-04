@@ -13,6 +13,7 @@ use crate::Rule;
 pub static ALL: &[&dyn Rule] = &[
     &syntax::InvalidYaml,
     &syntax::DuplicateKey,
+    &syntax::InvalidSuppression,
     &correctness::MissingApiVersion,
     &correctness::MissingKind,
 ];

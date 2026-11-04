@@ -1,0 +1,47 @@
+---
+source: crates/kubelint_linter/src/rules/syntax/invalid_suppression.rs
+expression: "crate::testing::check_fixture(&InvalidSuppression)"
+---
+warning[KL0003]: `missing-kinds` is not a rule code or name
+ --> syntax/KL0003.yaml:6:40
+  |
+6 |   # kubelint-disable-next-line KL1001, missing-kinds -- typo in the name
+  |                                        ^^^^^^^^^^^^^
+  = help: name a rule by its code (`KL1001`) or its name (`missing-api-version`); categories and prefixes are not accepted here
+
+warning[KL0003]: `KL0001` cannot be suppressed
+  --> syntax/KL0003.yaml:11:40
+   |
+11 | kind: Service  # kubelint-disable-line KL0001, invalid-yaml
+   |                                        ^^^^^^
+  = help: syntax errors are always reported; fix the YAML instead
+
+warning[KL0003]: `invalid-yaml` cannot be suppressed
+  --> syntax/KL0003.yaml:11:48
+   |
+11 | kind: Service  # kubelint-disable-line KL0001, invalid-yaml
+   |                                                ^^^^^^^^^^^^
+  = help: syntax errors are always reported; fix the YAML instead
+
+warning[KL0003]: `security` is not a rule code or name
+  --> syntax/KL0003.yaml:14:25
+   |
+14 | # kubelint-disable-file security
+   |                         ^^^^^^^^
+  = help: name a rule by its code (`KL1001`) or its name (`missing-api-version`); categories and prefixes are not accepted here
+
+warning[KL0003]: suppression comment names no rule
+  --> syntax/KL0003.yaml:20:18
+   |
+20 | kind: ConfigMap  # kubelint-disable-line -- just because
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: list the rule codes or names to silence, such as `# kubelint-disable-line KL1001`
+
+warning[KL0003]: suppression comment names no rule
+  --> syntax/KL0003.yaml:21:11
+   |
+21 | data: {}  # kubelint-disable-line
+   |           ^^^^^^^^^^^^^^^^^^^^^^^
+  = help: list the rule codes or names to silence, such as `# kubelint-disable-line KL1001`
+
+6 finding(s) in 6 object(s)

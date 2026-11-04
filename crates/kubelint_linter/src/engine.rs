@@ -4,7 +4,7 @@ use kubelint_diagnostics::{Diagnostic, Severity};
 use kubelint_source::{FileId, SourceFile};
 
 use crate::context::{LintObject, ObjectContext, RunContext};
-use crate::rules::syntax::InvalidYaml;
+use crate::rules::syntax::{InvalidSuppression, InvalidYaml};
 use crate::suppression::Suppressions;
 use crate::{Rule, rules};
 
@@ -79,7 +79,8 @@ impl Linter {
     /// Files are linted one after another; parallel linting is roadmap task M2-06.
     /// YAML syntax errors are always reported as KL0001, whatever rules are enabled;
     /// the other documents of a file with an error are still checked. Findings silenced
-    /// by suppression comments (`# kubelint-disable-line KL1001`) are dropped.
+    /// by suppression comments (`# kubelint-disable-line KL1001`) are dropped; KL0003
+    /// reports the suppression comments that cannot work.
     pub fn lint(&self, files: &[SourceFile]) -> LintResult {
         let parses: Vec<_> = files
             .iter()
@@ -109,6 +110,21 @@ impl Linter {
                     .map(move |error| InvalidYaml::diagnostic(file, error))
             })
             .collect();
+        let invalid_suppression = InvalidSuppression.meta().code;
+        if let Some(enabled) = self
+            .rules
+            .iter()
+            .find(|enabled| enabled.rule.meta().code == invalid_suppression)
+        {
+            for (index, parse) in parses.iter().enumerate() {
+                let file = FileId(u32::try_from(index).unwrap_or(u32::MAX));
+                diagnostics.extend(InvalidSuppression::diagnostics(
+                    file,
+                    &parse.comments,
+                    enabled.severity,
+                ));
+            }
+        }
         for enabled in &self.rules {
             let meta = enabled.rule.meta();
             for lint_object in &objects {

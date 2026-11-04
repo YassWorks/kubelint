@@ -1,0 +1,34 @@
+# Reported: a rule name with a typo, next to a valid code that is not reported.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web
+  # kubelint-disable-next-line KL1001, missing-kinds -- typo in the name
+  labels: {app: wéb}
+---
+# Reported: KL0001 cannot be suppressed, by code or by name.
+apiVersion: v1
+kind: Service  # kubelint-disable-line KL0001, invalid-yaml
+---
+# Reported: a category is not accepted, only codes and names.
+# kubelint-disable-file security
+apiVersion: v1
+kind: Secret
+---
+# Reported: a directive that names no rule, with or without a reason.
+apiVersion: v1
+kind: ConfigMap  # kubelint-disable-line -- just because
+data: {}  # kubelint-disable-line
+---
+# Not reported: codes and names of real rules, even ones that are not enabled.
+# kubelint-disable-file duplicate-key
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fine  # kubelint-disable-line KL1002,missing-api-version
+---
+# Not reported: comments that only mention a directive, or a longer keyword.
+# see kubelint-disable-line nope
+# kubelint-disable-lines nope
+apiVersion: v1
+kind: ConfigMap
