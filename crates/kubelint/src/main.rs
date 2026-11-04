@@ -6,6 +6,7 @@
 
 mod discover;
 mod exclude;
+mod rules_cmd;
 mod settings;
 
 use std::io::{IsTerminal as _, Read as _, Write as _};
@@ -35,6 +36,17 @@ struct Cli {
 enum Command {
     /// Lint Kubernetes manifests.
     Check(CheckArgs),
+    /// List every rule with its code, name, category and defaults.
+    Rules {
+        /// The output format.
+        #[arg(long, value_enum, default_value_t = rules_cmd::RulesFormat::Text)]
+        format: rules_cmd::RulesFormat,
+    },
+    /// Explain one rule: what it catches, why it matters and how to fix it.
+    Rule {
+        /// The rule's code (`KL1001`) or name (`missing-api-version`).
+        rule: String,
+    },
 }
 
 #[derive(Debug, clap::Args)]
@@ -119,6 +131,13 @@ fn main() -> ExitCode {
     };
     let result = match cli.command {
         Command::Check(args) => check(&args),
+        Command::Rules { format } => print(&rules_cmd::list(format)),
+        Command::Rule { rule } => match rules_cmd::explain(&rule) {
+            Some(text) => print(&text),
+            None => Err(anyhow::anyhow!(
+                "unknown rule `{rule}`: run `kubelint rules` to list the rule codes and names"
+            )),
+        },
     };
     match result {
         Ok(code) => code,
@@ -181,6 +200,16 @@ fn check(args: &CheckArgs) -> anyhow::Result<ExitCode> {
 
     let failed = kubelint_linter::fails(&result.diagnostics, settings.fail_on);
     Ok(ExitCode::from(if failed { EXIT_FINDINGS } else { 0 }))
+}
+
+/// Writes `text` to standard output.
+fn print(text: &str) -> anyhow::Result<ExitCode> {
+    let mut stdout = std::io::stdout().lock();
+    stdout
+        .write_all(text.as_bytes())
+        .and_then(|()| stdout.flush())
+        .context("cannot write the output")?;
+    Ok(ExitCode::SUCCESS)
 }
 
 /// Reads every input. A file that cannot be read stops the run with exit code 2.

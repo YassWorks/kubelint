@@ -302,3 +302,39 @@ kind: ConfigMap
 ";
     insta::assert_snapshot!(run(&["check", "-", "--color", "never"], Some(manifest)));
 }
+
+#[test]
+fn rules_lists_every_rule() {
+    let out = run(&["rules"], None);
+    assert!(
+        out.starts_with("exit: 0\n--- stdout\nCODE    NAME"),
+        "{out}"
+    );
+    assert!(
+        out.contains("\nKL1001  missing-api-version  correctness  on"),
+        "{out}"
+    );
+    let json = run(&["rules", "--format", "json"], None);
+    assert!(json.contains("\"name\": \"missing-kind\""), "{json}");
+}
+
+#[test]
+fn rule_explains_one_rule_by_code_or_name() {
+    let by_code = run(&["rule", "KL1002"], None);
+    assert!(
+        by_code.starts_with("exit: 0\n--- stdout\n# KL1002 `missing-kind`\n"),
+        "{by_code}"
+    );
+    assert!(by_code.contains("## What it does"), "{by_code}");
+    assert_eq!(by_code, run(&["rule", "missing-kind"], None));
+}
+
+#[test]
+fn unknown_rule_exits_two() {
+    insta::assert_snapshot!(run(&["rule", "KL9999"], None), @r"
+    exit: 2
+    --- stdout
+    --- stderr
+    error: unknown rule `KL9999`: run `kubelint rules` to list the rule codes and names
+    ");
+}
