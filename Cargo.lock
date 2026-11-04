@@ -327,6 +327,7 @@ dependencies = [
  "clap",
  "ignore",
  "insta",
+ "kubelint_config",
  "kubelint_diagnostics",
  "kubelint_linter",
  "kubelint_output",

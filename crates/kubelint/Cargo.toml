@@ -16,6 +16,7 @@ categories = ["command-line-utilities", "development-tools"]
 anyhow = { workspace = true }
 clap = { workspace = true }
 ignore = { workspace = true }
+kubelint_config = { workspace = true }
 kubelint_diagnostics = { workspace = true }
 kubelint_linter = { workspace = true }
 kubelint_output = { workspace = true }

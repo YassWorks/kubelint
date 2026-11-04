@@ -177,6 +177,11 @@ could not do its job (ADR 0003).
 directory search honors both, through the `ignore` crate from ripgrep. `.ignore` uses the
 same syntax but only affects search tools, not git.
 
+**Working directory.** The directory a program was started from (what `pwd` prints).
+Relative paths are resolved against it, and kubelint looks for `kubelint.toml` there and
+then in each parent directory, so running it from any subfolder of a project finds the
+project's configuration.
+
 **Standard input (stdin).** The stream a program reads when data is piped into it, as in
 `helm template ./chart | kubelint check -`. The `-` path means "read standard input".
 

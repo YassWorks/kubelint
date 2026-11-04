@@ -1,0 +1,17 @@
+---
+source: crates/kubelint/tests/cli.rs
+expression: "run_in(configured(), &[\"check\", \"--color\", \"never\"], None)"
+---
+exit: 0
+--- stdout
+warning[KL1002]: object `api` has no `kind`
+ --> pod.yaml:7:1
+  |
+7 | apiVersion: v1
+  | ^^^^^^^^^^^^^^
+  |
+  = help: add the object's type, such as `kind: Deployment`
+  = note: rule `missing-kind`
+
+Found 1 warning. Checked 1 file and 2 objects in [TIME].
+--- stderr

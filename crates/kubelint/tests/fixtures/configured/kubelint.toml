@@ -1,0 +1,7 @@
+# Silences one rule, downgrades another and fails only on errors.
+[lint]
+ignore = ["missing-api-version"]
+fail-on = "error"
+
+[lint.severity]
+missing-kind = "warning"

@@ -1,0 +1,12 @@
+---
+source: crates/kubelint/tests/cli.rs
+expression: "run_in(configured(),\n&[\"check\", \"--config\", \"bad/unknown-key.toml\", \"--color\", \"never\"], None)"
+---
+exit: 2
+--- stdout
+--- stderr
+error: unknown field `selct`, expected one of `select`, `ignore`, `fail-on`, `severity`
+ --> bad/unknown-key.toml:2:1
+  |
+2 | selct = ["security"]
+  | ^^^^^
