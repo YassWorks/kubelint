@@ -114,7 +114,7 @@ Engine and user experience:
 - [x] **M2-04a** (#31) Suppression comments: `kubelint-disable-next-line`,
   `kubelint-disable-line`, `kubelint-disable-file`, codes or names, optional
   `-- reason`. _Depends on: M1-05, M2-02._
-- [ ] **M2-04b** KL0003 `invalid-suppression`: a warning for a suppression comment that
+- [x] **M2-04b** (#32) KL0003 `invalid-suppression`: a warning for a suppression comment that
   names an unknown rule, names KL0001, or names no rule at all. _Depends on: M2-04a._
 - [ ] **M2-05** `kubelint rules` (table; `--format json`) and `kubelint rule <code|name>`
   (prints the explanation). _Depends on: M2-02._

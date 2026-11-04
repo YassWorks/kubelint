@@ -187,7 +187,13 @@ mod tests {
     #[test]
     fn no_config_and_no_flags_is_the_default_set() {
         let settings = resolve(&Config::default(), &Overrides::default()).expect("valid");
-        assert_eq!(codes(&settings), ["KL0001", "KL0002", "KL1001", "KL1002"]);
+        let defaults: Vec<_> = kubelint_linter::rules::ALL
+            .iter()
+            .map(|rule| rule.meta())
+            .filter(|meta| meta.default_enabled)
+            .map(|meta| meta.code)
+            .collect();
+        assert_eq!(codes(&settings), defaults);
         assert_eq!(settings.fail_on, Severity::Warning);
     }
 
