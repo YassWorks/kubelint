@@ -177,6 +177,10 @@ could not do its job (ADR 0003).
 directory search honors both, through the `ignore` crate from ripgrep. `.ignore` uses the
 same syntax but only affects search tools, not git.
 
+**Glob pattern.** A short pattern for file paths: `*` matches any characters within one
+folder name, `?` one character, and `**` any number of folders, so `vendor/**` matches
+everything under `vendor/`. kubelint's `[files] exclude` uses globs (ADR 0011).
+
 **Working directory.** The directory a program was started from (what `pwd` prints).
 Relative paths are resolved against it, and kubelint looks for `kubelint.toml` there and
 then in each parent directory, so running it from any subfolder of a project finds the

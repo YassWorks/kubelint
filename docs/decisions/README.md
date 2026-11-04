@@ -46,3 +46,4 @@ deliberately instead of drifting.
 | 0008 | [Autonomous development workflow](0008-autonomous-workflow.md) | Accepted |
 | 0009 | [Rule selection semantics](0009-rule-selection-semantics.md) | Accepted |
 | 0010 | [Command-line configuration flags](0010-cli-configuration-flags.md) | Accepted |
+| 0011 | [`[files] exclude` pattern semantics](0011-exclude-patterns.md) | Accepted |
