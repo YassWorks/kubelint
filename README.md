@@ -87,6 +87,16 @@ A few more things worth knowing:
 
   `--select`, `--ignore` and `--fail-on` replace the file's values for one run,
   `--config <path>` picks another file and `--isolated` ignores it.
+- **Suppressions:** silence one finding with a comment naming the rule's code or name,
+  and say why after `--`:
+
+  ```yaml
+  # kubelint-disable-next-line KL2001 -- the CNI plugin needs this
+  privileged: true
+  ```
+
+  `# kubelint-disable-line <rules>` works at the end of a line and
+  `# kubelint-disable-file <rules>` anywhere in a file. KL0001 cannot be suppressed.
 
 Only a handful of rules exist so far; see the [rule catalog](docs/rules/README.md) for
 what is implemented and what is planned.

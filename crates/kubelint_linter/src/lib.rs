@@ -12,6 +12,7 @@ mod engine;
 mod rule;
 pub mod rules;
 mod selection;
+mod suppression;
 #[cfg(test)]
 mod testing;
 
