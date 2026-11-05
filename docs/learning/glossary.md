@@ -134,6 +134,11 @@ without a garbage collector.
 usable from other crates; `pub(crate)` from anywhere in the same crate only. kubelint
 keeps things private unless another crate needs them.
 
+**`serde` and `#[derive(Serialize)]`.** `serde` is Rust's standard library for turning
+data into formats like JSON or TOML and back. Writing `#[derive(Serialize)]` on a struct
+makes the compiler generate the conversion, so the JSON output's shape is exactly the
+struct's fields; `serde_json` then writes the text.
+
 **Struct.** A type that groups named fields, like `Diagnostic { code, severity, message,
 ... }`.
 
@@ -219,6 +224,10 @@ you type.
 
 **rustfmt.** Rust's official code formatter. CI fails if code is not formatted exactly the
 way it would format it.
+
+**Schema version.** A number inside machine-readable output that says which shape the
+data has. Tools reading `kubelint check --format json` check `version`; kubelint may add
+fields freely but bumps the number when it renames or removes one (ADR 0013).
 
 **SARIF.** A standard JSON format for static analysis results. GitHub reads it to show
 findings in the "Code scanning" tab and inline on pull requests.

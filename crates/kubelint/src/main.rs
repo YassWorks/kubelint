@@ -18,7 +18,7 @@ use anyhow::Context as _;
 use clap::{Parser, Subcommand, ValueEnum};
 use kubelint_diagnostics::Severity;
 use kubelint_linter::{Linter, rules};
-use kubelint_output::{HumanRenderer, Summary};
+use kubelint_output::{HumanRenderer, JsonRenderer, Summary};
 use kubelint_source::SourceFile;
 
 use crate::discover::{Input, SkippedChart};
@@ -56,7 +56,11 @@ struct CheckArgs {
     #[arg(default_value = ".")]
     paths: Vec<PathBuf>,
 
-    /// When to color the output.
+    /// The output format.
+    #[arg(long, value_enum, default_value_t = OutputFormat::Human)]
+    format: OutputFormat,
+
+    /// When to color the human output.
     #[arg(long, value_enum, default_value_t = ColorChoice::Auto)]
     color: ColorChoice,
 
@@ -103,6 +107,14 @@ impl From<FailOn> for Severity {
             FailOn::Info => Self::Info,
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+enum OutputFormat {
+    /// Code snippets with explanations, for people.
+    Human,
+    /// One JSON document, for scripts (see `docs/user/output-formats.md`).
+    Json,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -191,7 +203,12 @@ fn check(args: &CheckArgs) -> anyhow::Result<ExitCode> {
         files_skipped: discovery.files_skipped(),
         elapsed: Some(start.elapsed()),
     };
-    let output = HumanRenderer::new(color).render(&files, &result.diagnostics, rule_name, &summary);
+    let output = match args.format {
+        OutputFormat::Human => {
+            HumanRenderer::new(color).render(&files, &result.diagnostics, rule_name, &summary)
+        }
+        OutputFormat::Json => JsonRenderer.render(&files, &result.diagnostics, rule_name, &summary),
+    };
     let mut stdout = std::io::stdout().lock();
     stdout
         .write_all(output.as_bytes())

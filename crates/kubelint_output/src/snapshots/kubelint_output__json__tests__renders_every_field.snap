@@ -1,0 +1,78 @@
+---
+source: crates/kubelint_output/src/json.rs
+expression: out
+---
+{
+  "version": 1,
+  "diagnostics": [
+    {
+      "code": "KL1004",
+      "name": "duplicate-object",
+      "severity": "warning",
+      "message": "duplicate object",
+      "help": "rename one of them",
+      "location": {
+        "path": "dir/a.yaml",
+        "start": {
+          "line": 2,
+          "column": 7,
+          "offset": 16
+        },
+        "end": {
+          "line": 2,
+          "column": 10,
+          "offset": 19
+        },
+        "message": "second here"
+      },
+      "related": [
+        {
+          "path": "b.yaml",
+          "start": {
+            "line": 1,
+            "column": 1,
+            "offset": 0
+          },
+          "end": {
+            "line": 1,
+            "column": 10,
+            "offset": 9
+          },
+          "message": null
+        }
+      ]
+    },
+    {
+      "code": "KL9999",
+      "name": null,
+      "severity": "info",
+      "message": "unnamed rule",
+      "help": null,
+      "location": {
+        "path": "b.yaml",
+        "start": {
+          "line": 2,
+          "column": 1,
+          "offset": 10
+        },
+        "end": {
+          "line": 2,
+          "column": 1,
+          "offset": 10
+        },
+        "message": null
+      },
+      "related": []
+    }
+  ],
+  "summary": {
+    "by_severity": {
+      "error": 0,
+      "warning": 1,
+      "info": 1
+    },
+    "files_checked": 2,
+    "objects_checked": 2,
+    "files_skipped": 1
+  }
+}
