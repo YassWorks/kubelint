@@ -124,7 +124,7 @@ Engine and user experience:
   `docs/user/output-formats.md`. _Depends on: M1-13._
 - [x] **M2-08** (#37) `--format sarif` (SARIF 2.1.0) with structural tests and docs for GitHub
   code scanning upload. _Depends on: M2-07._
-- [ ] **M2-09** `--format github` (workflow commands) with docs. _Depends on: M2-07._
+- [x] **M2-09** (#38) `--format github` (workflow commands) with docs. _Depends on: M2-07._
 - [ ] **M2-10** "Did you mean" suggestions for unknown rule codes or names in config, CLI
   and suppressions (`strsim`). _Depends on: M2-03b, M2-04b._
 
