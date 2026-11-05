@@ -338,3 +338,20 @@ fn unknown_rule_exits_two() {
     error: unknown rule `KL9999`: run `kubelint rules` to list the rule codes and names
     ");
 }
+
+#[test]
+fn json_format_prints_one_document() {
+    insta::assert_snapshot!(run(&["check", "--format", "json"], None));
+}
+
+#[test]
+fn json_format_with_no_findings() {
+    let out = run(&["check", "--format", "json", "deploy/web.yaml"], None);
+    let (_, stdout) = out.split_once("--- stdout\n").expect("stdout section");
+    let (stdout, _) = stdout.split_once("--- stderr").expect("stderr section");
+    let value: serde_json::Value = serde_json::from_str(stdout).expect("valid JSON");
+    assert_eq!(value["version"], 1);
+    assert_eq!(value["diagnostics"], serde_json::json!([]));
+    assert_eq!(value["summary"]["files_checked"], 1);
+    assert!(out.starts_with("exit: 0\n"), "{out}");
+}

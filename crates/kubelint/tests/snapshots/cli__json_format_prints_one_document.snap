@@ -1,0 +1,68 @@
+---
+source: crates/kubelint/tests/cli.rs
+expression: "run(&[\"check\", \"--format\", \"json\"], None)"
+---
+exit: 1
+--- stdout
+{
+  "version": 1,
+  "diagnostics": [
+    {
+      "code": "KL1001",
+      "name": "missing-api-version",
+      "severity": "error",
+      "message": "`Service` object has no `apiVersion`",
+      "help": "add `apiVersion: v1`",
+      "location": {
+        "path": "deploy/broken.yml",
+        "start": {
+          "line": 1,
+          "column": 1,
+          "offset": 0
+        },
+        "end": {
+          "line": 1,
+          "column": 14,
+          "offset": 13
+        },
+        "message": null
+      },
+      "related": []
+    },
+    {
+      "code": "KL0001",
+      "name": "invalid-yaml",
+      "severity": "error",
+      "message": "invalid YAML: while parsing a block mapping, did not find expected key",
+      "help": "fix the YAML syntax; kubelint skips this document until it parses",
+      "location": {
+        "path": "deploy/broken.yml",
+        "start": {
+          "line": 9,
+          "column": 2,
+          "offset": 87
+        },
+        "end": {
+          "line": 9,
+          "column": 2,
+          "offset": 87
+        },
+        "message": null
+      },
+      "related": []
+    }
+  ],
+  "summary": {
+    "by_severity": {
+      "error": 2,
+      "warning": 0,
+      "info": 0
+    },
+    "files_checked": 3,
+    "objects_checked": 2,
+    "files_skipped": 3
+  }
+}
+--- stderr
+note: skipped 3 files of the Helm chart `charts/web`; kubelint checks rendered manifests, not templates
+  = help: run `helm template charts/web | kubelint check -`

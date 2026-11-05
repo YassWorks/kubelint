@@ -234,7 +234,7 @@ securityContext:
 | `--format` | For | Notes |
 | --- | --- | --- |
 | `human` (default) | terminals | rustc-style snippets via `annotate-snippets`, colors when stdout is a TTY, summary line with timing. |
-| `json` | scripts | Stable, documented schema. Breaking it is a breaking change. |
+| `json` | scripts | Stable, versioned schema ([ADR 0013](decisions/0013-json-output-schema.md), [`user/output-formats.md`](user/output-formats.md)). Breaking it is a breaking change. |
 | `sarif` | GitHub code scanning and other security dashboards | SARIF 2.1.0, hand-written `serde` structs (no SARIF crate dependency). |
 | `github` | GitHub Actions logs | `::error file=...,line=...,col=...::message` workflow commands. |
 

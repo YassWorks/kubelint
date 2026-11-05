@@ -393,6 +393,8 @@ dependencies = [
  "insta",
  "kubelint_diagnostics",
  "kubelint_source",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

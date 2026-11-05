@@ -13,6 +13,8 @@ homepage.workspace = true
 annotate-snippets = { workspace = true }
 kubelint_diagnostics = { workspace = true }
 kubelint_source = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
 
 [dev-dependencies]
 insta = { workspace = true }

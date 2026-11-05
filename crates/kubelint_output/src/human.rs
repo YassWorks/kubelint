@@ -202,7 +202,7 @@ fn annotation<'a>(file: &SourceFile, label: &'a Label, kind: AnnotationKind) -> 
 }
 
 /// The file's path with `/` separators, so output looks the same on every platform.
-fn path_string(file: &SourceFile) -> String {
+pub(crate) fn path_string(file: &SourceFile) -> String {
     file.path().to_string_lossy().replace('\\', "/")
 }
 
