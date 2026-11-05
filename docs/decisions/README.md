@@ -50,3 +50,4 @@ deliberately instead of drifting.
 | 0012 | [`kubelint rules` and `kubelint rule` output](0012-rules-command-output.md) | Accepted |
 | 0013 | [JSON output schema for `kubelint check`](0013-json-output-schema.md) | Accepted |
 | 0014 | [SARIF output](0014-sarif-output.md) | Accepted |
+| 0015 | [GitHub Actions output](0015-github-output.md) | Accepted |

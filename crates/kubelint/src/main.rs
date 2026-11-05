@@ -18,7 +18,9 @@ use anyhow::Context as _;
 use clap::{Parser, Subcommand, ValueEnum};
 use kubelint_diagnostics::Severity;
 use kubelint_linter::{Linter, rules};
-use kubelint_output::{HumanRenderer, JsonRenderer, SarifRenderer, SarifRule, Summary};
+use kubelint_output::{
+    GithubRenderer, HumanRenderer, JsonRenderer, SarifRenderer, SarifRule, Summary,
+};
 use kubelint_source::SourceFile;
 
 use crate::discover::{Input, SkippedChart};
@@ -117,6 +119,8 @@ enum OutputFormat {
     Json,
     /// SARIF 2.1.0, for GitHub code scanning and other dashboards.
     Sarif,
+    /// GitHub Actions workflow commands, shown as annotations on the changed lines.
+    Github,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -210,6 +214,9 @@ fn check(args: &CheckArgs) -> anyhow::Result<ExitCode> {
             HumanRenderer::new(color).render(&files, &result.diagnostics, rule_name, &summary)
         }
         OutputFormat::Json => JsonRenderer.render(&files, &result.diagnostics, rule_name, &summary),
+        OutputFormat::Github => {
+            GithubRenderer.render(&files, &result.diagnostics, rule_name, &summary)
+        }
         OutputFormat::Sarif => {
             let rules: Vec<SarifRule<'_>> = rules::ALL
                 .iter()

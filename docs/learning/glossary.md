@@ -222,6 +222,10 @@ mistakes. kubelint is a linter for Kubernetes YAML.
 language tools. A kubelint language server (planned for v0.3) will show findings while
 you type.
 
+**Workflow commands.** Specially formatted lines such as `::error file=a.yaml,line=3::text`
+that a program prints in a GitHub Actions job. The runner hides the line and shows an
+annotation instead. Special characters are escaped with `%` codes (`%0A` for a newline).
+
 **rustfmt.** Rust's official code formatter. CI fails if code is not formatted exactly the
 way it would format it.
 

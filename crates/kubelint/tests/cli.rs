@@ -402,3 +402,8 @@ fn sarif_format_lists_every_rule_and_each_finding() {
         ]
     );
 }
+
+#[test]
+fn github_format_prints_workflow_commands() {
+    insta::assert_snapshot!(run(&["check", "--format", "github"], None));
+}

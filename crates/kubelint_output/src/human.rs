@@ -209,7 +209,7 @@ pub(crate) fn path_string(file: &SourceFile) -> String {
 /// `Found 2 errors and 1 warning. Checked 3 files and 12 objects in 42ms.`, or `All
 /// checks passed.` first when there is nothing to report. Skipped files, if any, come
 /// before the timing: `Checked 3 files and 12 objects, skipped 2 files in 42ms.`
-fn summary_line(diagnostics: &[Diagnostic], summary: &Summary) -> String {
+pub(crate) fn summary_line(diagnostics: &[Diagnostic], summary: &Summary) -> String {
     let parts: Vec<String> = [
         (Severity::Error, "error"),
         (Severity::Warning, "warning"),

@@ -7,7 +7,7 @@
 | `human` (default) | people in a terminal | available |
 | `json` | scripts and other tools | available |
 | `sarif` | GitHub code scanning and security dashboards | available |
-| `github` | annotations in GitHub Actions logs | planned (M2-09) |
+| `github` | annotations in GitHub Actions logs | available |
 
 Whatever the format, the exit code is the same: `0` when nothing at or above the
 `fail-on` severity was found, `1` when something was, `2` when kubelint could not run
@@ -138,3 +138,32 @@ jobs:
 
 Code scanning is free for public repositories and needs GitHub Advanced Security for
 private ones. Release binaries and a ready-made GitHub Action are planned (M3-07, M3-08).
+
+## `github`
+
+[Workflow commands](https://docs.github.com/actions/reference/workflow-commands-for-github-actions)
+that GitHub Actions turns into annotations: each finding appears in the job log and on
+the changed line of the pull request's "Files changed" tab. No upload step or extra
+permission is needed.
+
+```console
+$ kubelint check --format github .
+::error file=deploy/broken.yml,line=1,col=1,endLine=1,endColumn=14,title=KL1001 missing-api-version::`Service` object has no `apiVersion`%0Ahelp: add `apiVersion: v1`
+Found 1 error. Checked 2 files and 2 objects.
+```
+
+- `error` and `warning` findings become `::error` and `::warning`; `info` becomes
+  `::notice`.
+- The title is the rule code and name; the message has the help as a second line.
+- Columns count UTF-16 code units, like SARIF. Paths are printed as found, so run
+  kubelint from the repository root.
+- The summary line (without timing) ends the output as plain log text.
+
+```yaml
+# a step in a GitHub Actions job
+- name: Lint manifests
+  run: kubelint check --format github .
+```
+
+The step fails when kubelint finds something at or above `fail-on` (exit code 1), which
+is usually what a CI gate wants.
