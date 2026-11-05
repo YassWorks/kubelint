@@ -8,6 +8,8 @@
 
 mod human;
 mod json;
+mod sarif;
 
 pub use human::{HumanRenderer, Summary};
 pub use json::{JSON_SCHEMA_VERSION, JsonRenderer};
+pub use sarif::{SarifRenderer, SarifRule};

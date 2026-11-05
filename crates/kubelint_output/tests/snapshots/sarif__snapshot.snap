@@ -1,0 +1,159 @@
+---
+source: crates/kubelint_output/tests/sarif.rs
+expression: render()
+---
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "kubelint",
+          "version": "1.2.3",
+          "informationUri": "https://github.com/YassWorks/kubelint",
+          "rules": [
+            {
+              "id": "KL1004",
+              "name": "duplicate-object",
+              "shortDescription": {
+                "text": "Two objects have the same kind, namespace and name."
+              },
+              "fullDescription": {
+                "text": "Two objects have the same kind, namespace and name."
+              },
+              "help": {
+                "text": "## Why\n\nThe second one silently replaces the first.\n",
+                "markdown": "## Why\n\nThe second one silently replaces the first.\n"
+              },
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "tags": [
+                  "correctness"
+                ]
+              }
+            },
+            {
+              "id": "KL3005",
+              "name": "single-replica",
+              "shortDescription": {
+                "text": "The workload runs a single replica."
+              },
+              "fullDescription": {
+                "text": "The workload runs a single replica."
+              },
+              "help": {
+                "text": "One pod means downtime on every restart.\n",
+                "markdown": "One pod means downtime on every restart.\n"
+              },
+              "defaultConfiguration": {
+                "level": "note"
+              },
+              "properties": {
+                "tags": [
+                  "reliability"
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "columnKind": "utf16CodeUnits",
+      "results": [
+        {
+          "ruleId": "KL1004",
+          "ruleIndex": 0,
+          "level": "warning",
+          "message": {
+            "text": "duplicate object\nhelp: rename one of them"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "deploy/a%20b.yaml",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 2,
+                  "startColumn": 10,
+                  "endLine": 2,
+                  "endColumn": 11
+                }
+              },
+              "message": {
+                "text": "second here"
+              }
+            }
+          ],
+          "relatedLocations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///abs/b.yaml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "endLine": 1,
+                  "endColumn": 10
+                }
+              },
+              "message": {
+                "text": "first here"
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "KL3005",
+          "ruleIndex": 1,
+          "level": "note",
+          "message": {
+            "text": "one replica"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "file:///abs/b.yaml"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 7,
+                  "endLine": 1,
+                  "endColumn": 10
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "KL0001",
+          "level": "error",
+          "message": {
+            "text": "a code without a rule entry"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "deploy/a%20b.yaml",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 1,
+                  "startColumn": 1,
+                  "endLine": 1,
+                  "endColumn": 1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

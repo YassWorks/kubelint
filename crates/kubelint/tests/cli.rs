@@ -355,3 +355,50 @@ fn json_format_with_no_findings() {
     assert_eq!(value["summary"]["files_checked"], 1);
     assert!(out.starts_with("exit: 0\n"), "{out}");
 }
+
+#[test]
+fn sarif_format_lists_every_rule_and_each_finding() {
+    let mut cmd = Command::cargo_bin("kubelint").expect("binary is built");
+    let output = cmd
+        .current_dir(project())
+        .args(["check", "--format", "sarif"])
+        .output()
+        .expect("binary runs");
+    assert_eq!(output.status.code(), Some(1));
+    let log: serde_json::Value = serde_json::from_slice(&output.stdout).expect("valid JSON");
+    assert_eq!(log["version"], "2.1.0");
+    let run = &log["runs"][0];
+    let rules: Vec<&str> = run["tool"]["driver"]["rules"]
+        .as_array()
+        .expect("rules")
+        .iter()
+        .map(|rule| rule["id"].as_str().expect("id"))
+        .collect();
+    let codes: Vec<&str> = kubelint_linter::rules::ALL
+        .iter()
+        .map(|rule| rule.meta().code)
+        .collect();
+    assert_eq!(rules, codes);
+    let results: Vec<String> = run["results"]
+        .as_array()
+        .expect("results")
+        .iter()
+        .map(|result| {
+            let location = &result["locations"][0]["physicalLocation"];
+            format!(
+                "{} {} {}:{}",
+                result["ruleId"].as_str().expect("ruleId"),
+                result["level"].as_str().expect("level"),
+                location["artifactLocation"]["uri"].as_str().expect("uri"),
+                location["region"]["startLine"],
+            )
+        })
+        .collect();
+    assert_eq!(
+        results,
+        [
+            "KL1001 error deploy/broken.yml:1",
+            "KL0001 error deploy/broken.yml:9"
+        ]
+    );
+}

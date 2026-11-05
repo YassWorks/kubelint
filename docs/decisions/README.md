@@ -49,3 +49,4 @@ deliberately instead of drifting.
 | 0011 | [`[files] exclude` pattern semantics](0011-exclude-patterns.md) | Accepted |
 | 0012 | [`kubelint rules` and `kubelint rule` output](0012-rules-command-output.md) | Accepted |
 | 0013 | [JSON output schema for `kubelint check`](0013-json-output-schema.md) | Accepted |
+| 0014 | [SARIF output](0014-sarif-output.md) | Accepted |

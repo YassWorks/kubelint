@@ -230,7 +230,9 @@ data has. Tools reading `kubelint check --format json` check `version`; kubelint
 fields freely but bumps the number when it renames or removes one (ADR 0013).
 
 **SARIF.** A standard JSON format for static analysis results. GitHub reads it to show
-findings in the "Code scanning" tab and inline on pull requests.
+findings in the "Code scanning" tab and inline on pull requests. Its columns count UTF-16 code
+units (the way JavaScript strings count), so an emoji is two columns wide there while it
+is four bytes in kubelint's own offsets.
 
 **Rule selector.** A string that names one or more rules in configuration: a category
 (`security`), a code prefix (`KL2`), a code (`KL2001`) or a name. Categories and prefixes

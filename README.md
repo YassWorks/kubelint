@@ -98,7 +98,8 @@ A few more things worth knowing:
   `# kubelint-disable-line <rules>` works at the end of a line and
   `# kubelint-disable-file <rules>` anywhere in a file. KL0001 cannot be suppressed, and a
   suppression naming an unknown rule is reported (KL0003), so typos do not go unnoticed.
-- **Output formats:** `--format json` prints one JSON document for scripts; see
+- **Output formats:** `--format json` prints one JSON document for scripts and
+  `--format sarif` feeds GitHub code scanning; see
   [output formats](docs/user/output-formats.md).
 - **Rules:** `kubelint rules` lists every rule (`--format json` for scripts) and
   `kubelint rule KL1001` (or `kubelint rule missing-api-version`) explains one.
