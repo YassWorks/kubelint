@@ -18,7 +18,7 @@ use anyhow::Context as _;
 use clap::{Parser, Subcommand, ValueEnum};
 use kubelint_diagnostics::Severity;
 use kubelint_linter::{Linter, rules};
-use kubelint_output::{HumanRenderer, JsonRenderer, Summary};
+use kubelint_output::{HumanRenderer, JsonRenderer, SarifRenderer, SarifRule, Summary};
 use kubelint_source::SourceFile;
 
 use crate::discover::{Input, SkippedChart};
@@ -115,6 +115,8 @@ enum OutputFormat {
     Human,
     /// One JSON document, for scripts (see `docs/user/output-formats.md`).
     Json,
+    /// SARIF 2.1.0, for GitHub code scanning and other dashboards.
+    Sarif,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -208,6 +210,24 @@ fn check(args: &CheckArgs) -> anyhow::Result<ExitCode> {
             HumanRenderer::new(color).render(&files, &result.diagnostics, rule_name, &summary)
         }
         OutputFormat::Json => JsonRenderer.render(&files, &result.diagnostics, rule_name, &summary),
+        OutputFormat::Sarif => {
+            let rules: Vec<SarifRule<'_>> = rules::ALL
+                .iter()
+                .map(|rule| {
+                    let meta = rule.meta();
+                    SarifRule {
+                        code: meta.code,
+                        name: meta.name,
+                        summary: meta.summary,
+                        explanation: meta.explanation,
+                        category: meta.category.as_str(),
+                        default_severity: meta.default_severity,
+                    }
+                })
+                .collect();
+            SarifRenderer::new(env!("CARGO_PKG_VERSION"), &rules)
+                .render(&files, &result.diagnostics)
+        }
     };
     let mut stdout = std::io::stdout().lock();
     stdout

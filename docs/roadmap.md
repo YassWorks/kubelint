@@ -122,7 +122,7 @@ Engine and user experience:
   code). Test that output is identical across runs. _Depends on: M1-13._
 - [x] **M2-07** (#36) `--format json` with a documented, versioned schema in
   `docs/user/output-formats.md`. _Depends on: M1-13._
-- [ ] **M2-08** `--format sarif` (SARIF 2.1.0) with structural tests and docs for GitHub
+- [x] **M2-08** (#37) `--format sarif` (SARIF 2.1.0) with structural tests and docs for GitHub
   code scanning upload. _Depends on: M2-07._
 - [ ] **M2-09** `--format github` (workflow commands) with docs. _Depends on: M2-07._
 - [ ] **M2-10** "Did you mean" suggestions for unknown rule codes or names in config, CLI

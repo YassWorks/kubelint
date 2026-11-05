@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | `human` (default) | people in a terminal | available |
 | `json` | scripts and other tools | available |
-| `sarif` | GitHub code scanning and security dashboards | planned (M2-08) |
+| `sarif` | GitHub code scanning and security dashboards | available |
 | `github` | annotations in GitHub Actions logs | planned (M2-09) |
 
 Whatever the format, the exit code is the same: `0` when nothing at or above the
@@ -94,3 +94,47 @@ A **position** has `line` (1-based), `column` (1-based, counted in UTF-8 bytes) 
 $ kubelint check --format json . | jq -r '.diagnostics[] | "\(.location.path):\(.location.start.line) \(.code)"'
 $ kubelint check --format json . | jq '.summary.by_severity.error'
 ```
+
+## `sarif`
+
+[SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html), the
+standard format for static analysis results. GitHub code scanning reads it and shows each
+finding on the pull request and in the repository's "Security" tab. The mapping is
+recorded in [ADR 0014](../decisions/0014-sarif-output.md). In short:
+
+- Every built-in rule is listed under `runs[0].tool.driver.rules`, with its summary and
+  its full explanation as `help.markdown`.
+- Each finding is a result with `ruleId`, `level` (`error`, `warning`, or `note` for
+  `info`), a message (with the help as a second line), its location and any related
+  locations.
+- Columns count UTF-16 code units, the SARIF default. Relative paths stay relative, so
+  run kubelint from the repository root.
+
+### Uploading to GitHub code scanning
+
+```yaml
+# .github/workflows/kubelint.yml
+name: kubelint
+on: [push, pull_request]
+permissions:
+  contents: read
+  security-events: write   # needed to upload SARIF
+jobs:
+  kubelint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install kubelint
+        run: cargo install --locked --git https://github.com/YassWorks/kubelint kubelint
+      - name: Lint manifests
+        # Findings make kubelint exit with 1; let the upload step run anyway.
+        run: kubelint check --format sarif . > kubelint.sarif || true
+      - name: Upload to code scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: kubelint.sarif
+          category: kubelint
+```
+
+Code scanning is free for public repositories and needs GitHub Advanced Security for
+private ones. Release binaries and a ready-made GitHub Action are planned (M3-07, M3-08).
