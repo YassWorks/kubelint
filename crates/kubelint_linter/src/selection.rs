@@ -18,6 +18,7 @@ use std::fmt;
 use kubelint_diagnostics::{Diagnostic, Severity};
 
 use crate::rules::syntax::InvalidYaml;
+use crate::suggest::rule_suggestion;
 use crate::{Category, EnabledRule, Rule, rules};
 
 /// Which rules to run, as written by the user.
@@ -64,6 +65,9 @@ pub struct SelectionError {
     pub selector: String,
     /// What is wrong with it.
     pub kind: SelectionErrorKind,
+    /// For an unknown selector, the closest rule code, rule name or category, if one is
+    /// close enough to be a likely typo.
+    pub suggestion: Option<&'static str>,
 }
 
 /// What is wrong with a selector.
@@ -82,12 +86,20 @@ impl fmt::Display for SelectionError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let selector = &self.selector;
         match self.kind {
-            SelectionErrorKind::Unknown => write!(
-                f,
-                "unknown rule selector `{selector}` in `{}`: expected a rule code \
-                 (`KL2001`), a code prefix (`KL2`), a category (`security`) or a rule name",
-                self.list.as_str()
-            ),
+            SelectionErrorKind::Unknown => match self.suggestion {
+                Some(suggestion) => write!(
+                    f,
+                    "unknown rule selector `{selector}` in `{}`: did you mean `{suggestion}`?",
+                    self.list.as_str()
+                ),
+                None => write!(
+                    f,
+                    "unknown rule selector `{selector}` in `{}`: expected a rule code \
+                     (`KL2001`), a code prefix (`KL2`), a category (`security`) or a rule \
+                     name",
+                    self.list.as_str()
+                ),
+            },
             SelectionErrorKind::AlwaysOn => write!(
                 f,
                 "`{selector}` cannot be configured: KL0001 `invalid-yaml` always runs and \
@@ -199,6 +211,7 @@ fn error(
         index,
         selector: selector.to_owned(),
         kind,
+        suggestion: None,
     }
 }
 
@@ -250,7 +263,10 @@ fn matches(
     if known {
         Ok(matched)
     } else {
-        Err(error(list, index, selector, SelectionErrorKind::Unknown))
+        Err(SelectionError {
+            suggestion: rule_suggestion(registry, selector, true),
+            ..error(list, index, selector, SelectionErrorKind::Unknown)
+        })
     }
 }
 
@@ -499,6 +515,14 @@ mod tests {
             message(&selection(Some(&["KL9"]), &[])),
             "unknown rule selector `KL9` in `select`: expected a rule code (`KL2001`), a code \
              prefix (`KL2`), a category (`security`) or a rule name"
+        );
+        assert_eq!(
+            message(&selection(Some(&["Security"]), &[])),
+            "unknown rule selector `Security` in `select`: did you mean `security`?"
+        );
+        assert_eq!(
+            message(&selection(None, &["kl2001"])),
+            "unknown rule selector `kl2001` in `ignore`: did you mean `KL2001`?"
         );
         assert_eq!(
             message(&selection(None, &["invalid-yaml"])),

@@ -7,7 +7,7 @@ warning[KL0003]: `missing-kinds` is not a rule code or name
   |
 6 |   # kubelint-disable-next-line KL1001, missing-kinds -- typo in the name
   |                                        ^^^^^^^^^^^^^
-  = help: name a rule by its code (`KL1001`) or its name (`missing-api-version`); categories and prefixes are not accepted here
+  = help: did you mean `missing-kind`?
 
 warning[KL0003]: `KL0001` cannot be suppressed
   --> syntax/KL0003.yaml:11:40

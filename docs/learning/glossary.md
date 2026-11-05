@@ -180,6 +180,11 @@ terminal to switch color. They make output readable in a terminal and garbage in
 or CI log, so the human renderer takes color on or off as a parameter and the CLI decides
 (`--color auto` turns it on only when output goes to a terminal).
 
+**Edit distance (Levenshtein distance).** The smallest number of one-character
+insertions, deletions or substitutions that turn one word into another: `secrity` is one
+edit away from `security`. kubelint uses it to answer "did you mean `security`?" when a
+rule selector, suppression or `kubelint rule` argument is misspelled.
+
 **Exit code.** The number a program returns to the shell when it ends; `0` means
 success. CI systems fail a step when a command exits non-zero. kubelint returns `0` when
 nothing at or above the fail threshold was found, `1` when something was, and `2` when it

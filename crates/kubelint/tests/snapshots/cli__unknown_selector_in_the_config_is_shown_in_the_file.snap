@@ -5,7 +5,7 @@ expression: "run_in(configured(),\n&[\"check\", \"--config\", \"bad/unknown-sele
 exit: 2
 --- stdout
 --- stderr
-error: unknown rule selector `secrity` in `select`: expected a rule code (`KL2001`), a code prefix (`KL2`), a category (`security`) or a rule name
+error: unknown rule selector `secrity` in `select`: did you mean `security`?
  --> bad/unknown-selector.toml:2:26
   |
 2 | select = ["correctness", "secrity"]
