@@ -12,6 +12,7 @@ mod engine;
 mod rule;
 pub mod rules;
 mod selection;
+mod suggest;
 mod suppression;
 #[cfg(test)]
 mod testing;
@@ -20,3 +21,4 @@ pub use context::{LintObject, ObjectContext, RunContext};
 pub use engine::{EnabledRule, LintResult, Linter};
 pub use rule::{Category, Rule, RuleMeta};
 pub use selection::{RuleSelection, SelectionError, SelectionErrorKind, SelectorList, fails};
+pub use suggest::{did_you_mean, suggest_rule};

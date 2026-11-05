@@ -152,9 +152,15 @@ fn main() -> ExitCode {
         Command::Rules { format } => print(&rules_cmd::list(format)),
         Command::Rule { rule } => match rules_cmd::explain(&rule) {
             Some(text) => print(&text),
-            None => Err(anyhow::anyhow!(
-                "unknown rule `{rule}`: run `kubelint rules` to list the rule codes and names"
-            )),
+            None => Err(match kubelint_linter::suggest_rule(&rule) {
+                Some(suggestion) => anyhow::anyhow!(
+                    "unknown rule `{rule}`: did you mean `{suggestion}`? Run `kubelint rules` \
+                     to list the rule codes and names"
+                ),
+                None => anyhow::anyhow!(
+                    "unknown rule `{rule}`: run `kubelint rules` to list the rule codes and names"
+                ),
+            }),
         },
     };
     match result {

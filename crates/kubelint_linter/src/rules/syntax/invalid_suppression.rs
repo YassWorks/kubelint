@@ -5,7 +5,7 @@ use kubelint_source::FileId;
 use kubelint_yaml::Comment;
 
 use crate::suppression::{Target, parse_directive, target};
-use crate::{Category, Rule, RuleMeta};
+use crate::{Category, Rule, RuleMeta, suggest_rule};
 
 /// Reports suppression comments that silence nothing because a rule they name is
 /// unknown, is KL0001, or because they name no rule at all.
@@ -83,13 +83,17 @@ impl InvalidSuppression {
                     Target::Rule(_) => continue,
                     Target::Unknown => (
                         format!("`{selector}` is not a rule code or name"),
-                        "name a rule by its code (`KL1001`) or its name \
-                         (`missing-api-version`); categories and prefixes are not \
-                         accepted here",
+                        match suggest_rule(selector) {
+                            Some(suggestion) => format!("did you mean `{suggestion}`?"),
+                            None => "name a rule by its code (`KL1001`) or its name \
+                                     (`missing-api-version`); categories and prefixes are \
+                                     not accepted here"
+                                .to_owned(),
+                        },
                     ),
                     Target::AlwaysOn => (
                         format!("`{selector}` cannot be suppressed"),
-                        "syntax errors are always reported; fix the YAML instead",
+                        "syntax errors are always reported; fix the YAML instead".to_owned(),
                     ),
                 };
                 out.push(

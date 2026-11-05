@@ -125,8 +125,9 @@ Engine and user experience:
 - [x] **M2-08** (#37) `--format sarif` (SARIF 2.1.0) with structural tests and docs for GitHub
   code scanning upload. _Depends on: M2-07._
 - [x] **M2-09** (#38) `--format github` (workflow commands) with docs. _Depends on: M2-07._
-- [ ] **M2-10** "Did you mean" suggestions for unknown rule codes or names in config, CLI
-  and suppressions (`strsim`). _Depends on: M2-03b, M2-04b._
+- [x] **M2-10** (#39) "Did you mean" suggestions for unknown rule codes or names in config,
+  CLI and suppressions (a small edit-distance function instead of `strsim`, per the
+  dependency policy). _Depends on: M2-03b, M2-04b._
 
 Correctness rules (one PR each):
 

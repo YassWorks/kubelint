@@ -340,6 +340,16 @@ fn unknown_rule_exits_two() {
 }
 
 #[test]
+fn misspelled_rule_gets_a_suggestion() {
+    insta::assert_snapshot!(run(&["rule", "missing-knd"], None), @r"
+    exit: 2
+    --- stdout
+    --- stderr
+    error: unknown rule `missing-knd`: did you mean `missing-kind`? Run `kubelint rules` to list the rule codes and names
+    ");
+}
+
+#[test]
 fn json_format_prints_one_document() {
     insta::assert_snapshot!(run(&["check", "--format", "json"], None));
 }
