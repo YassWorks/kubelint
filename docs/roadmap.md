@@ -118,7 +118,7 @@ Engine and user experience:
   names an unknown rule, names KL0001, or names no rule at all. _Depends on: M2-04a._
 - [x] **M2-05** (#33) `kubelint rules` (table; `--format json`) and `kubelint rule <code|name>`
   (prints the explanation). _Depends on: M2-02._
-- [ ] **M2-06** Parallel linting with `rayon` and deterministic output order (path, offset,
+- [x] **M2-06** (#35) Parallel linting with `rayon` and deterministic output order (path, offset,
   code). Test that output is identical across runs. _Depends on: M1-13._
 - [ ] **M2-07** `--format json` with a documented, versioned schema in
   `docs/user/output-formats.md`. _Depends on: M1-13._

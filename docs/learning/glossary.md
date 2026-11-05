@@ -154,6 +154,13 @@ the same way.
 crashes the program (a "panic") if there is none. kubelint forbids it on anything that
 comes from user input, because a linter must never crash on a bad file.
 
+**`Send`, `Sync` and `rayon`.** `Send` means a value can be moved to another thread;
+`Sync` means it can be shared between threads by reference. The compiler checks both,
+so a data race is a compile error. `rayon` turns an iterator into a parallel one
+(`files.par_iter()` instead of `files.iter()`) and spreads the work over all CPU cores.
+`collect()` on a parallel iterator keeps the original order, which helps kubelint print
+the same output on every run.
+
 **Workspace.** Several crates developed together in one repository, sharing one
 `Cargo.lock`, one `target/` build folder and common settings. kubelint's root `Cargo.toml`
 defines the workspace.

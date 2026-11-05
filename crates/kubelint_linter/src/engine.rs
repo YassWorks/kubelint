@@ -2,6 +2,8 @@
 
 use kubelint_diagnostics::{Diagnostic, Severity};
 use kubelint_source::{FileId, SourceFile};
+use kubelint_yaml::Parse;
+use rayon::prelude::*;
 
 use crate::context::{LintObject, ObjectContext, RunContext};
 use crate::rules::syntax::{InvalidSuppression, InvalidYaml};
@@ -76,88 +78,62 @@ impl Linter {
 
     /// Lints `files`. A file's [`FileId`] is its index in the slice.
     ///
-    /// Files are linted one after another; parallel linting is roadmap task M2-06.
+    /// Files are independent until the cross-object rules run, so parsing, per-object
+    /// rules and suppression comments are handled for each file in parallel (`rayon`).
+    /// Cross-object rules ([`Rule::check_all`]) then run once over every object. The
+    /// findings are sorted by file, byte offset and rule code, so the result does not
+    /// depend on thread scheduling.
+    ///
     /// YAML syntax errors are always reported as KL0001, whatever rules are enabled;
     /// the other documents of a file with an error are still checked. Findings silenced
     /// by suppression comments (`# kubelint-disable-line KL1001`) are dropped; KL0003
     /// reports the suppression comments that cannot work.
     pub fn lint(&self, files: &[SourceFile]) -> LintResult {
         let parses: Vec<_> = files
-            .iter()
+            .par_iter()
             .map(|file| kubelint_yaml::parse(file.text()))
             .collect();
-        let objects: Vec<LintObject<'_>> = parses
-            .iter()
+        let per_file: Vec<FileLint<'_>> = files
+            .par_iter()
+            .zip(&parses)
             .enumerate()
-            .flat_map(|(index, parse)| {
-                let file = FileId(u32::try_from(index).unwrap_or(u32::MAX));
-                parse
-                    .documents
-                    .iter()
-                    .flat_map(kubelint_k8s::objects)
-                    .map(move |object| LintObject { file, object })
+            .map(|(index, (file, parse))| {
+                self.lint_file(
+                    FileId(u32::try_from(index).unwrap_or(u32::MAX)),
+                    file,
+                    parse,
+                )
             })
             .collect();
 
-        let mut diagnostics: Vec<Diagnostic> = parses
+        let objects: Vec<LintObject<'_>> = per_file
             .iter()
-            .enumerate()
-            .flat_map(|(index, parse)| {
-                let file = FileId(u32::try_from(index).unwrap_or(u32::MAX));
-                parse
-                    .errors
-                    .iter()
-                    .map(move |error| InvalidYaml::diagnostic(file, error))
-            })
+            .flat_map(|lint| lint.objects.iter().copied())
             .collect();
-        let invalid_suppression = InvalidSuppression.meta().code;
-        if let Some(enabled) = self
-            .rules
-            .iter()
-            .find(|enabled| enabled.rule.meta().code == invalid_suppression)
-        {
-            for (index, parse) in parses.iter().enumerate() {
-                let file = FileId(u32::try_from(index).unwrap_or(u32::MAX));
-                diagnostics.extend(InvalidSuppression::diagnostics(
-                    file,
-                    &parse.comments,
-                    enabled.severity,
-                ));
-            }
-        }
+        let mut cross_object = Vec::new();
         for enabled in &self.rules {
-            let meta = enabled.rule.meta();
-            for lint_object in &objects {
-                let Some(file) = files.get(lint_object.file.0 as usize) else {
-                    continue;
-                };
-                let mut cx = ObjectContext::new(
-                    lint_object.file,
-                    file,
-                    lint_object.object,
-                    meta,
-                    enabled.severity,
-                    &mut diagnostics,
-                );
-                enabled.rule.check_object(&mut cx);
-            }
-            let mut cx = RunContext::new(files, &objects, meta, enabled.severity, &mut diagnostics);
+            let mut cx = RunContext::new(
+                files,
+                &objects,
+                enabled.rule.meta(),
+                enabled.severity,
+                &mut cross_object,
+            );
             enabled.rule.check_all(&mut cx);
         }
-
-        let suppressions: Vec<Suppressions> = files
-            .iter()
-            .zip(&parses)
-            .map(|(file, parse)| Suppressions::new(file, &parse.comments))
-            .collect();
-        diagnostics.retain(|diagnostic| {
+        cross_object.retain(|diagnostic| {
             let index = diagnostic.primary.file.0 as usize;
-            match (files.get(index), suppressions.get(index)) {
-                (Some(file), Some(suppressions)) => !suppressions.suppresses(file, diagnostic),
+            match (files.get(index), per_file.get(index)) {
+                (Some(file), Some(lint)) => !lint.suppressions.suppresses(file, diagnostic),
                 _ => true,
             }
         });
 
+        let mut diagnostics: Vec<Diagnostic> = per_file
+            .into_iter()
+            .flat_map(|lint| lint.diagnostics)
+            .chain(cross_object)
+            .collect();
         diagnostics.sort_by(|a, b| {
             (a.primary.file, a.primary.range.start(), a.code).cmp(&(
                 b.primary.file,
@@ -170,6 +146,64 @@ impl Linter {
             objects_checked: objects.len(),
         }
     }
+
+    /// Everything that needs only one file: its objects, its syntax errors, its invalid
+    /// suppression comments and the per-object findings, minus the suppressed ones.
+    fn lint_file<'a>(&self, id: FileId, file: &'a SourceFile, parse: &'a Parse) -> FileLint<'a> {
+        let objects: Vec<LintObject<'a>> = parse
+            .documents
+            .iter()
+            .flat_map(kubelint_k8s::objects)
+            .map(|object| LintObject { file: id, object })
+            .collect();
+
+        let mut diagnostics: Vec<Diagnostic> = parse
+            .errors
+            .iter()
+            .map(|error| InvalidYaml::diagnostic(id, error))
+            .collect();
+        let invalid_suppression = InvalidSuppression.meta().code;
+        if let Some(enabled) = self
+            .rules
+            .iter()
+            .find(|enabled| enabled.rule.meta().code == invalid_suppression)
+        {
+            diagnostics.extend(InvalidSuppression::diagnostics(
+                id,
+                &parse.comments,
+                enabled.severity,
+            ));
+        }
+        for enabled in &self.rules {
+            let meta = enabled.rule.meta();
+            for lint_object in &objects {
+                let mut cx = ObjectContext::new(
+                    id,
+                    file,
+                    lint_object.object,
+                    meta,
+                    enabled.severity,
+                    &mut diagnostics,
+                );
+                enabled.rule.check_object(&mut cx);
+            }
+        }
+
+        let suppressions = Suppressions::new(file, &parse.comments);
+        diagnostics.retain(|diagnostic| !suppressions.suppresses(file, diagnostic));
+        FileLint {
+            objects,
+            diagnostics,
+            suppressions,
+        }
+    }
+}
+
+/// The part of a run that [`Linter::lint_file`] computes for one file.
+struct FileLint<'a> {
+    objects: Vec<LintObject<'a>>,
+    diagnostics: Vec<Diagnostic>,
+    suppressions: Suppressions,
 }
 
 #[cfg(test)]
@@ -318,6 +352,49 @@ mod tests {
                 .all(|line| line.starts_with("1:") && line.contains(" KL0001 error invalid YAML: ")),
             "{summary:?}"
         );
+    }
+
+    /// Many files mixing objects, syntax errors, duplicate keys and suppression
+    /// comments, so every step of the engine has findings to order.
+    fn many_files() -> Vec<SourceFile> {
+        (0..64)
+            .map(|i| {
+                let text = match i % 4 {
+                    0 => format!("apiVersion: v1\nkind: Pod\nmetadata:\n  name: p{i}\n"),
+                    1 => format!("kind: Service\nkind: Service\n---\nmetadata: {{name: s{i}}}\n"),
+                    2 => "a: [\n---\napiVersion: v1\n# kubelint-disable-next-line KL9999\nkind: Secret\n".to_owned(),
+                    _ => "# kubelint-disable-file KL1001\nkind: ConfigMap\n---\napiVersion: v1\n".to_owned(),
+                };
+                SourceFile::new(format!("f{i}.yaml"), text)
+            })
+            .collect()
+    }
+
+    #[test]
+    fn parallel_output_matches_a_single_thread_and_is_stable() {
+        let mut rules: Vec<EnabledRule> = crate::rules::ALL
+            .iter()
+            .map(|&rule| EnabledRule::new(rule))
+            .collect();
+        rules.push(EnabledRule::new(&KindReporter));
+        rules.push(EnabledRule::new(&CountReporter));
+        let linter = Linter::new(rules);
+        let files = many_files();
+
+        let single = rayon::ThreadPoolBuilder::new()
+            .num_threads(1)
+            .build()
+            .expect("a one-thread pool")
+            .install(|| summary(&linter, &files));
+        assert!(single.len() > files.len(), "{single:?}");
+        for _ in 0..20 {
+            let parallel = rayon::ThreadPoolBuilder::new()
+                .num_threads(8)
+                .build()
+                .expect("an eight-thread pool")
+                .install(|| summary(&linter, &files));
+            assert_eq!(parallel, single);
+        }
     }
 
     #[test]
