@@ -104,6 +104,11 @@ to restart it. See KL3004.
 container starve its neighbors (KL3001); mistyped quantities like `256mb` are rejected
 (KL1007).
 
+**Quantity.** Kubernetes' format for amounts: a number plus a case-sensitive suffix.
+Binary suffixes are powers of 1024 (`Ki`, `Mi`, `Gi`...: `1Mi` is 1,048,576), decimal ones
+powers of 1000 (`m` is a thousandth, `k`, `M`, `G`...: `1M` is 1,000,000), and `e3` is an
+exponent. `500m` CPU is half a core. `1K`, `1mb` and `0.5cores` are not quantities.
+
 **`securityContext`.** Security settings for a pod or a container: run as a non-root
 user, forbid privilege escalation, drop Linux capabilities, read-only filesystem. Most
 `KL2xxx` security rules inspect it. Container-level settings override pod-level ones.
