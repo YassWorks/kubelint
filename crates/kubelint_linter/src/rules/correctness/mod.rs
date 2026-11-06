@@ -1,10 +1,12 @@
 //! `KL1xxx`: objects the Kubernetes API server would reject, or that cannot work as
 //! written.
 
+mod duplicate_object;
 mod missing_api_version;
 mod missing_kind;
 mod missing_object_name;
 
+pub use duplicate_object::DuplicateObject;
 pub use missing_api_version::MissingApiVersion;
 pub use missing_kind::MissingKind;
 pub use missing_object_name::MissingObjectName;

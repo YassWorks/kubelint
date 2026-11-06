@@ -1,0 +1,105 @@
+# Not reported: the first definition of a Deployment.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: prod
+---
+# Reported: the same Deployment again, pointing back at the first one.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: prod
+  name: web
+---
+# Reported: a different version of the same API group is the same object.
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata: {name: web, namespace: prod}
+---
+# Not reported: same name in another namespace.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: staging
+---
+# Not reported: same name without a namespace (it depends on where it is applied).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+---
+# Not reported: same name, different kind.
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: prod
+---
+# Not reported: same kind name in another API group.
+apiVersion: cert-manager.io/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: prod
+---
+# Reported: a quoted name is the same name; cluster-scoped objects have no namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: reader
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: "reader"
+---
+# Reported: items of a kind: List count too.
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: settings
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: settings
+---
+# Not reported: suppressed on the duplicate's line.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: settings  # kubelint-disable-line duplicate-object
+---
+# Not reported: generateName makes a new name every time.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: migrate-
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: migrate-
+---
+# Not reported: objects without a usable name, apiVersion or kind (other rules).
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ""
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ""
+---
+kind: Secret
+metadata:
+  name: token
+---
+kind: Secret
+metadata:
+  name: token

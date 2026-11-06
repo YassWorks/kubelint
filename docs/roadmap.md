@@ -131,8 +131,8 @@ Engine and user experience:
 
 Correctness rules (one PR each):
 
-- [x] **M2-11** KL1003 `missing-object-name`. _Depends on: M1-10._
-- [ ] **M2-12** KL1004 `duplicate-object` (first cross-object rule, uses `check_all`).
+- [x] **M2-11** (#41) KL1003 `missing-object-name`. _Depends on: M1-10._
+- [x] **M2-12** (#42) KL1004 `duplicate-object` (first cross-object rule, uses `check_all`).
   _Depends on: M1-10._
 - [ ] **M2-13** KL1005 `selector-mismatch`. _Depends on: M1-10._
 - [ ] **M2-14** KL1006 `duplicate-container-name`. _Depends on: M1-10._

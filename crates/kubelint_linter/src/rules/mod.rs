@@ -17,6 +17,7 @@ pub static ALL: &[&dyn Rule] = &[
     &correctness::MissingApiVersion,
     &correctness::MissingKind,
     &correctness::MissingObjectName,
+    &correctness::DuplicateObject,
 ];
 
 #[cfg(test)]
