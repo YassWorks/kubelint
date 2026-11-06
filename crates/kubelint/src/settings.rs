@@ -203,7 +203,7 @@ mod tests {
         let from_file = resolve(&config, &Overrides::default()).expect("valid");
         assert_eq!(codes(&from_file), ["KL0001", "KL1001"]);
         let overrides = Overrides {
-            select: Some(vec!["correctness".to_owned()]),
+            select: Some(vec!["KL1001".to_owned(), "KL1002".to_owned()]),
             ignore: Some(Vec::new()),
             fail_on: Some(Severity::Error),
         };

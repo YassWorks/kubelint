@@ -122,7 +122,7 @@ impl RuleSelection {
     /// use kubelint_linter::RuleSelection;
     ///
     /// let selection = RuleSelection {
-    ///     select: Some(vec!["correctness".to_owned()]),
+    ///     select: Some(vec!["KL1001".to_owned(), "missing-kind".to_owned()]),
     ///     ignore: vec!["missing-kind".to_owned()],
     ///     ..RuleSelection::default()
     /// };

@@ -1,0 +1,95 @@
+# Reported: metadata without a name points at the `metadata` key.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: web
+---
+# Reported: no metadata at all on a built-in kind points at `kind`.
+apiVersion: v1
+kind: ConfigMap
+data:
+  key: value
+---
+# Reported: a name with no value, an explicit null and an empty string.
+apiVersion: v1
+kind: Service
+metadata:
+  name:
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: null
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ""
+  generateName: "  "
+---
+# Reported: an empty metadata mapping on a custom resource.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata: {}
+---
+# Reported: metadata with no value.
+apiVersion: v1
+kind: Namespace
+metadata:
+---
+# Reported: an item of a kind: List.
+apiVersion: v1
+kind: List
+items:
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: builder
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    namespace: ci
+---
+# Not reported: a name.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+---
+# Not reported: generateName (used with `kubectl create`).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: migrate-
+---
+# Not reported: a name of the wrong type is a schema problem.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: 42
+---
+# Not reported: metadata of the wrong type is a schema problem.
+apiVersion: v1
+kind: ConfigMap
+metadata: [web]
+---
+# Not reported: configuration files that look like objects but have no metadata.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- deployment.yaml
+---
+apiVersion: v1
+kind: Config
+clusters: []
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+---
+# Not reported: no kind and no metadata (KL1002 reports the missing kind).
+apiVersion: v1
+---
+# Not reported: not a Kubernetes object.
+name: build
+on: push

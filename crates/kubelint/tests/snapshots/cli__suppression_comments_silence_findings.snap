@@ -5,10 +5,10 @@ expression: "run(&[\"check\", \"-\", \"--color\", \"never\"], Some(manifest))"
 exit: 1
 --- stdout
 error[KL1001]: `ConfigMap` object has no `apiVersion`
-  --> <stdin>:10:1
+  --> <stdin>:10:2
    |
-10 | kind: ConfigMap
-   | ^^^^^^^^^^^^^^^
+10 | {kind: ConfigMap, metadata: {name: web}}
+   |  ^^^^^^^^^^^^^^^
    |
    = help: add `apiVersion: v1`
    = note: rule `missing-api-version`

@@ -16,6 +16,7 @@ pub static ALL: &[&dyn Rule] = &[
     &syntax::InvalidSuppression,
     &correctness::MissingApiVersion,
     &correctness::MissingKind,
+    &correctness::MissingObjectName,
 ];
 
 #[cfg(test)]
