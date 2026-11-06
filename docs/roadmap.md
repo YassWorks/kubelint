@@ -136,7 +136,7 @@ Correctness rules (one PR each):
   _Depends on: M1-10._
 - [x] **M2-13** (#43) KL1005 `selector-mismatch`. _Depends on: M1-10._
 - [x] **M2-14** (#44) KL1006 `duplicate-container-name`. _Depends on: M1-10._
-- [ ] **M2-15** `kubelint_k8s`: resource quantity parser matching Kubernetes'
+- [x] **M2-15** (#45) `kubelint_k8s`: resource quantity parser matching Kubernetes'
   `resource.Quantity` grammar, with exhaustive tests. _Depends on: M1-07._
 - [ ] **M2-16** KL1007 `invalid-resource-quantity`. _Depends on: M2-15._
 - [ ] **M2-17** `kubelint_k8s`: validators for DNS-1123 subdomain/label names and label
