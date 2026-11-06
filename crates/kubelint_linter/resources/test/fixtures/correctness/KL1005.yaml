@@ -1,0 +1,163 @@
+# Reported: the template label has a different value.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+---
+# Reported: the template is missing one of the selector's labels.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  selector:
+    matchLabels:
+      app: db
+      tier: data
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers: []
+---
+# Reported: the template has no labels at all; points at its metadata.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: agent
+spec:
+  selector:
+    matchLabels: {app: agent}
+  template:
+    metadata:
+      annotations: {team: infra}
+    spec:
+      containers: []
+---
+# Reported: each failing expression (In, NotIn, Exists, DoesNotExist).
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: api
+spec:
+  selector:
+    matchExpressions:
+    - {key: tier, operator: In, values: [web, api]}
+    - {key: track, operator: NotIn, values: [canary]}
+    - {key: app, operator: Exists}
+    - {key: debug, operator: DoesNotExist}
+  template:
+    metadata:
+      labels:
+        tier: backend
+        track: canary
+        debug: "true"
+    spec:
+      containers: []
+---
+# Reported: a ReplicationController's selector is a plain map.
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: legacy
+spec:
+  selector:
+    app: legacy
+  template:
+    metadata:
+      labels:
+        app: old
+    spec:
+      containers: []
+---
+# Not reported: matching labels and expressions; extra template labels are fine.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ok
+spec:
+  selector:
+    matchLabels:
+      app: ok
+    matchExpressions:
+    - key: tier
+      operator: In
+      values: [web, api]
+    - {key: track, operator: NotIn, values: [canary]}
+    - {key: app, operator: Exists}
+    - {key: debug, operator: DoesNotExist}
+  template:
+    metadata:
+      labels:
+        app: ok
+        tier: "api"
+        version: v2
+    spec:
+      containers: []
+---
+# Not reported: a Job without a selector (the API server generates one).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+spec:
+  template:
+    spec:
+      containers: []
+---
+# Not reported: no selector, an unknown operator, or values of the wrong type
+# (schema problems for other rules).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: no-selector
+spec:
+  template:
+    metadata:
+      labels: {app: x}
+    spec:
+      containers: []
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: odd
+spec:
+  selector:
+    matchLabels:
+      app: [x]
+    matchExpressions:
+    - {key: app, operator: Matches, values: [x]}
+    - {key: app, operator: In, values: [{a: b}]}
+  template:
+    metadata:
+      labels: {app: y}
+    spec:
+      containers: []
+---
+# Not reported: a custom resource named Deployment.
+apiVersion: example.com/v1
+kind: Deployment
+metadata:
+  name: custom
+spec:
+  selector:
+    matchLabels: {app: a}
+  template:
+    metadata:
+      labels: {app: b}
+    spec:
+      containers: []

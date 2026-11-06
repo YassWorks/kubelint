@@ -5,11 +5,13 @@ mod duplicate_object;
 mod missing_api_version;
 mod missing_kind;
 mod missing_object_name;
+mod selector_mismatch;
 
 pub use duplicate_object::DuplicateObject;
 pub use missing_api_version::MissingApiVersion;
 pub use missing_kind::MissingKind;
 pub use missing_object_name::MissingObjectName;
+pub use selector_mismatch::SelectorMismatch;
 
 use kubelint_k8s::Object;
 use kubelint_source::TextRange;

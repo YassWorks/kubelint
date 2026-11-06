@@ -18,6 +18,7 @@ pub static ALL: &[&dyn Rule] = &[
     &correctness::MissingKind,
     &correctness::MissingObjectName,
     &correctness::DuplicateObject,
+    &correctness::SelectorMismatch,
 ];
 
 #[cfg(test)]

@@ -37,7 +37,7 @@ is the default severity. *Task* is the roadmap task that implements it.
 | KL1002 | `missing-kind` | on | error | implemented | M1-10 | Object has no `kind`, or an empty one. |
 | KL1003 | `missing-object-name` | on | error | implemented | M2-11 | No `metadata.name` (and no `metadata.generateName`). |
 | KL1004 | `duplicate-object` | on | error | implemented | M2-12 | The same kind/namespace/name is defined more than once across the linted files. |
-| KL1005 | `selector-mismatch` | on | error | planned | M2-13 | A workload's `spec.selector` does not match its pod template labels. |
+| KL1005 | `selector-mismatch` | on | error | implemented | M2-13 | A workload's `spec.selector` does not match its pod template labels. |
 | KL1006 | `duplicate-container-name` | on | error | planned | M2-14 | Two containers (including init containers) in one pod share a name. |
 | KL1007 | `invalid-resource-quantity` | on | error | planned | M2-16 | A CPU/memory value like `512mb` or `0.5cores` that Kubernetes cannot parse. |
 | KL1008 | `invalid-object-name` | on | error | planned | M2-18 | `metadata.name` is not a valid DNS-1123 name. |
