@@ -3,9 +3,11 @@
 
 mod missing_api_version;
 mod missing_kind;
+mod missing_object_name;
 
 pub use missing_api_version::MissingApiVersion;
 pub use missing_kind::MissingKind;
+pub use missing_object_name::MissingObjectName;
 
 use kubelint_k8s::Object;
 use kubelint_source::TextRange;

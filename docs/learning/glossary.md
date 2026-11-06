@@ -64,7 +64,15 @@ server rejects it. That is rule KL1005.
 hold several objects separated by `---` lines.
 
 **Metadata.** The `metadata` block every object has: `name` (required, unique per kind and
-namespace), `namespace`, `labels` and `annotations`.
+namespace), `namespace`, `labels` and `annotations`. Instead of a `name`, an object can
+have a `generateName` prefix such as `migrate-`: the API server appends random characters
+to make a unique name. That works with `kubectl create` but not with `kubectl apply`.
+
+**Configuration files with `apiVersion` and `kind`.** Some files borrow the object format
+without being objects the API server stores: `kustomization.yaml`
+(`kind: Kustomization`), a kubeconfig (`kind: Config`) and component settings such as
+`KubeletConfiguration`. They usually have no `metadata`, so rules about names skip
+objects without `metadata` unless their kind is a built-in one.
 
 **Namespace.** A named group of objects inside a cluster, like a folder. Two objects can
 share a name if they are in different namespaces. This matters for KL1004
