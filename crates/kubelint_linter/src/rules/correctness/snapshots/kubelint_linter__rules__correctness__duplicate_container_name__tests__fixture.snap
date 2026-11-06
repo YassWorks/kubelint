@@ -1,0 +1,60 @@
+---
+source: crates/kubelint_linter/src/rules/correctness/duplicate_container_name.rs
+expression: "crate::testing::check_fixture(&DuplicateContainerName)"
+---
+error[KL1006]: container name `web` is already used in `containers`
+  --> correctness/KL1006.yaml:16:15
+   |
+16 |       - name: web
+   |               ^^^
+  --> correctness/KL1006.yaml:14:15
+   |
+14 |       - name: web
+   |               --- first used here
+  = help: give each container in the pod a unique name
+
+error[KL1006]: container name `setup` is already used in `initContainers`
+  --> correctness/KL1006.yaml:30:11
+   |
+30 |   - name: "setup"
+   |           ^^^^^^^
+  --> correctness/KL1006.yaml:27:11
+   |
+27 |   - name: setup
+   |           ----- first used here
+  = help: give each container in the pod a unique name
+
+error[KL1006]: container name `app` is already used in `containers`
+  --> correctness/KL1006.yaml:42:12
+   |
+42 |   - {name: app, image: app:1.0}
+   |            ^^^
+  --> correctness/KL1006.yaml:41:12
+   |
+41 |   - {name: app, image: app:1.0}
+   |            --- first used here
+  = help: give each container in the pod a unique name
+
+error[KL1006]: container name `app` is already used in `containers`
+  --> correctness/KL1006.yaml:44:12
+   |
+44 |   - {name: app, image: busybox:1.36}
+   |            ^^^
+  --> correctness/KL1006.yaml:41:12
+   |
+41 |   - {name: app, image: app:1.0}
+   |            --- first used here
+  = help: give each container in the pod a unique name
+
+error[KL1006]: container name `report` is already used in `containers`
+  --> correctness/KL1006.yaml:61:19
+   |
+61 |           - name: report
+   |                   ^^^^^^
+  --> correctness/KL1006.yaml:59:19
+   |
+59 |           - name: report
+   |                   ------ first used here
+  = help: give each container in the pod a unique name
+
+5 finding(s) in 7 object(s)

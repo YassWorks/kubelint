@@ -313,8 +313,17 @@ fn rules_lists_every_rule() {
         out.starts_with("exit: 0\n--- stdout\nCODE    NAME"),
         "{out}"
     );
+    // Columns are padded to the longest cell, so compare words, not spacing.
+    let row = [
+        "KL1001",
+        "missing-api-version",
+        "correctness",
+        "on",
+        "error",
+    ];
     assert!(
-        out.contains("\nKL1001  missing-api-version  correctness  on"),
+        out.lines()
+            .any(|line| line.split_whitespace().take(row.len()).eq(row)),
         "{out}"
     );
     let json = run(&["rules", "--format", "json"], None);
