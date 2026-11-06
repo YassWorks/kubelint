@@ -1,0 +1,101 @@
+# Reported: two containers with the same name.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+      - name: web
+        image: envoyproxy/envoy:v1.31.0
+---
+# Reported: an init container shares the name of a regular container that comes later
+# in the file; the finding is on the later one.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+spec:
+  initContainers:
+  - name: setup
+    image: busybox:1.36
+  containers:
+  - name: "setup"
+    image: app:1.0
+---
+# Reported: an ephemeral container, and a third copy (two findings, both pointing
+# back at the first).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug
+spec:
+  containers:
+  - {name: app, image: app:1.0}
+  - {name: app, image: app:1.0}
+  ephemeralContainers:
+  - {name: app, image: busybox:1.36}
+---
+# Reported: inside a CronJob.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: report
+            image: report:2
+          - name: report
+            image: report:2
+---
+# Not reported: different names; names are case-sensitive.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ok
+spec:
+  initContainers:
+  - name: init
+    image: busybox:1.36
+  containers:
+  - name: app
+    image: app:1.0
+  - name: App
+    image: app:1.0
+---
+# Not reported: missing, empty or non-string names (schema problems).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: unnamed
+spec:
+  containers:
+  - image: app:1.0
+  - image: app:1.0
+  - name: ""
+  - name: ""
+  - name: [a]
+  - name: [a]
+---
+# Not reported: the same container name in two different pods.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: other
+spec:
+  containers:
+  - name: app
+    image: app:1.0
