@@ -58,7 +58,10 @@ under `spec.jobTemplate`). `pod_spec()` in `kubelint_k8s` knows where each kind 
 **Labels and selectors.** Labels are key/value tags in `metadata.labels`. A selector picks
 objects by their labels: a Deployment finds its pods, a Service finds where to send
 traffic. If a Deployment's selector does not match its own pod template's labels, the API
-server rejects it. That is rule KL1005.
+server rejects it. That is rule KL1005. A selector has two parts that must all hold:
+`matchLabels` (exact `key: value` pairs) and `matchExpressions` (`In`, `NotIn`, `Exists`,
+`DoesNotExist` tests on one key). A ReplicationController's older selector is just a map
+of `key: value` pairs.
 
 **Manifest.** A YAML (or JSON) file describing one or more Kubernetes objects. One file can
 hold several objects separated by `---` lines.
