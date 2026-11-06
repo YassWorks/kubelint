@@ -76,7 +76,14 @@ objects without `metadata` unless their kind is a built-in one.
 
 **Namespace.** A named group of objects inside a cluster, like a folder. Two objects can
 share a name if they are in different namespaces. This matters for KL1004
-(duplicate objects).
+(duplicate objects). Cluster-wide kinds (Namespace, ClusterRole, StorageClass) have no
+namespace. A manifest without `metadata.namespace` lands in whatever namespace it is
+applied to (`kubectl apply -n prod`, or the current context's default).
+
+**Object identity.** The cluster knows an object by its API group, kind, namespace and
+name. The version is not part of it: `apps/v1` and `apps/v1beta2` are two views of the
+same Deployment. Applying a second manifest with the same identity updates the first
+object instead of creating a new one.
 
 **Object.** One thing in the cluster (a Deployment, a Service, a ConfigMap), described by
 one YAML document in a manifest.
