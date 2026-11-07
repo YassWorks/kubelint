@@ -1,0 +1,82 @@
+# Reported: uppercase and an underscore in a Deployment name.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: My_App
+---
+# Reported: a trailing dot, and a name longer than 253 characters.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: settings.
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+# Reported: a dot in a Namespace name (a DNS-1123 label).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: team.payments
+---
+# Reported: a Service name starting with a digit (a DNS-1035 label), and one with a
+# space.
+apiVersion: v1
+kind: Service
+metadata:
+  name: 1-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "web server"
+---
+# Reported: an RBAC name with a slash.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: team/reader
+---
+# Reported: an invalid namespace, on any kind.
+apiVersion: example.com/v1
+kind: Widget
+metadata:
+  name: Anything_Goes
+  namespace: Team_A
+---
+# Not reported: valid names for each format, including a subdomain with dots, an
+# uppercase-free RBAC name with colons, and a namespace.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web.v2-1
+  namespace: prod-eu
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: system:controller:Reader
+---
+# Not reported: custom resources and other API groups choose their own name rules.
+apiVersion: example.com/v1
+kind: Deployment
+metadata:
+  name: My_Deployment
+---
+# Not reported: non-string and empty names are schema problems or KL1003's.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: 1234
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ""

@@ -21,6 +21,7 @@ pub static ALL: &[&dyn Rule] = &[
     &correctness::SelectorMismatch,
     &correctness::DuplicateContainerName,
     &correctness::InvalidResourceQuantity,
+    &correctness::InvalidObjectName,
 ];
 
 #[cfg(test)]

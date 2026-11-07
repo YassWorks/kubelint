@@ -13,6 +13,15 @@ error[KL1001]: `Service` object has no `apiVersion`
   = help: add `apiVersion: v1`
   = note: rule `missing-api-version`
 
+error[KL1008]: `café` is not a valid `Service` name: a DNS-1035 label must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character (e.g. 'my-name' or 'abc-123')
+ --> deploy/broken.yml:3:9
+  |
+3 |   name: café
+  |         ^^^^
+  |
+  = help: use lowercase letters, digits and `-`, starting with a letter
+  = note: rule `invalid-object-name`
+
 error[KL0001]: invalid YAML: while parsing a block mapping, did not find expected key
  --> deploy/broken.yml:9:2
   |
@@ -22,5 +31,5 @@ error[KL0001]: invalid YAML: while parsing a block mapping, did not find expecte
   = help: fix the YAML syntax; kubelint skips this document until it parses
   = note: rule `invalid-yaml`
 
-Found 2 errors. Checked 3 files and 2 objects in [TIME].
+Found 3 errors. Checked 3 files and 2 objects in [TIME].
 --- stderr

@@ -5,8 +5,9 @@ expression: "run(&[\"check\", \"--format\", \"github\"], None)"
 exit: 1
 --- stdout
 ::error file=deploy/broken.yml,line=1,col=1,endLine=1,endColumn=14,title=KL1001 missing-api-version::`Service` object has no `apiVersion`%0Ahelp: add `apiVersion: v1`
+::error file=deploy/broken.yml,line=3,col=9,endLine=3,endColumn=13,title=KL1008 invalid-object-name::`café` is not a valid `Service` name: a DNS-1035 label must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character (e.g. 'my-name' or 'abc-123')%0Ahelp: use lowercase letters, digits and `-`, starting with a letter
 ::error file=deploy/broken.yml,line=9,col=2,endLine=9,endColumn=2,title=KL0001 invalid-yaml::invalid YAML: while parsing a block mapping, did not find expected key%0Ahelp: fix the YAML syntax; kubelint skips this document until it parses
-Found 2 errors. Checked 3 files and 2 objects, skipped 3 files.
+Found 3 errors. Checked 3 files and 2 objects, skipped 3 files.
 --- stderr
 note: skipped 3 files of the Helm chart `charts/web`; kubelint checks rendered manifests, not templates
   = help: run `helm template charts/web | kubelint check -`

@@ -420,6 +420,7 @@ fn sarif_format_lists_every_rule_and_each_finding() {
         results,
         [
             "KL1001 error deploy/broken.yml:1",
+            "KL1008 error deploy/broken.yml:3",
             "KL0001 error deploy/broken.yml:9"
         ]
     );
