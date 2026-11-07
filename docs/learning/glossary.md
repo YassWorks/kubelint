@@ -55,6 +55,15 @@ three, because each one runs code on the node.
 for the pods they create, at `spec.template.spec` (a CronJob nests it one level deeper,
 under `spec.jobTemplate`). `pod_spec()` in `kubelint_k8s` knows where each kind keeps it.
 
+**DNS-1123 names and label syntax.** Most object names must be a DNS-1123
+*subdomain*: lowercase letters, digits, `-` and `.`, at most 253 characters, starting
+and ending with a letter or digit (`my-app.v2`). Some kinds, such as Namespace, need the
+stricter DNS-1123 *label*: no dots, at most 63 characters. Service names are DNS-1035
+labels, which must also start with a letter. Label keys are *qualified names*: an
+optional DNS subdomain prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`
+(`app.kubernetes.io/name`). Label values follow the same rule as the name part, or are
+empty. `kubelint_k8s` mirrors these checks and Kubernetes' wording for them.
+
 **Labels and selectors.** Labels are key/value tags in `metadata.labels`. A selector picks
 objects by their labels: a Deployment finds its pods, a Service finds where to send
 traffic. If a Deployment's selector does not match its own pod template's labels, the API
