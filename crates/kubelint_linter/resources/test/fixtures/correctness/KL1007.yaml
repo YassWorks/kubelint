@@ -1,0 +1,184 @@
+# Reported: units from other tools in container requests and limits.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+        resources:
+          requests:
+            cpu: 0.5cores
+            memory: 512mb
+          limits:
+            cpu: "1 CPU"
+            memory: 1GiB
+      initContainers:
+      - name: setup
+        image: busybox:1.36
+        resources:
+          limits:
+            memory: 64K
+            ephemeral-storage: 1gi
+---
+# Reported: a boolean, an empty string, a value without a number and an unknown suffix.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: odd
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    resources:
+      requests:
+        cpu: yes
+        memory: ""
+      limits:
+        cpu: half
+        memory: 2x
+---
+# Reported: pod-level resources, overhead, emptyDir size limit, and a non-finite float.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-level
+spec:
+  resources:
+    limits:
+      memory: 1Gb
+  overhead:
+    cpu: 250mcores
+  volumes:
+  - name: scratch
+    emptyDir:
+      sizeLimit: 500MB
+  containers:
+  - name: app
+    image: app:1.0
+    resources:
+      limits:
+        cpu: .inf
+---
+# Reported: persistent volume claims, also in a StatefulSet's claim templates.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: data
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 10GB
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db
+  selector:
+    matchLabels: {app: db}
+  template:
+    metadata:
+      labels: {app: db}
+    spec:
+      containers:
+      - name: db
+        image: postgres:17
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources:
+        requests:
+          storage: 20 Gi
+---
+# Reported: resource quotas and limit ranges.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: quota
+spec:
+  hard:
+    requests.memory: 10gb
+    pods: "10"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: limits
+spec:
+  limits:
+  - type: Container
+    max:
+      memory: 2Tb
+    default:
+      cpu: 1core
+    defaultRequest:
+      cpu: 100m
+---
+# Not reported: every valid spelling, including YAML numbers, exponents, null and
+# surrounding whitespace in a quoted value.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: valid
+spec:
+  overhead:
+    cpu: 0.1
+  containers:
+  - name: app
+    image: app:1.0
+    resources:
+      requests:
+        cpu: 500m
+        memory: 128Mi
+        ephemeral-storage: 1e9
+        nvidia.com/gpu: 1
+      limits:
+        cpu: "2"
+        memory: " 1G "
+        hugepages-2Mi: 1.5Ki
+        example.com/thing: ~
+        storage: 1E3
+        other: +.5e-3
+---
+# Not reported: mappings and lists are schema problems, not quantity syntax.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: schema
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    resources:
+      limits:
+        memory: {value: 1Gi}
+        cpu: [1]
+---
+# Not reported: a custom resource that happens to be called ResourceQuota, and a
+# ConfigMap whose data looks like resources.
+apiVersion: example.com/v1
+kind: ResourceQuota
+metadata:
+  name: custom
+spec:
+  hard:
+    memory: 10gb
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: settings
+data:
+  memory: 512mb
