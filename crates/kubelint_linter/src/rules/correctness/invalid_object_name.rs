@@ -7,6 +7,7 @@ use kubelint_k8s::{
 };
 use kubelint_yaml::{Node, NodeKind, ResolvedScalar};
 
+use super::shown;
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
 /// Reports a `metadata.name` that the API server would reject for the object's kind,
@@ -76,14 +77,6 @@ impl NameFormat {
             Self::Label | Self::Dns1035 => MAX_LABEL_LENGTH,
             Self::PathSegment => usize::MAX,
         }
-    }
-}
-
-/// `name` for a message: names longer than 40 characters are cut after 32.
-fn shown(name: &str) -> String {
-    match name.char_indices().nth(32) {
-        Some((end, _)) if name.chars().count() > 40 => format!("{}...", &name[..end]),
-        _ => name.to_owned(),
     }
 }
 
