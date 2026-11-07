@@ -9,6 +9,7 @@ mod invalid_resource_quantity;
 mod missing_api_version;
 mod missing_kind;
 mod missing_object_name;
+mod non_string_env_value;
 mod selector_mismatch;
 
 pub use duplicate_container_name::DuplicateContainerName;
@@ -19,6 +20,7 @@ pub use invalid_resource_quantity::InvalidResourceQuantity;
 pub use missing_api_version::MissingApiVersion;
 pub use missing_kind::MissingKind;
 pub use missing_object_name::MissingObjectName;
+pub use non_string_env_value::NonStringEnvValue;
 pub use selector_mismatch::SelectorMismatch;
 
 use kubelint_k8s::Object;
