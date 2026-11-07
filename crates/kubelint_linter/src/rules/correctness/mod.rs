@@ -3,6 +3,7 @@
 
 mod duplicate_container_name;
 mod duplicate_object;
+mod invalid_resource_quantity;
 mod missing_api_version;
 mod missing_kind;
 mod missing_object_name;
@@ -10,6 +11,7 @@ mod selector_mismatch;
 
 pub use duplicate_container_name::DuplicateContainerName;
 pub use duplicate_object::DuplicateObject;
+pub use invalid_resource_quantity::InvalidResourceQuantity;
 pub use missing_api_version::MissingApiVersion;
 pub use missing_kind::MissingKind;
 pub use missing_object_name::MissingObjectName;
