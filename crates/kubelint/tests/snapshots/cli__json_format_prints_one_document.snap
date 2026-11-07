@@ -30,6 +30,28 @@ exit: 1
       "related": []
     },
     {
+      "code": "KL1008",
+      "name": "invalid-object-name",
+      "severity": "error",
+      "message": "`café` is not a valid `Service` name: a DNS-1035 label must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character (e.g. 'my-name' or 'abc-123')",
+      "help": "use lowercase letters, digits and `-`, starting with a letter",
+      "location": {
+        "path": "deploy/broken.yml",
+        "start": {
+          "line": 3,
+          "column": 9,
+          "offset": 32
+        },
+        "end": {
+          "line": 3,
+          "column": 14,
+          "offset": 37
+        },
+        "message": null
+      },
+      "related": []
+    },
+    {
       "code": "KL0001",
       "name": "invalid-yaml",
       "severity": "error",
@@ -54,7 +76,7 @@ exit: 1
   ],
   "summary": {
     "by_severity": {
-      "error": 2,
+      "error": 3,
       "warning": 0,
       "info": 0
     },

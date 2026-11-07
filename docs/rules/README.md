@@ -40,7 +40,7 @@ is the default severity. *Task* is the roadmap task that implements it.
 | KL1005 | `selector-mismatch` | on | error | implemented | M2-13 | A workload's `spec.selector` does not match its pod template labels. |
 | KL1006 | `duplicate-container-name` | on | error | implemented | M2-14 | Two containers (including init containers) in one pod share a name. |
 | KL1007 | `invalid-resource-quantity` | on | error | implemented | M2-16 | A CPU/memory value like `512mb` or `0.5cores` that Kubernetes cannot parse. |
-| KL1008 | `invalid-object-name` | on | error | planned | M2-18 | `metadata.name` is not a valid DNS-1123 name. |
+| KL1008 | `invalid-object-name` | on | error | implemented | M2-18 | `metadata.name` is not valid for its kind (DNS-1123 subdomain or label, DNS-1035 for Services), or `metadata.namespace` is not a valid namespace name. |
 | KL1009 | `non-string-env-value` | on | error | planned | M2-20 | An env var `value` that YAML reads as a number or boolean (`8080`, `yes`, `true`). |
 | KL1010 | `invalid-label` | on | error | planned | M2-19 | A label key or value that breaks Kubernetes' label syntax. |
 | KL1011 | `duplicate-env-name` | on | warning | planned | M2-21 | The same env var name is set twice in one container; only the last one wins. |
