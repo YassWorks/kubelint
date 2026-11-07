@@ -1,0 +1,54 @@
+---
+source: crates/kubelint_linter/src/rules/correctness/non_string_env_value.rs
+expression: "crate::testing::check_fixture(&NonStringEnvValue)"
+---
+error[KL1009]: env var `PORT` has a value that YAML reads as a number, not a string
+  --> correctness/KL1009.yaml:19:18
+   |
+19 |           value: 8080
+   |                  ^^^^
+  = help: quote the value: `value: "8080"`
+
+error[KL1009]: env var `VERSION` has a value that YAML reads as a number, not a string
+  --> correctness/KL1009.yaml:21:18
+   |
+21 |           value: 1.10
+   |                  ^^^^
+  = help: quote the value: `value: "1.10"`
+
+error[KL1009]: env var `DEBUG` has a value that YAML reads as a boolean, not a string
+  --> correctness/KL1009.yaml:23:18
+   |
+23 |           value: yes
+   |                  ^^^
+  = help: quote the value: `value: "yes"`
+
+error[KL1009]: env var `MODE` has a value that YAML reads as a number, not a string
+  --> correctness/KL1009.yaml:25:18
+   |
+25 |           value: 0755
+   |                  ^^^^
+  = help: quote the value: `value: "0755"`
+
+error[KL1009]: env var `ENABLED` has a value that YAML reads as a boolean, not a string
+  --> correctness/KL1009.yaml:30:34
+   |
+30 |         - {name: ENABLED, value: true}
+   |                                  ^^^^
+  = help: quote the value: `value: "true"`
+
+error[KL1009]: env var has a value that YAML reads as a boolean, not a string
+  --> correctness/KL1009.yaml:31:18
+   |
+31 |         - value: off
+   |                  ^^^
+  = help: quote the value: `value: "off"`
+
+error[KL1009]: env var `LIMIT` has a value that YAML reads as a number, not a string
+  --> correctness/KL1009.yaml:50:22
+   |
+50 |               value: 1e3
+   |                      ^^^
+  = help: quote the value: `value: "1e3"`
+
+7 finding(s) in 4 object(s)

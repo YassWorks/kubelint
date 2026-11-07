@@ -1,0 +1,86 @@
+# Reported: numbers and YAML 1.1 booleans as env values, in regular and init
+# containers.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+        env:
+        - name: PORT
+          value: 8080
+        - name: VERSION
+          value: 1.10
+        - name: DEBUG
+          value: yes
+        - name: MODE
+          value: 0755
+      initContainers:
+      - name: setup
+        image: busybox:1.36
+        env:
+        - {name: ENABLED, value: true}
+        - value: off
+---
+# Reported: a CronJob's container, and a value in exponent form.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: report
+            image: report:1.0
+            env:
+            - name: LIMIT
+              value: 1e3
+---
+# Not reported: quoted values, strings that only look special to YAML 1.2, null,
+# block scalars, valueFrom and schema problems.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: valid
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    env:
+    - name: PORT
+      value: "8080"
+    - name: DEBUG
+      value: 'yes'
+    - name: HOST
+      value: localhost
+    - name: EMPTY
+      value:
+    - name: SCRIPT
+      value: |
+        8080
+    - name: SECRET
+      valueFrom:
+        secretKeyRef: {name: db, key: password}
+    - name: LIST
+      value: [1, 2]
+---
+# Not reported: env in something that is not a workload.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: settings
+data:
+  env: "1"
