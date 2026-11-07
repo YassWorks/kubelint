@@ -139,7 +139,7 @@ Correctness rules (one PR each):
 - [x] **M2-15** (#45) `kubelint_k8s`: resource quantity parser matching Kubernetes'
   `resource.Quantity` grammar, with exhaustive tests. _Depends on: M1-07._
 - [x] **M2-16** (#47) KL1007 `invalid-resource-quantity`. _Depends on: M2-15._
-- [ ] **M2-17** `kubelint_k8s`: validators for DNS-1123 subdomain/label names and label
+- [x] **M2-17** (#48) `kubelint_k8s`: validators for DNS-1123 subdomain/label names and label
   keys/values, with tests mirroring Kubernetes' own validation messages.
   _Depends on: M1-07._
 - [ ] **M2-18** KL1008 `invalid-object-name`. _Depends on: M2-17._
