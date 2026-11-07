@@ -1,0 +1,121 @@
+# Reported: free text in a label value, a key with a space, and values YAML reads as a
+# number and a boolean.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: settings
+  labels:
+    owner: team@example.com
+    Team Name: payments
+    version: 1.0
+    canary: yes
+---
+# Reported: a bad key prefix, too many slashes, an empty name part, and a value that
+# starts with a dash.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: token
+  labels:
+    Example.com/tier: web
+    a/b/c: x
+    example.com/: x
+    track: -stable
+---
+# Reported: a pod template label and a selector label of a Deployment, with values over
+# 63 characters and with a colon.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels:
+      app: "web: frontend"
+  template:
+    metadata:
+      labels:
+        app: web
+        build: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+---
+# Reported: both CronJob templates, a ReplicationController's plain selector and a
+# Service selector.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    metadata:
+      labels:
+        job type: report
+    spec:
+      template:
+        metadata:
+          labels:
+            run: "every hour"
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: report
+            image: report:1.0
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: legacy
+spec:
+  selector:
+    app: legacy app
+  template:
+    metadata:
+      labels:
+        app: legacy
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+spec:
+  selector:
+    app.kubernetes.io/name: web_
+---
+# Not reported: valid keys and values, including uppercase, `_`, `.`, a 63-character
+# value, an empty value, a null value and quoted numbers.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: valid
+  labels:
+    app.kubernetes.io/name: web
+    app.kubernetes.io/version: "1.0"
+    Tier: Front_End.v2
+    empty: ""
+    unset:
+    canary: "true"
+    build: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Not reported: annotations take free text, and a custom resource's spec.selector is
+# its own business.
+apiVersion: example.com/v1
+kind: Service
+metadata:
+  name: custom
+  annotations:
+    owner: team@example.com
+spec:
+  selector:
+    app: not a label

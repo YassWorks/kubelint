@@ -3,6 +3,7 @@
 
 mod duplicate_container_name;
 mod duplicate_object;
+mod invalid_label;
 mod invalid_object_name;
 mod invalid_resource_quantity;
 mod missing_api_version;
@@ -12,6 +13,7 @@ mod selector_mismatch;
 
 pub use duplicate_container_name::DuplicateContainerName;
 pub use duplicate_object::DuplicateObject;
+pub use invalid_label::InvalidLabel;
 pub use invalid_object_name::InvalidObjectName;
 pub use invalid_resource_quantity::InvalidResourceQuantity;
 pub use missing_api_version::MissingApiVersion;
@@ -75,4 +77,13 @@ fn missing_field_range(object: Object<'_>, other: &str) -> TextRange {
         .entries()
         .next()
         .map_or(object.range(), |entry| entry.key.range)
+}
+
+/// `text` for a message: values longer than 40 characters are cut after 32, so a
+/// 250-character name does not swamp the line.
+fn shown(text: &str) -> String {
+    match text.char_indices().nth(32) {
+        Some((end, _)) if text.chars().count() > 40 => format!("{}...", &text[..end]),
+        _ => text.to_owned(),
+    }
 }

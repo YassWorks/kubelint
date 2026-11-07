@@ -143,7 +143,7 @@ Correctness rules (one PR each):
   keys/values, with tests mirroring Kubernetes' own validation messages.
   _Depends on: M1-07._
 - [x] **M2-18** (#49) KL1008 `invalid-object-name`. _Depends on: M2-17._
-- [ ] **M2-19** KL1010 `invalid-label`. _Depends on: M2-17._
+- [x] **M2-19** (#50) KL1010 `invalid-label`. _Depends on: M2-17._
 - [ ] **M2-20** KL1009 `non-string-env-value`. _Depends on: M1-04, M1-10._
 - [ ] **M2-21** KL1011 `duplicate-env-name`. _Depends on: M1-10._
 
