@@ -1,4 +1,4 @@
-use crate::{Entry, Node, NodeKind, Scalar};
+use crate::{Entry, Node, NodeKind, ResolvedScalar, Scalar};
 
 impl Node {
     /// The scalar, if this node is one.
@@ -25,6 +25,22 @@ impl Node {
     /// ```
     pub fn as_str(&self) -> Option<&str> {
         self.as_scalar().map(|s| s.value.as_str())
+    }
+
+    /// The boolean Kubernetes reads from this node, if it is a plain scalar that resolves
+    /// to one (see [`Scalar::resolve_kubernetes`]). A quoted `"true"` is a string.
+    ///
+    /// ```
+    /// let doc = &kubelint_yaml::parse("a: on\nb: \"true\"").documents[0];
+    /// let root = doc.root.as_ref().unwrap();
+    /// assert_eq!(root.get("a").and_then(|n| n.as_bool()), Some(true));
+    /// assert_eq!(root.get("b").and_then(|n| n.as_bool()), None);
+    /// ```
+    pub fn as_bool(&self) -> Option<bool> {
+        match self.as_scalar()?.resolve_kubernetes() {
+            ResolvedScalar::Bool(value) => Some(value),
+            _ => None,
+        }
     }
 
     /// The entries, in source order, if this node is a mapping.

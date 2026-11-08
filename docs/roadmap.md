@@ -55,7 +55,7 @@ Correctness rules:
 
 Security rules:
 
-- [ ] KL2001 `privileged-container`
+- [x] KL2001 `privileged-container`
 - [ ] KL2002 `privilege-escalation-allowed`
 - [ ] KL2003 `run-as-root`: container settings override pod settings. Add a helper in
   `kubelint_k8s` that merges the pod and container `securityContext`.
