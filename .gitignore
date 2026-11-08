@@ -10,4 +10,7 @@
 .vscode/
 *.swp
 .DS_Store
-.claude
+
+# Personal Claude Code files; only the project skills are shared
+.claude/*
+!.claude/skills/
