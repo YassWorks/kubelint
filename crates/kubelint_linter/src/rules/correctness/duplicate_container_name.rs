@@ -21,40 +21,7 @@ static META: RuleMeta = RuleMeta {
     default_severity: Severity::Error,
     default_enabled: true,
     summary: "Two containers in one pod share a name.",
-    explanation: r#"## What it does
-
-Reports a container whose `name` is already used by another container in the same pod,
-counting `containers`, `initContainers` and `ephemeralContainers` together.
-
-## Why it matters
-
-Kubernetes refers to containers by name: in `kubectl logs`, `kubectl exec`, status
-reports and probes. Names must be unique within a pod, so the API server rejects the
-object with "Duplicate value". This usually happens when a container block is copied to
-add a sidecar and the name is not changed.
-
-## Example
-
-```yaml
-spec:
-  containers:
-  - name: web
-    image: nginx:1.27
-  - name: web
-    image: envoyproxy/envoy:v1.31.0
-```
-
-Use instead:
-
-```yaml
-spec:
-  containers:
-  - name: web
-    image: nginx:1.27
-  - name: proxy
-    image: envoyproxy/envoy:v1.31.0
-```
-"#,
+    explanation: include_str!("duplicate_container_name.md"),
 };
 
 impl Rule for DuplicateContainerName {
@@ -86,24 +53,14 @@ impl Rule for DuplicateContainerName {
                 "container name `{name}` is already used in `{}`",
                 original.kind().field()
             );
-            let label = cx
-                .label(original_name.range)
-                .with_message("first used here");
-            let diagnostic = cx
-                .diagnostic(name_node.range, message)
-                .with_secondary(label)
-                .with_help("give each container in the pod a unique name");
-            cx.report(diagnostic);
+            cx.report(
+                cx.diagnostic(name_node.range, message)
+                    .with_secondary(
+                        cx.label(original_name.range)
+                            .with_message("first used here"),
+                    )
+                    .with_help("give each container in the pod a unique name"),
+            );
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::DuplicateContainerName;
-
-    #[test]
-    fn fixture() {
-        insta::assert_snapshot!(crate::testing::check_fixture(&DuplicateContainerName));
     }
 }

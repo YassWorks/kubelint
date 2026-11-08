@@ -1,0 +1,4 @@
+apiVersion: v1
+kind: ConfigMap
+x: &base {k: 1, k: 2}
+y: *base

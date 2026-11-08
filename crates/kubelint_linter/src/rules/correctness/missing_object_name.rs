@@ -1,7 +1,7 @@
 //! KL1003 `missing-object-name`.
 
 use kubelint_diagnostics::Severity;
-use kubelint_k8s::Object;
+use kubelint_k8s::{BuiltinKind, Object};
 use kubelint_source::TextRange;
 
 use super::{entry_range, is_empty};
@@ -23,48 +23,8 @@ static META: RuleMeta = RuleMeta {
     default_severity: Severity::Error,
     default_enabled: true,
     summary: "Object has no `metadata.name`.",
-    explanation: r#"## What it does
-
-Reports a Kubernetes object that has no `metadata.name`, or whose name is empty. An
-object with `metadata.generateName` instead is fine.
-
-## Why it matters
-
-Every object stored by Kubernetes needs a name: it is how `kubectl`, controllers and
-other objects refer to it. `kubectl apply` fails with "resource name may not be empty"
-and nothing in the file is applied.
-
-`generateName` asks the API server to make up a unique name from a prefix. It works with
-`kubectl create`, but not with `kubectl apply`, which needs to know the name to find the
-object again.
-
-Files that only look like objects, such as `kustomization.yaml` or a kubeconfig, are
-not reported when they have no `metadata` at all.
-
-## Example
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app: web
-```
-
-Use instead:
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: web
-  labels:
-    app: web
-```
-"#,
+    explanation: include_str!("missing_object_name.md"),
 };
-
-const HELP: &str = "add a name under `metadata`, such as `name: web`";
 
 impl Rule for MissingObjectName {
     fn meta(&self) -> &'static RuleMeta {
@@ -85,8 +45,10 @@ impl Rule for MissingObjectName {
         } else {
             format!("{subject} has no `metadata.name`")
         };
-        let diagnostic = cx.diagnostic(range, message).with_help(HELP);
-        cx.report(diagnostic);
+        cx.report(
+            cx.diagnostic(range, message)
+                .with_help("add a name under `metadata`, such as `name: web`"),
+        );
     }
 }
 
@@ -95,11 +57,7 @@ impl Rule for MissingObjectName {
 fn problem(object: Object<'_>) -> Option<(TextRange, bool)> {
     let Some(metadata) = object.node().get_entry("metadata") else {
         let kind = object.node().get_entry("kind")?;
-        let is_builtin = kind
-            .value
-            .as_str()
-            .and_then(kubelint_k8s::stable_api_version)
-            .is_some();
+        let is_builtin = kind.value.as_str().and_then(BuiltinKind::parse).is_some();
         return is_builtin.then(|| (entry_range(kind), false));
     };
     if is_empty(&metadata.value) {
@@ -120,15 +78,5 @@ fn problem(object: Object<'_>) -> Option<(TextRange, bool)> {
     match metadata.value.get_entry("name") {
         Some(name) => Some((entry_range(name), true)),
         None => Some((metadata.key.range, false)),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::MissingObjectName;
-
-    #[test]
-    fn fixture() {
-        insta::assert_snapshot!(crate::testing::check_fixture(&MissingObjectName));
     }
 }

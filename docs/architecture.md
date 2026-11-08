@@ -194,14 +194,18 @@ pub struct RuleMeta {
     pub default_severity: Severity,
     pub default_enabled: bool,
     pub summary: &'static str,       // one line, shown in `kubelint rules`
-    pub explanation: &'static str,   // markdown: why it matters, examples, how to fix
+    pub explanation: &'static str,   // markdown from <rule_name>.md: why, examples, fix
 }
 ```
 
-- Rules are unit structs, one per file: `crates/kubelint_linter/src/rules/<category>/<rule_name>.rs`.
-- The registry is a single static slice in `rules/mod.rs`. Adding a rule = one new file
-  + one line in the registry + one fixture + one snapshot + a row in
-  [`rules/README.md`](rules/README.md). [`CONTRIBUTING.md`](CONTRIBUTING.md) walks through it.
+- Rules are unit structs, one per file:
+  `crates/kubelint_linter/src/rules/<category>/<rule_name>.rs`, with the explanation in
+  `<rule_name>.md` next to it.
+- The registry is a single static slice in `rules/mod.rs`. Adding a rule takes the rule
+  file and its `.md`, one line in the registry, one fixture, its snapshot and a row in
+  [`rules/README.md`](rules/README.md). No test code: `rules/tests.rs` snapshots the
+  fixture of every rule in the registry. [`CONTRIBUTING.md`](CONTRIBUTING.md) walks
+  through it.
 - Rules report through the context (`cx.report(...)`), never by returning errors. A rule
   that cannot evaluate (missing fields) reports nothing; missing required fields are a
   different rule's job.
@@ -285,7 +289,8 @@ How tests are written is in [`conventions.md`](conventions.md#tests).
 - **Rule tests** are snapshot tests: a fixture YAML file per rule in
   `crates/kubelint_linter/resources/test/fixtures/<category>/<CODE>.yaml` containing both
   violating and passing cases, linted with only that rule enabled, rendered as text and
-  compared with `insta`.
+  compared with `insta`. One loop in `crates/kubelint_linter/src/rules/tests.rs` covers
+  every rule of the registry, with one snapshot per rule code.
 - **CLI tests** in `crates/kubelint/tests/` run the real binary (`assert_cmd`) and
   snapshot stdout, stderr and the exit code.
 - Snapshots are reviewed like code. Update with `INSTA_UPDATE=always cargo test`, then

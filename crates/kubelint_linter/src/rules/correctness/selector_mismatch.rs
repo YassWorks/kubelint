@@ -1,6 +1,7 @@
 //! KL1005 `selector-mismatch`.
 
 use kubelint_diagnostics::Severity;
+use kubelint_k8s::BuiltinKind;
 use kubelint_source::TextRange;
 use kubelint_yaml::{Entry, Node};
 
@@ -23,55 +24,7 @@ static META: RuleMeta = RuleMeta {
     default_severity: Severity::Error,
     default_enabled: true,
     summary: "A workload's selector does not match its pod template labels.",
-    explanation: r#"## What it does
-
-Reports a Deployment, ReplicaSet, DaemonSet, StatefulSet, Job or ReplicationController
-whose `spec.selector` does not match the labels in `spec.template.metadata.labels`.
-
-## Why it matters
-
-A workload finds the pods it owns with its selector. The pods it creates get the labels
-of its pod template. If the template's labels do not satisfy the selector, the workload
-could never see its own pods, so the API server rejects it with
-"`selector` does not match template `labels`".
-
-The selector of a Deployment, ReplicaSet, DaemonSet or StatefulSet cannot be changed
-after it is created, so it is worth getting right before the first apply.
-
-## Example
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: web
-spec:
-  selector:
-    matchLabels:
-      app: web
-  template:
-    metadata:
-      labels:
-        app: frontend
-```
-
-Use instead:
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: web
-spec:
-  selector:
-    matchLabels:
-      app: web
-  template:
-    metadata:
-      labels:
-        app: web
-```
-"#,
+    explanation: include_str!("selector_mismatch.md"),
 };
 
 const HELP: &str = "make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding \
@@ -87,9 +40,15 @@ impl Rule for SelectorMismatch {
         let Some(kind) = object.kind().and_then(Node::as_str) else {
             return;
         };
-        let plain_map = match kind {
-            "ReplicationController" => true,
-            "Deployment" | "ReplicaSet" | "DaemonSet" | "StatefulSet" | "Job" => false,
+        let plain_map = match BuiltinKind::parse(kind) {
+            Some(BuiltinKind::ReplicationController) => true,
+            Some(
+                BuiltinKind::Deployment
+                | BuiltinKind::ReplicaSet
+                | BuiltinKind::DaemonSet
+                | BuiltinKind::StatefulSet
+                | BuiltinKind::Job,
+            ) => false,
             _ => return,
         };
         // `pod_spec` checks that the kind is in the right API group.
@@ -148,11 +107,11 @@ impl Rule for SelectorMismatch {
                         .with_message(template.anchor_message()),
                 ),
             };
-            let diagnostic = cx
-                .diagnostic(range, message)
-                .with_secondary(label)
-                .with_help(HELP);
-            cx.report(diagnostic);
+            cx.report(
+                cx.diagnostic(range, message)
+                    .with_secondary(label)
+                    .with_help(HELP),
+            );
         }
     }
 }
@@ -254,15 +213,5 @@ impl std::fmt::Display for Requirement<'_> {
             Operator::Exists => write!(f, "the `{key}` label"),
             Operator::DoesNotExist => write!(f, "no `{key}` label"),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::SelectorMismatch;
-
-    #[test]
-    fn fixture() {
-        insta::assert_snapshot!(crate::testing::check_fixture(&SelectorMismatch));
     }
 }

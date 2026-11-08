@@ -15,36 +15,7 @@ static META: RuleMeta = RuleMeta {
     default_severity: Severity::Error,
     default_enabled: true,
     summary: "Object has no `apiVersion`.",
-    explanation: r#"## What it does
-
-Reports a Kubernetes object that has no `apiVersion` field, or whose `apiVersion` is
-empty.
-
-## Why it matters
-
-`apiVersion` and `kind` together tell Kubernetes what an object is. Without
-`apiVersion`, `kubectl apply` fails with "apiVersion not set" and nothing in the file is
-applied.
-
-## Example
-
-```yaml
-kind: Deployment
-metadata:
-  name: web
-```
-
-Use instead:
-
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: web
-```
-
-`kubectl api-resources` lists the `apiVersion` of every kind your cluster serves.
-"#,
+    explanation: include_str!("missing_api_version.md"),
 };
 
 impl Rule for MissingApiVersion {
@@ -57,10 +28,13 @@ impl Rule for MissingApiVersion {
         let Some(problem) = check_type_field(object, "apiVersion") else {
             return;
         };
-        let kind = object.kind().and_then(|kind| kind.as_str());
+        let kind = object
+            .kind()
+            .and_then(|kind| kind.as_str())
+            .filter(|kind| !kind.trim().is_empty());
         let subject = match kind {
-            Some(kind) if !kind.trim().is_empty() => format!("`{kind}` object"),
-            _ => "object".to_owned(),
+            Some(kind) => format!("`{kind}` object"),
+            None => "object".to_owned(),
         };
         let (range, message) = match problem {
             TypeField::Missing => (
@@ -72,27 +46,15 @@ impl Rule for MissingApiVersion {
                 format!("{subject} has an empty `apiVersion`"),
             ),
         };
-        let has_kind = kind.is_some_and(|kind| !kind.trim().is_empty());
         let help = match kind.and_then(kubelint_k8s::stable_api_version) {
             Some(api_version) => format!("add `apiVersion: {api_version}`"),
-            None if has_kind => {
+            None if kind.is_some() => {
                 "add the `apiVersion` of this kind; `kubectl api-resources` lists them".to_owned()
             }
             None => "add `apiVersion` and `kind`, such as `apiVersion: apps/v1` and \
                      `kind: Deployment`"
                 .to_owned(),
         };
-        let diagnostic = cx.diagnostic(range, message).with_help(help);
-        cx.report(diagnostic);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::MissingApiVersion;
-
-    #[test]
-    fn fixture() {
-        insta::assert_snapshot!(crate::testing::check_fixture(&MissingApiVersion));
+        cx.report(cx.diagnostic(range, message).with_help(help));
     }
 }

@@ -1,0 +1,5 @@
+---
+source: crates/kubelint_linter/src/testing/tests.rs
+expression: "check_source(&KindReporter, &file)"
+---
+0 finding(s) in 0 object(s)

@@ -19,40 +19,7 @@ static META: RuleMeta = RuleMeta {
     default_severity: Severity::Error,
     default_enabled: true,
     summary: "An env var value that YAML reads as a number or boolean.",
-    explanation: r#"## What it does
-
-Reports a container environment variable whose `value` is not a string once YAML has
-read it: an unquoted number such as `8080` or `1.10`, or a boolean such as `true`, `yes`
-or `off`.
-
-## Why it matters
-
-Environment variable values are strings in the Kubernetes API. Kubernetes reads YAML
-with YAML 1.1 rules, where unquoted `8080` is a number and `yes`, `on` and `off` are
-booleans, and it refuses to turn them into strings: the object fails with "cannot
-unmarshal number into Go struct field EnvVar.value of type string". Tools that do
-convert can change the value on the way, for example `1.10` to `1.1` or `0755` to `493`.
-
-## Example
-
-```yaml
-env:
-- name: PORT
-  value: 8080
-- name: DEBUG
-  value: yes
-```
-
-Use instead:
-
-```yaml
-env:
-- name: PORT
-  value: "8080"
-- name: DEBUG
-  value: "yes"
-```
-"#,
+    explanation: include_str!("non_string_env_value.md"),
 };
 
 impl Rule for NonStringEnvValue {
@@ -65,8 +32,7 @@ impl Rule for NonStringEnvValue {
             return;
         };
         for container in pod.containers() {
-            let vars = container.env().into_iter().flat_map(Node::items);
-            for var in vars {
+            for var in container.env().into_iter().flat_map(Node::items) {
                 let Some(value) = var.get("value") else {
                     continue;
                 };
@@ -87,19 +53,8 @@ impl Rule for NonStringEnvValue {
                 let message =
                     format!("{subject} has a value that YAML reads as {type_name}, not a string");
                 let help = format!("quote the value: `value: \"{}\"`", scalar.value);
-                let diagnostic = cx.diagnostic(value.range, message).with_help(help);
-                cx.report(diagnostic);
+                cx.report(cx.diagnostic(value.range, message).with_help(help));
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::NonStringEnvValue;
-
-    #[test]
-    fn fixture() {
-        insta::assert_snapshot!(crate::testing::check_fixture(&NonStringEnvValue));
     }
 }

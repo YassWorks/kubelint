@@ -1,0 +1,38 @@
+## What it does
+
+Reports label keys and values that Kubernetes rejects, in object and pod template
+labels and in label selectors. Also reports label values that YAML reads as a number
+or boolean, such as `version: 1.0` or `canary: true`.
+
+## Why it matters
+
+Labels are used to select objects, so their syntax is strict. A key is an optional DNS
+subdomain prefix and `/`, then a name of at most 63 letters, digits, `-`, `_` and `.`
+that starts and ends with a letter or digit (`app.kubernetes.io/name`, `tier`). A value
+follows the same rules as the name, or is empty. Spaces, `:` and `@` are not allowed in
+either, and values are not free text.
+
+Label values must also be strings. An unquoted `1.0` or `true` is a number or a
+boolean in YAML, and the API server refuses the object.
+
+## Example
+
+```yaml
+metadata:
+  labels:
+    owner: team@example.com
+    version: 1.0
+```
+
+Use instead:
+
+```yaml
+metadata:
+  labels:
+    owner: team-example
+    version: "1.0"
+  annotations:
+    owner: team@example.com
+```
+
+Free text belongs in annotations, which have no such limits.

@@ -1,0 +1,103 @@
+---
+source: crates/kubelint_linter/src/rules/tests.rs
+expression: check_fixture(rule)
+---
+error[KL1010]: label value `team@example.com` of `owner` is invalid: a valid label must be an empty string or consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyValue', 'my_value' or '12345')
+ --> correctness/KL1010.yaml:8:12
+  |
+8 |     owner: team@example.com
+  |            ^^^^^^^^^^^^^^^^
+  = help: use letters, digits, `-`, `_` and `.`, for example `team-example.com`; free text belongs in an annotation
+
+error[KL1010]: label key `Team Name` is invalid: name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName', 'my.name' or '123-abc')
+ --> correctness/KL1010.yaml:9:5
+  |
+9 |     Team Name: payments
+  |     ^^^^^^^^^
+  = help: a label key is an optional DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `app.kubernetes.io/name`
+
+error[KL1010]: label `version` has a value that YAML reads as a number, not a string
+  --> correctness/KL1010.yaml:10:14
+   |
+10 |     version: 1.0
+   |              ^^^
+  = help: quote the value: `version: "1.0"`
+
+error[KL1010]: label `canary` has a value that YAML reads as a boolean, not a string
+  --> correctness/KL1010.yaml:11:13
+   |
+11 |     canary: yes
+   |             ^^^
+  = help: quote the value: `canary: "yes"`
+
+error[KL1010]: label key `Example.com/tier` is invalid: prefix part a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com')
+  --> correctness/KL1010.yaml:20:5
+   |
+20 |     Example.com/tier: web
+   |     ^^^^^^^^^^^^^^^^
+  = help: a label key is an optional DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `app.kubernetes.io/name`
+
+error[KL1010]: label key `a/b/c` is invalid: a qualified name must consist of a name with an optional DNS subdomain prefix and '/' (e.g. 'example.com/MyName')
+  --> correctness/KL1010.yaml:21:5
+   |
+21 |     a/b/c: x
+   |     ^^^^^
+  = help: a label key is an optional DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `app.kubernetes.io/name`
+
+error[KL1010]: label key `example.com/` is invalid: name part must be non-empty
+  --> correctness/KL1010.yaml:22:5
+   |
+22 |     example.com/: x
+   |     ^^^^^^^^^^^^
+  = help: a label key is an optional DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `app.kubernetes.io/name`
+
+error[KL1010]: label value `-stable` of `track` is invalid: a valid label must be an empty string or consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyValue', 'my_value' or '12345')
+  --> correctness/KL1010.yaml:23:12
+   |
+23 |     track: -stable
+   |            ^^^^^^^
+  = help: use letters, digits, `-`, `_` and `.`, for example `stable`; free text belongs in an annotation
+
+error[KL1010]: selector label value `web: frontend` of `app` is invalid: a valid label must be an empty string or consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyValue', 'my_value' or '12345')
+  --> correctness/KL1010.yaml:34:12
+   |
+34 |       app: "web: frontend"
+   |            ^^^^^^^^^^^^^^^
+  = help: use letters, digits, `-`, `_` and `.`, for example `web-frontend`; free text belongs in an annotation
+
+error[KL1010]: label value `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` of `build` is invalid: must be no more than 63 characters
+  --> correctness/KL1010.yaml:39:16
+   |
+39 |         build: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: shorten the value to at most 63 characters, or move it to an annotation
+
+error[KL1010]: label key `job type` is invalid: name part must consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyName', 'my.name' or '123-abc')
+  --> correctness/KL1010.yaml:56:9
+   |
+56 |         job type: report
+   |         ^^^^^^^^
+  = help: a label key is an optional DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `app.kubernetes.io/name`
+
+error[KL1010]: label value `every hour` of `run` is invalid: a valid label must be an empty string or consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyValue', 'my_value' or '12345')
+  --> correctness/KL1010.yaml:61:18
+   |
+61 |             run: "every hour"
+   |                  ^^^^^^^^^^^^
+  = help: use letters, digits, `-`, `_` and `.`, for example `every-hour`; free text belongs in an annotation
+
+error[KL1010]: selector label value `legacy app` of `app` is invalid: a valid label must be an empty string or consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyValue', 'my_value' or '12345')
+  --> correctness/KL1010.yaml:74:10
+   |
+74 |     app: legacy app
+   |          ^^^^^^^^^^
+  = help: use letters, digits, `-`, `_` and `.`, for example `legacy-app`; free text belongs in an annotation
+
+error[KL1010]: selector label value `web_` of `app.kubernetes.io/name` is invalid: a valid label must be an empty string or consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyValue', 'my_value' or '12345')
+  --> correctness/KL1010.yaml:90:29
+   |
+90 |     app.kubernetes.io/name: web_
+   |                             ^^^^
+  = help: use letters, digits, `-`, `_` and `.`, for example `web`; free text belongs in an annotation
+
+14 finding(s) in 8 object(s)

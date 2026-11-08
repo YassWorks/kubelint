@@ -1,0 +1,26 @@
+---
+source: crates/kubelint_linter/src/rules/tests.rs
+expression: check_fixture(rule)
+---
+error[KL0001]: invalid YAML: while parsing a block mapping, did not find expected key
+  --> syntax/KL0001.yaml:12:2
+   |
+12 |  farewell: bye
+   |  ^
+  = help: fix the YAML syntax; kubelint skips this document until it parses
+
+error[KL0001]: invalid YAML: while parsing a flow sequence, expected ',' or ']'
+  --> syntax/KL0001.yaml:23:1
+   |
+23 | ---
+   | ^
+  = help: fix the YAML syntax; kubelint skips this document until it parses
+
+error[KL0001]: invalid YAML: while parsing a block mapping, did not find expected key
+  --> syntax/KL0001.yaml:27:3
+   |
+27 | - item
+   |   ^
+  = help: fix the YAML syntax; kubelint skips this document until it parses
+
+3 finding(s) in 3 object(s)

@@ -2,8 +2,8 @@
 
 use kubelint_diagnostics::Severity;
 use kubelint_k8s::{
-    GroupVersion, MAX_LABEL_LENGTH, MAX_SUBDOMAIN_LENGTH, Object, ValidationError,
-    is_dns1035_label, is_dns1123_label, is_dns1123_subdomain, stable_api_version,
+    BuiltinKind, MAX_LABEL_LENGTH, MAX_SUBDOMAIN_LENGTH, ValidationError, is_dns1035_label,
+    is_dns1123_label, is_dns1123_subdomain,
 };
 use kubelint_yaml::{Node, NodeKind, ResolvedScalar};
 
@@ -13,12 +13,11 @@ use crate::{Category, ObjectContext, Rule, RuleMeta};
 /// Reports a `metadata.name` that the API server would reject for the object's kind,
 /// and a `metadata.namespace` that is not a valid namespace name.
 ///
-/// Names are checked only for built-in kinds (those [`stable_api_version`] knows, in
-/// their own API group), because a custom resource's name rules are up to its
-/// definition. Most kinds need a DNS-1123 subdomain, `Namespace` a DNS-1123 label,
-/// `Service` a DNS-1035 label, and the RBAC kinds only a valid path segment (so
-/// `system:controller:foo` is fine). Values that are not strings are schema problems
-/// and are skipped, as are empty names (KL1003).
+/// Names are checked only for built-in kinds ([`BuiltinKind`], in their own API group),
+/// because a custom resource's name rules are up to its definition. Most kinds need a
+/// DNS-1123 subdomain, `Namespace` a DNS-1123 label, `Service` a DNS-1035 label, and the
+/// RBAC kinds only a valid path segment (so `system:controller:foo` is fine). Values that
+/// are not strings are schema problems and are skipped, as are empty names (KL1003).
 pub struct InvalidObjectName;
 
 static META: RuleMeta = RuleMeta {
@@ -28,36 +27,7 @@ static META: RuleMeta = RuleMeta {
     default_severity: Severity::Error,
     default_enabled: true,
     summary: "An object name or namespace that Kubernetes would reject.",
-    explanation: r"## What it does
-
-Reports a `metadata.name` that is not valid for the object's kind, and a
-`metadata.namespace` that is not a valid namespace name.
-
-## Why it matters
-
-Kubernetes uses names in DNS records, URLs and file paths, so it restricts them. Most
-objects need a DNS-1123 subdomain: lowercase letters, digits, `-` and `.`, at most 253
-characters, starting and ending with a letter or digit. Namespaces need a DNS-1123
-label (no dots, at most 63 characters), and Services a DNS-1035 label, which must also
-start with a letter. The API server rejects any other name, so names like `My_App` or
-`web.` fail at apply time. Uppercase letters and underscores are the usual culprits.
-
-## Example
-
-```yaml
-kind: Deployment
-metadata:
-  name: My_App
-```
-
-Use instead:
-
-```yaml
-kind: Deployment
-metadata:
-  name: my-app
-```
-",
+    explanation: include_str!("invalid_object_name.md"),
 };
 
 /// The syntax a kind's names must follow.
@@ -92,9 +62,9 @@ impl Rule for InvalidObjectName {
             && let Err(error) = is_dns1123_label(text)
         {
             let message = format!("`{}` is not a valid namespace name: {error}", shown(text));
-            report(cx, namespace, message, NameFormat::Label);
+            report(cx, namespace, text, message, NameFormat::Label);
         }
-        let Some((kind, format)) = name_format(object) else {
+        let Some(kind) = object.builtin_kind() else {
             return;
         };
         let Some(name) = object.name() else {
@@ -103,16 +73,26 @@ impl Rule for InvalidObjectName {
         let Some(text) = string_value(name) else {
             return;
         };
+        let format = name_format(kind);
         let Err(reason) = check(text, format) else {
             return;
         };
-        let message = format!("`{}` is not a valid `{kind}` name: {reason}", shown(text));
-        report(cx, name, message, format);
+        let message = format!(
+            "`{}` is not a valid `{}` name: {reason}",
+            shown(text),
+            kind.as_str()
+        );
+        report(cx, name, text, message, format);
     }
 }
 
-fn report(cx: &mut ObjectContext<'_>, node: &Node, message: String, format: NameFormat) {
-    let text = node_text(node);
+fn report(
+    cx: &mut ObjectContext<'_>,
+    node: &Node,
+    text: &str,
+    message: String,
+    format: NameFormat,
+) {
     let max = format.max_len();
     let help = match (format, suggestion(text, format)) {
         _ if text.len() > max => format!("shorten the name to at most {max} characters"),
@@ -127,27 +107,19 @@ fn report(cx: &mut ObjectContext<'_>, node: &Node, message: String, format: Name
                       letter or digit"
             .to_owned(),
     };
-    let diagnostic = cx.diagnostic(node.range, message).with_help(help);
-    cx.report(diagnostic);
+    cx.report(cx.diagnostic(node.range, message).with_help(help));
 }
 
-/// The kind and its name format, for built-in kinds in their own API group. Without a
-/// usable `apiVersion` the kind alone decides.
-fn name_format(object: Object<'_>) -> Option<(&str, NameFormat)> {
-    let kind = object.kind()?.as_str()?;
-    let stable = GroupVersion::parse(stable_api_version(kind)?)?;
-    if let Some(gv) = object.group_version()
-        && gv.group != stable.group
-    {
-        return None;
-    }
-    let format = match kind {
-        "Namespace" => NameFormat::Label,
-        "Service" => NameFormat::Dns1035,
-        "Role" | "ClusterRole" | "RoleBinding" | "ClusterRoleBinding" => NameFormat::PathSegment,
+fn name_format(kind: BuiltinKind) -> NameFormat {
+    match kind {
+        BuiltinKind::Namespace => NameFormat::Label,
+        BuiltinKind::Service => NameFormat::Dns1035,
+        BuiltinKind::Role
+        | BuiltinKind::ClusterRole
+        | BuiltinKind::RoleBinding
+        | BuiltinKind::ClusterRoleBinding => NameFormat::PathSegment,
         _ => NameFormat::Subdomain,
-    };
-    Some((kind, format))
+    }
 }
 
 /// The text of a non-empty string value. Numbers, booleans and collections are schema
@@ -158,11 +130,6 @@ fn string_value(node: &Node) -> Option<&str> {
     };
     (scalar.resolve_kubernetes() == ResolvedScalar::String && !scalar.value.trim().is_empty())
         .then_some(scalar.value.as_str())
-}
-
-/// The scalar text of a node checked by [`string_value`].
-fn node_text(node: &Node) -> &str {
-    node.as_scalar().map_or("", |scalar| scalar.value.as_str())
 }
 
 fn check(name: &str, format: NameFormat) -> Result<(), String> {
@@ -227,31 +194,4 @@ fn suggestion(name: &str, format: NameFormat) -> Option<String> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{InvalidObjectName, NameFormat, suggestion};
-
-    #[test]
-    fn fixture() {
-        insta::assert_snapshot!(crate::testing::check_fixture(&InvalidObjectName));
-    }
-
-    #[test]
-    fn suggestions() {
-        let cases = [
-            ("My_App", NameFormat::Subdomain, Some("my-app")),
-            ("web.", NameFormat::Subdomain, Some("web")),
-            ("a__.b", NameFormat::Subdomain, Some("a.b")),
-            ("api.v2", NameFormat::Label, Some("api-v2")),
-            ("Web Server", NameFormat::Dns1035, Some("web-server")),
-            ("1web", NameFormat::Dns1035, None),
-            ("café", NameFormat::Dns1035, None),
-            ("___", NameFormat::Subdomain, None),
-            ("a/b", NameFormat::PathSegment, None),
-        ];
-        for (name, format, expected) in cases {
-            assert_eq!(suggestion(name, format).as_deref(), expected, "{name}");
-        }
-        let long = "a".repeat(70);
-        assert_eq!(suggestion(&long, NameFormat::Label), Some("a".repeat(63)));
-    }
-}
+mod tests;

@@ -1,0 +1,61 @@
+---
+source: crates/kubelint_linter/src/rules/tests.rs
+expression: check_fixture(rule)
+---
+error[KL1001]: `Deployment` object has no `apiVersion`
+ --> correctness/KL1001.yaml:2:1
+  |
+2 | kind: Deployment
+  | ^^^^^^^^^^^^^^^^
+  = help: add `apiVersion: apps/v1`
+
+error[KL1001]: `Certificate` object has no `apiVersion`
+ --> correctness/KL1001.yaml:9:1
+  |
+9 | kind: Certificate
+  | ^^^^^^^^^^^^^^^^^
+  = help: add the `apiVersion` of this kind; `kubectl api-resources` lists them
+
+error[KL1001]: `Service` object has an empty `apiVersion`
+  --> correctness/KL1001.yaml:12:1
+   |
+12 | apiVersion:
+   | ^^^^^^^^^^
+  = help: add `apiVersion: v1`
+
+error[KL1001]: `ConfigMap` object has an empty `apiVersion`
+  --> correctness/KL1001.yaml:16:1
+   |
+16 | apiVersion: null
+   | ^^^^^^^^^^^^^^^^
+  = help: add `apiVersion: v1`
+
+error[KL1001]: `Secret` object has an empty `apiVersion`
+  --> correctness/KL1001.yaml:19:1
+   |
+19 | apiVersion: ""
+   | ^^^^^^^^^^^^^^
+  = help: add `apiVersion: v1`
+
+error[KL1001]: `Pod` object has no `apiVersion`
+  --> correctness/KL1001.yaml:23:2
+   |
+23 | {kind: Pod, metadata: {name: inline}}
+   |  ^^^^^^^^^
+  = help: add `apiVersion: v1`
+
+error[KL1001]: `Pod` object has no `apiVersion`
+  --> correctness/KL1001.yaml:31:3
+   |
+31 | - kind: Pod
+   |   ^^^^^^^^^
+  = help: add `apiVersion: v1`
+
+error[KL1001]: object has no `apiVersion`
+  --> correctness/KL1001.yaml:32:3
+   |
+32 | - metadata:
+   |   ^^^^^^^^
+  = help: add `apiVersion` and `kind`, such as `apiVersion: apps/v1` and `kind: Deployment`
+
+8 finding(s) in 12 object(s)

@@ -1,0 +1,10 @@
+# é
+kind: Pod
+---
+name: not-an-object
+---
+apiVersion: v1
+kind: List
+items:
+- kind: Service
+- kind: Secret

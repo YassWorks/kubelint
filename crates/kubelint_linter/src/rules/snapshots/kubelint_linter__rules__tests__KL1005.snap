@@ -1,0 +1,93 @@
+---
+source: crates/kubelint_linter/src/rules/tests.rs
+expression: check_fixture(rule)
+---
+error[KL1005]: `Deployment` selector requires `app: web`, but the pod template has `app: frontend`
+ --> correctness/KL1005.yaml:9:7
+  |
+9 |       app: web
+  |       ^^^^^^^^
+  --> correctness/KL1005.yaml:13:9
+   |
+13 |         app: frontend
+   |         ------------- pod template label
+  = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
+
+error[KL1005]: `StatefulSet` selector requires `tier: data`, but the pod template has no `tier` label
+  --> correctness/KL1005.yaml:28:7
+   |
+28 |       tier: data
+   |       ^^^^^^^^^^
+  --> correctness/KL1005.yaml:31:7
+   |
+31 |       labels:
+   |       ------ pod template labels
+  = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
+
+error[KL1005]: `DaemonSet` selector requires `app: agent`, but the pod template has no `app` label
+  --> correctness/KL1005.yaml:43:19
+   |
+43 |     matchLabels: {app: agent}
+   |                   ^^^^^^^^^^
+  --> correctness/KL1005.yaml:45:5
+   |
+45 |     metadata:
+   |     -------- pod template has no labels
+  = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
+
+error[KL1005]: `ReplicaSet` selector requires `tier` in [web, api], but the pod template has `tier: backend`
+  --> correctness/KL1005.yaml:58:7
+   |
+58 |     - {key: tier, operator: In, values: [web, api]}
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  --> correctness/KL1005.yaml:65:9
+   |
+65 |         tier: backend
+   |         ------------- pod template label
+  = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
+
+error[KL1005]: `ReplicaSet` selector requires `track` not in [canary], but the pod template has `track: canary`
+  --> correctness/KL1005.yaml:59:7
+   |
+59 |     - {key: track, operator: NotIn, values: [canary]}
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  --> correctness/KL1005.yaml:66:9
+   |
+66 |         track: canary
+   |         ------------- pod template label
+  = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
+
+error[KL1005]: `ReplicaSet` selector requires the `app` label, but the pod template has no `app` label
+  --> correctness/KL1005.yaml:60:7
+   |
+60 |     - {key: app, operator: Exists}
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  --> correctness/KL1005.yaml:64:7
+   |
+64 |       labels:
+   |       ------ pod template labels
+  = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
+
+error[KL1005]: `ReplicaSet` selector requires no `debug` label, but the pod template has `debug: true`
+  --> correctness/KL1005.yaml:61:7
+   |
+61 |     - {key: debug, operator: DoesNotExist}
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  --> correctness/KL1005.yaml:67:9
+   |
+67 |         debug: "true"
+   |         ------------- pod template label
+  = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
+
+error[KL1005]: `ReplicationController` selector requires `app: legacy`, but the pod template has `app: old`
+  --> correctness/KL1005.yaml:78:5
+   |
+78 |     app: legacy
+   |     ^^^^^^^^^^^
+  --> correctness/KL1005.yaml:82:9
+   |
+82 |         app: old
+   |         -------- pod template label
+  = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
+
+8 finding(s) in 10 object(s)

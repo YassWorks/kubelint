@@ -65,26 +65,23 @@ small example to copy.
 3. **Write the rule** in `crates/kubelint_linter/src/rules/<category>/<rule_name>.rs`
    (the name in snake case): a unit struct implementing `Rule`, with a `static META:
    RuleMeta` (code, name, category, default severity, default enabled, summary,
-   explanation). `check_object` gets an `ObjectContext`: read the object with
-   `cx.object()`, build a finding with `cx.diagnostic(range, message)` plus
-   `.with_help(...)`, and hand it to `cx.report(...)`. The context fills in the code and
-   the configured severity. Use the `kubelint_k8s` helpers (for example
-   `pod_spec().containers()`) instead of walking YAML by hand.
+   explanation). The explanation is Markdown in `<rule_name>.md` next to the rule
+   (what it does, why it matters, an example and its fix), loaded with
+   `explanation: include_str!("<rule_name>.md")`. `check_object` gets an
+   `ObjectContext`: read the object with `cx.object()`, build a finding with
+   `cx.diagnostic(range, message)` plus `.with_help(...)`, and hand it to
+   `cx.report(...)`. The context fills in the code and the configured severity. Use the
+   `kubelint_k8s` helpers (for example `pod_spec().containers()`) instead of walking
+   YAML by hand.
 4. **Register it** in two places: `mod <rule_name>;` and `pub use` of the struct in the
    category module (`src/rules/<category>/mod.rs`), and one line in `ALL` in
    `src/rules/mod.rs`, which is kept in code order (a test checks it).
-5. **Add the snapshot test** in the rule's `tests` module:
-
-   ```rust
-   #[test]
-   fn fixture() {
-       insta::assert_snapshot!(crate::testing::check_fixture(&RuleStruct));
-   }
-   ```
-
-   Run `INSTA_UPDATE=always cargo test -p kubelint_linter` and read the new file under
-   `src/rules/<category>/snapshots/`: every reported position and message should be
-   exactly what you expect, and every `Not reported` case should be absent.
+5. **Review the snapshot.** There is no test code to write: `src/rules/tests.rs` lints
+   the fixture of every rule in `ALL`. Run
+   `INSTA_UPDATE=always cargo test -p kubelint_linter` and read the new
+   `src/rules/snapshots/kubelint_linter__rules__tests__<CODE>.snap`: every reported
+   position and message should be exactly what you expect, and every `Not reported`
+   case should be absent.
 6. **Update the catalog row** status to `implemented` and tick the roadmap item.
 
 A good diagnostic message names the object and the field and says what is wrong; the

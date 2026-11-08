@@ -1,0 +1,4 @@
+# kubelint-disable-file KL1001
+kind: ConfigMap
+---
+apiVersion: v1

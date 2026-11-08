@@ -9,9 +9,7 @@ use crate::RuleMeta;
 /// One Kubernetes object of the run, with the file it came from.
 #[derive(Debug, Clone, Copy)]
 pub struct LintObject<'a> {
-    /// The file the object is in.
     pub file: FileId,
-    /// The object.
     pub object: Object<'a>,
 }
 
@@ -63,7 +61,6 @@ impl<'a> ObjectContext<'a> {
         }
     }
 
-    /// The object being checked.
     pub fn object(&self) -> Object<'a> {
         self.object
     }
@@ -86,7 +83,6 @@ impl<'a> ObjectContext<'a> {
         Label::new(self.file_id, range)
     }
 
-    /// Records a finding.
     pub fn report(&mut self, diagnostic: Diagnostic) {
         self.reporter.diagnostics.push(diagnostic);
     }
@@ -139,7 +135,6 @@ impl<'a> RunContext<'a> {
         self.reporter.diagnostic(file, range, message.into())
     }
 
-    /// Records a finding.
     pub fn report(&mut self, diagnostic: Diagnostic) {
         self.reporter.diagnostics.push(diagnostic);
     }

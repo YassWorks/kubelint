@@ -1,7 +1,7 @@
 //! KL1007 `invalid-resource-quantity`.
 
 use kubelint_diagnostics::Severity;
-use kubelint_k8s::{Object, Quantity, QuantityError};
+use kubelint_k8s::{BuiltinKind, Quantity, QuantityError};
 use kubelint_yaml::{Node, NodeKind, ResolvedScalar};
 
 use crate::{Category, ObjectContext, Rule, RuleMeta};
@@ -24,40 +24,7 @@ static META: RuleMeta = RuleMeta {
     default_severity: Severity::Error,
     default_enabled: true,
     summary: "A resource quantity that Kubernetes cannot parse.",
-    explanation: r"## What it does
-
-Reports a CPU, memory or storage amount that is not a valid Kubernetes quantity, in
-container and pod resources, pod overhead, `emptyDir.sizeLimit`, persistent volume
-claims, resource quotas and limit ranges.
-
-## Why it matters
-
-Kubernetes writes amounts as a number with an optional, case-sensitive suffix: `Ki`,
-`Mi`, `Gi`, `Ti`, `Pi`, `Ei` (powers of 1024), `n`, `u`, `m`, `k`, `M`, `G`, `T`, `P`,
-`E` (powers of 1000) or an exponent such as `e3`. Units from other tools, like `512mb`,
-`1GB`, `1K` or `0.5cores`, are rejected by the API server and the whole object fails to
-apply. Note that `m` means milli: `memory: 512m` is half a byte, not 512 megabytes.
-
-CPU is counted in cores without a unit: `0.5` and `500m` both mean half a core.
-
-## Example
-
-```yaml
-resources:
-  requests:
-    cpu: 0.5cores
-    memory: 512mb
-```
-
-Use instead:
-
-```yaml
-resources:
-  requests:
-    cpu: 500m
-    memory: 512Mi
-```
-",
+    explanation: include_str!("invalid_resource_quantity.md"),
 };
 
 /// The `LimitRange` item fields that hold resource lists.
@@ -76,6 +43,7 @@ impl Rule for InvalidResourceQuantity {
 
     fn check_object(&self, cx: &mut ObjectContext<'_>) {
         let object = cx.object();
+        let kind = object.builtin_kind();
         let mut lists: Vec<&Node> = Vec::new();
         let mut single: Vec<(&Node, &str)> = Vec::new();
         if let Some(pod) = object.pod_spec() {
@@ -89,24 +57,31 @@ impl Rule for InvalidResourceQuantity {
                     single.push((size, "sizeLimit"));
                 }
             }
-            if is_kind(object, "StatefulSet", "apps") {
+            if kind == Some(BuiltinKind::StatefulSet) {
                 let templates = object.node().get_path(&["spec", "volumeClaimTemplates"]);
                 for template in templates.into_iter().flat_map(Node::items) {
                     push_requirements(&mut lists, template.get_path(&["spec", "resources"]));
                 }
             }
-        } else if is_kind(object, "PersistentVolumeClaim", "") {
-            push_requirements(&mut lists, object.node().get_path(&["spec", "resources"]));
-        } else if is_kind(object, "ResourceQuota", "") {
-            lists.extend(object.node().get_path(&["spec", "hard"]));
-        } else if is_kind(object, "LimitRange", "") {
-            let limits = object.node().get_path(&["spec", "limits"]);
-            for item in limits.into_iter().flat_map(Node::items) {
-                lists.extend(
-                    LIMIT_RANGE_FIELDS
-                        .iter()
-                        .filter_map(|field| item.get(field)),
-                );
+        } else {
+            match kind {
+                Some(BuiltinKind::PersistentVolumeClaim) => {
+                    push_requirements(&mut lists, object.node().get_path(&["spec", "resources"]));
+                }
+                Some(BuiltinKind::ResourceQuota) => {
+                    lists.extend(object.node().get_path(&["spec", "hard"]));
+                }
+                Some(BuiltinKind::LimitRange) => {
+                    let limits = object.node().get_path(&["spec", "limits"]);
+                    for item in limits.into_iter().flat_map(Node::items) {
+                        lists.extend(
+                            LIMIT_RANGE_FIELDS
+                                .iter()
+                                .filter_map(|field| item.get(field)),
+                        );
+                    }
+                }
+                _ => {}
             }
         }
         for list in lists {
@@ -131,48 +106,35 @@ fn push_requirements<'a>(lists: &mut Vec<&'a Node>, resources: Option<&'a Node>)
     lists.extend(resources.get("limits"));
 }
 
-/// Whether `object` is a `kind` of API group `group`. Without a usable `apiVersion` the
-/// kind alone decides, as for workloads.
-fn is_kind(object: Object<'_>, kind: &str, group: &str) -> bool {
-    object.kind().and_then(Node::as_str) == Some(kind)
-        && object.group_version().is_none_or(|gv| gv.group == group)
-}
-
 fn check_value(cx: &mut ObjectContext<'_>, value: &Node, resource: &str) {
     let NodeKind::Scalar(scalar) = &value.kind else {
         return;
     };
-    let text = match scalar.resolve_kubernetes() {
+    let text = scalar.value.as_str();
+    let (reason, help) = match scalar.resolve_kubernetes() {
         ResolvedScalar::Null | ResolvedScalar::Int(_) | ResolvedScalar::Uint(_) => return,
         ResolvedScalar::Float(number) if number.is_finite() => return,
-        ResolvedScalar::Float(_) => {
-            let message = invalid(&scalar.value, resource, "it is not a finite number");
-            let diagnostic = cx.diagnostic(value.range, message).with_help(GENERIC_HELP);
-            cx.report(diagnostic);
-            return;
+        ResolvedScalar::Float(_) => ("it is not a finite number".to_owned(), None),
+        ResolvedScalar::Bool(_) => ("YAML reads it as a boolean".to_owned(), None),
+        ResolvedScalar::String => {
+            // Kubernetes trims surrounding whitespace before parsing (`Quantity.UnmarshalJSON`).
+            let trimmed = text.trim();
+            let Err(error) = Quantity::parse(trimmed) else {
+                return;
+            };
+            let help = match error {
+                QuantityError::InvalidSuffix(suffix) => {
+                    suggest_suffix(&trimmed[..trimmed.len() - suffix.len()], suffix)
+                }
+                QuantityError::Empty | QuantityError::InvalidNumber => None,
+            };
+            (error.to_string(), help)
         }
-        ResolvedScalar::Bool(_) => {
-            let message = invalid(&scalar.value, resource, "YAML reads it as a boolean");
-            let diagnostic = cx.diagnostic(value.range, message).with_help(GENERIC_HELP);
-            cx.report(diagnostic);
-            return;
-        }
-        ResolvedScalar::String => scalar.value.as_str(),
     };
-    // Kubernetes trims surrounding whitespace before parsing (`Quantity.UnmarshalJSON`).
-    let Err(error) = Quantity::parse(text.trim()) else {
-        return;
-    };
-    let help = match error {
-        QuantityError::InvalidSuffix(suffix) => {
-            let number = &text.trim()[..text.trim().len() - suffix.len()];
-            suggest_suffix(number, suffix).unwrap_or_else(|| GENERIC_HELP.to_owned())
-        }
-        QuantityError::Empty | QuantityError::InvalidNumber => GENERIC_HELP.to_owned(),
-    };
-    let message = invalid(text, resource, &error.to_string());
-    let diagnostic = cx.diagnostic(value.range, message).with_help(help);
-    cx.report(diagnostic);
+    cx.report(
+        cx.diagnostic(value.range, invalid(text, resource, &reason))
+            .with_help(help.as_deref().unwrap_or(GENERIC_HELP)),
+    );
 }
 
 /// The diagnostic message: `invalid quantity `512mb` for `memory`: <reason>`.
@@ -255,75 +217,4 @@ fn millis(number: &str) -> Option<String> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{InvalidResourceQuantity, millis, suggest_suffix};
-
-    #[test]
-    fn fixture() {
-        insta::assert_snapshot!(crate::testing::check_fixture(&InvalidResourceQuantity));
-    }
-
-    #[test]
-    fn suffix_suggestions() {
-        let cases = [
-            (
-                "512",
-                "mb",
-                Some("write `512Mi` (powers of 1024) or `512M` (powers of 1000)"),
-            ),
-            (
-                "1",
-                "GB",
-                Some("write `1Gi` (powers of 1024) or `1G` (powers of 1000)"),
-            ),
-            (
-                "1",
-                "K",
-                Some("write `1Ki` (powers of 1024) or `1k` (powers of 1000)"),
-            ),
-            ("2", "gi", Some("suffixes are case-sensitive: write `2Gi`")),
-            ("2", "MiB", Some("suffixes are case-sensitive: write `2Mi`")),
-            ("100", "bytes", Some("bytes need no unit: write `100`")),
-            (
-                "0.5",
-                "cores",
-                Some("CPU is counted in cores without a unit: write `0.5` or `500m`"),
-            ),
-            (
-                "2",
-                "CPU",
-                Some("CPU is counted in cores without a unit: write `2` or `2000m`"),
-            ),
-            (
-                "250",
-                "mcores",
-                Some("millicores are written with `m`: write `250m`"),
-            ),
-            ("20", " Gi", Some("remove the space: write `20Gi`")),
-            (
-                "1",
-                " CPU",
-                Some("CPU is counted in cores without a unit: write `1` or `1000m`"),
-            ),
-            ("1", "x", None),
-            ("1", "ib", None),
-        ];
-        for (number, suffix, expected) in cases {
-            assert_eq!(
-                suggest_suffix(number, suffix).as_deref(),
-                expected,
-                "{number}{suffix}"
-            );
-        }
-    }
-
-    #[test]
-    fn millis_of_numbers() {
-        assert_eq!(millis("0.5").as_deref(), Some("500"));
-        assert_eq!(millis(".25").as_deref(), Some("250"));
-        assert_eq!(millis("1.").as_deref(), Some("1000"));
-        assert_eq!(millis("0").as_deref(), Some("0"));
-        assert_eq!(millis("0.0001"), None);
-        assert_eq!(millis("-1"), None);
-    }
-}
+mod tests;

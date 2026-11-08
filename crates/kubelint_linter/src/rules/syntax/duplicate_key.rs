@@ -20,43 +20,7 @@ static META: RuleMeta = RuleMeta {
     default_severity: Severity::Error,
     default_enabled: true,
     summary: "The same key appears twice in one mapping.",
-    explanation: r#"## What it does
-
-Reports a key that appears more than once in the same YAML mapping, anywhere in a
-Kubernetes object. Keys are compared by their text after removing quotes, so `"app"`
-and `app` are the same key.
-
-## Why it matters
-
-Kubernetes cannot keep both values. Depending on the tool and its settings, the object
-is rejected (`kubectl apply` with strict field validation reports "duplicate field") or
-the last value silently wins. Either way, one of the two values is not what runs, and a
-reader of the file cannot tell which one was meant.
-
-## Example
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: settings
-data:
-  mode: fast
-data:
-  mode: slow
-```
-
-Use instead, keeping the value you mean:
-
-```yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: settings
-data:
-  mode: slow
-```
-"#,
+    explanation: include_str!("duplicate_key.md"),
 };
 
 impl Rule for DuplicateKey {
@@ -79,15 +43,15 @@ impl Rule for DuplicateKey {
             } else {
                 format!("duplicate key `{}` in `{}`", duplicate.key, duplicate.path)
             };
-            let diagnostic = cx
-                .diagnostic(duplicate.repeat, message)
-                .with_secondary(cx.label(duplicate.first).with_message("first defined here"))
-                .with_help(format!(
-                    "keep one `{}`: Kubernetes either rejects the object or uses only the \
-                     last value",
-                    duplicate.key
-                ));
-            cx.report(diagnostic);
+            cx.report(
+                cx.diagnostic(duplicate.repeat, message)
+                    .with_secondary(cx.label(duplicate.first).with_message("first defined here"))
+                    .with_help(format!(
+                        "keep one `{}`: Kubernetes either rejects the object or uses only the \
+                         last value",
+                        duplicate.key
+                    )),
+            );
         }
     }
 }
@@ -97,9 +61,7 @@ struct Duplicate {
     key: String,
     /// Where the mapping is, like `spec.containers[0]`; empty for the object itself.
     path: String,
-    /// The first occurrence of the key.
     first: TextRange,
-    /// A later occurrence.
     repeat: TextRange,
 }
 
@@ -168,28 +130,4 @@ fn push_key(path: &mut String, key: &str) {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{DuplicateKey, push_key};
-
-    #[test]
-    fn fixture() {
-        insta::assert_snapshot!(crate::testing::check_fixture(&DuplicateKey));
-    }
-
-    #[test]
-    fn a_duplicate_repeated_by_an_alias_is_reported_once() {
-        let text = "apiVersion: v1\nkind: ConfigMap\nx: &base {k: 1, k: 2}\ny: *base\n";
-        let file = kubelint_source::SourceFile::new("alias.yaml", text);
-        let out = crate::testing::check_source(&DuplicateKey, &file);
-        assert_eq!(out.matches("error[KL0002]").count(), 1, "{out}");
-    }
-
-    #[test]
-    fn paths_quote_keys_that_are_not_simple() {
-        let mut path = String::new();
-        push_key(&mut path, "metadata");
-        push_key(&mut path, "annotations");
-        push_key(&mut path, "example.com/owner");
-        assert_eq!(path, r#"metadata.annotations["example.com/owner"]"#);
-    }
-}
+mod tests;

@@ -1,0 +1,5 @@
+# kubelint-disable-next-line KL1001
+# another comment
+a: 1
+b: 2 # kubelint-disable-line missing-kind
+c: 3

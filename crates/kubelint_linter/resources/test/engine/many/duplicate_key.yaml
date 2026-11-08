@@ -1,0 +1,4 @@
+kind: Service
+kind: Service
+---
+metadata: {name: s{i}}

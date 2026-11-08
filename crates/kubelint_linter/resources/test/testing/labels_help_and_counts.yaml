@@ -1,0 +1,10 @@
+# Non-ASCII before the finding: é
+apiVersion: v1
+kind: Pöd
+---
+# Not an object.
+name: x
+---
+# Flow style, multi-line range.
+{kind: "Con
+  figMap"}

@@ -1,0 +1,33 @@
+## What it does
+
+Reports a container environment variable whose `value` is not a string once YAML has
+read it: an unquoted number such as `8080` or `1.10`, or a boolean such as `true`, `yes`
+or `off`.
+
+## Why it matters
+
+Environment variable values are strings in the Kubernetes API. Kubernetes reads YAML
+with YAML 1.1 rules, where unquoted `8080` is a number and `yes`, `on` and `off` are
+booleans, and it refuses to turn them into strings: the object fails with "cannot
+unmarshal number into Go struct field EnvVar.value of type string". Tools that do
+convert can change the value on the way, for example `1.10` to `1.1` or `0755` to `493`.
+
+## Example
+
+```yaml
+env:
+- name: PORT
+  value: 8080
+- name: DEBUG
+  value: yes
+```
+
+Use instead:
+
+```yaml
+env:
+- name: PORT
+  value: "8080"
+- name: DEBUG
+  value: "yes"
+```

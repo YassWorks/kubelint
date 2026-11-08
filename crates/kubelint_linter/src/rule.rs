@@ -15,7 +15,6 @@ use crate::{ObjectContext, RunContext};
 /// Rules are pure, with no I/O and no global state, so the engine can run them in
 /// parallel (`Sync`).
 pub trait Rule: Sync {
-    /// The rule's code, name, category and documentation.
     fn meta(&self) -> &'static RuleMeta;
 
     /// Checks one Kubernetes object. Called once per object.
@@ -38,7 +37,6 @@ pub struct RuleMeta {
     pub code: &'static str,
     /// Kebab-case description of the problem, such as `privileged-container`.
     pub name: &'static str,
-    /// The rule's category.
     pub category: Category,
     /// Severity unless configuration overrides it.
     pub default_severity: Severity,
@@ -46,7 +44,8 @@ pub struct RuleMeta {
     pub default_enabled: bool,
     /// One line, shown by `kubelint rules`.
     pub summary: &'static str,
-    /// Markdown: why it matters, examples, how to fix it.
+    /// Markdown: why it matters, examples, how to fix it. Built-in rules keep it in
+    /// `<rule_name>.md` next to the rule.
     pub explanation: &'static str,
 }
 
