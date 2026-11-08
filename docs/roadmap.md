@@ -57,7 +57,7 @@ Security rules:
 
 - [x] KL2001 `privileged-container`
 - [x] KL2002 `privilege-escalation-allowed`
-- [ ] KL2003 `run-as-root`: container settings override pod settings. Add a helper in
+- [x] KL2003 `run-as-root`: container settings override pod settings. Add a helper in
   `kubelint_k8s` that merges the pod and container `securityContext`.
 - [ ] KL2004 `host-namespace`
 - [ ] KL2005 `host-path-volume`

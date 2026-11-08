@@ -3,7 +3,7 @@
 use kubelint_diagnostics::Severity;
 use kubelint_yaml::Node;
 
-use super::container_subject;
+use super::{container_range, container_subject};
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
 /// Reports a container that does not set `securityContext.allowPrivilegeEscalation` to
@@ -55,10 +55,7 @@ impl Rule for PrivilegeEscalationAllowed {
                 ),
                 Some(entry) if !entry.value.is_null() => continue,
                 _ => (
-                    container
-                        .name()
-                        .or_else(|| container.node().entries().next().map(|entry| &entry.key))
-                        .map_or(container.node().range, |node| node.range),
+                    container_range(container),
                     "does not set `allowPrivilegeEscalation: false`",
                 ),
             };

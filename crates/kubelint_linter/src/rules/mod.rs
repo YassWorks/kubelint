@@ -30,4 +30,5 @@ pub static ALL: &[&dyn Rule] = &[
     &correctness::DuplicateEnvName,
     &security::PrivilegedContainer,
     &security::PrivilegeEscalationAllowed,
+    &security::RunAsRoot,
 ];

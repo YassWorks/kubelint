@@ -4,7 +4,7 @@
 //! helpers find the pod template wherever a workload kind keeps it, so rules never walk
 //! `spec.template.spec` by hand and every kind is covered the same way.
 
-use kubelint_yaml::Node;
+use kubelint_yaml::{Entry, Node};
 
 use crate::{BuiltinKind, Object};
 
@@ -133,7 +133,11 @@ impl<'a> PodSpec<'a> {
                 .into_iter()
                 .flat_map(Node::items)
                 .filter(|item| item.as_mapping().is_some())
-                .map(move |node| Container { node, kind })
+                .map(move |node| Container {
+                    node,
+                    kind,
+                    pod: self,
+                })
         })
     }
 }
@@ -169,6 +173,7 @@ impl ContainerKind {
 pub struct Container<'a> {
     node: &'a Node,
     kind: ContainerKind,
+    pod: PodSpec<'a>,
 }
 
 impl<'a> Container<'a> {
@@ -192,6 +197,31 @@ impl<'a> Container<'a> {
         self.node.get("securityContext")
     }
 
+    /// The `securityContext` field that applies to this container: its own when set and
+    /// not null, otherwise the pod's (`DetermineEffectiveSecurityContext` in
+    /// `pkg/securitycontext/util.go`).
+    ///
+    /// ```
+    /// use kubelint_k8s::SecurityField;
+    ///
+    /// let parse = kubelint_yaml::parse(
+    ///     "kind: Pod\nspec: {securityContext: {runAsUser: 1, runAsNonRoot: true}, containers: [{securityContext: {runAsUser: 0, runAsNonRoot: null}}]}",
+    /// );
+    /// let pod = kubelint_k8s::objects(&parse.documents[0])[0].pod_spec().unwrap();
+    /// let container = pod.containers().next().unwrap();
+    /// let value = |field| container.security_setting(field).and_then(|e| e.value.as_str());
+    /// assert_eq!(value(SecurityField::RunAsUser), Some("0"));
+    /// assert_eq!(value(SecurityField::RunAsNonRoot), Some("true"));
+    /// ```
+    pub fn security_setting(self, field: SecurityField) -> Option<&'a Entry> {
+        let set = |context: Option<&'a Node>| {
+            context
+                .and_then(|context| context.get_entry(field.key()))
+                .filter(|entry| !entry.value.is_kubernetes_null())
+        };
+        set(self.security_context()).or_else(|| set(self.pod.security_context()))
+    }
+
     /// The `resources` value (requests and limits).
     pub fn resources(self) -> Option<&'a Node> {
         self.node.get("resources")
@@ -212,5 +242,32 @@ impl<'a> Container<'a> {
 
     pub fn startup_probe(self) -> Option<&'a Node> {
         self.node.get("startupProbe")
+    }
+}
+
+/// The `securityContext` fields a pod sets for all its containers and a container can
+/// override.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SecurityField {
+    RunAsUser,
+    RunAsGroup,
+    RunAsNonRoot,
+    SeLinuxOptions,
+    SeccompProfile,
+    AppArmorProfile,
+    WindowsOptions,
+}
+
+impl SecurityField {
+    pub fn key(self) -> &'static str {
+        match self {
+            Self::RunAsUser => "runAsUser",
+            Self::RunAsGroup => "runAsGroup",
+            Self::RunAsNonRoot => "runAsNonRoot",
+            Self::SeLinuxOptions => "seLinuxOptions",
+            Self::SeccompProfile => "seccompProfile",
+            Self::AppArmorProfile => "appArmorProfile",
+            Self::WindowsOptions => "windowsOptions",
+        }
     }
 }

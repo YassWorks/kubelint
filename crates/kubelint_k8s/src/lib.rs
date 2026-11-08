@@ -23,4 +23,4 @@ pub use validation::{
     is_dns1035_label, is_dns1123_label, is_dns1123_subdomain, is_qualified_name,
     is_valid_label_value,
 };
-pub use workload::{Container, ContainerKind, PodSpec};
+pub use workload::{Container, ContainerKind, PodSpec, SecurityField};

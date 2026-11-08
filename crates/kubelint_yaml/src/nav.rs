@@ -79,6 +79,23 @@ impl Node {
         matches!(self.kind, NodeKind::Null)
     }
 
+    /// Whether Kubernetes decodes this node as null: a missing value (`key:`) or a plain
+    /// scalar such as `~` or `null`.
+    ///
+    /// ```
+    /// let doc = &kubelint_yaml::parse("a:\nb: ~\nc: \"null\"").documents[0];
+    /// let root = doc.root.as_ref().unwrap();
+    /// let null = |k| root.get(k).unwrap().is_kubernetes_null();
+    /// assert_eq!((null("a"), null("b"), null("c")), (true, true, false));
+    /// ```
+    pub fn is_kubernetes_null(&self) -> bool {
+        match &self.kind {
+            NodeKind::Null => true,
+            NodeKind::Scalar(scalar) => scalar.resolve_kubernetes() == ResolvedScalar::Null,
+            NodeKind::Mapping(_) | NodeKind::Sequence(_) => false,
+        }
+    }
+
     /// Iterates over the entries of a mapping. Empty for any other node.
     ///
     /// ```
