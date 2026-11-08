@@ -1,5 +1,3 @@
-//! Resource quantities such as `500m`, `128Mi` and `1e3`, as Kubernetes parses them.
-
 use std::fmt;
 
 /// A parsed resource quantity: a signed decimal number and a suffix.
@@ -20,8 +18,8 @@ use std::fmt;
 /// (`ParseQuantity`, `parseQuantityString`) and `suffix.go`. Suffixes are
 /// case-sensitive: `1K` and `1mi` are invalid. No whitespace is allowed anywhere.
 ///
-/// One deliberate difference: a number without any digit (`.`, `-`, `+Mi`) is rejected
-/// here, while Kubernetes' parser quietly reads some of them as zero. Nobody means them.
+/// Unlike Kubernetes, which reads some of them as zero, a number without any digit
+/// (`.`, `-`, `+Mi`) is rejected.
 ///
 /// ```
 /// use kubelint_k8s::{Quantity, Suffix};
@@ -37,11 +35,9 @@ use std::fmt;
 pub struct Quantity<'a> {
     /// The number as written, with its sign: `128`, `-1.5`, `.5`.
     pub number: &'a str,
-    /// The suffix, already interpreted.
     pub suffix: Suffix,
 }
 
-/// The suffix of a [`Quantity`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Suffix {
     /// A power of 1024: `Ki` is 1, `Mi` 2, up to `Ei` 6.
@@ -53,10 +49,8 @@ pub enum Suffix {
     Exponent(i32),
 }
 
-/// Why a string is not a valid [`Quantity`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum QuantityError<'a> {
-    /// The string is empty.
     Empty,
     /// The string does not start with a number (an optional sign, then digits with at
     /// most one `.`).
@@ -132,7 +126,6 @@ impl<'a> Quantity<'a> {
     }
 }
 
-/// The number of ASCII digits at the start of `bytes`.
 fn count_digits(bytes: &[u8]) -> usize {
     bytes.iter().take_while(|b| b.is_ascii_digit()).count()
 }

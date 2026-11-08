@@ -1,6 +1,6 @@
 ---
 source: crates/kubelint_k8s/tests/object.rs
-expression: "describe(\"# é\\napiVersion: apps/v1\\nkind: Deployment\\nmetadata:\\n  name: wéb\\n  namespace: prod\\n  labels:\\n    app: web\\n  annotations:\\n    note: \\\"ü\\\"\\n\")"
+expression: describe(text)
 ---
 doc 0 object 5..135
   apiVersion "apps/v1" 17..24

@@ -1,9 +1,9 @@
 //! Kubernetes object model.
 //!
-//! Read-only views over YAML documents that understand Kubernetes: `apiVersion`/`kind`,
-//! metadata, helpers that find pod specs and containers inside every workload kind, and
-//! parsers and validators for Kubernetes value formats such as resource quantities,
-//! DNS names and labels.
+//! Read-only views over YAML documents that understand Kubernetes: `apiVersion`/`kind`
+//! and the built-in kinds, metadata, helpers that find pod specs and containers inside
+//! every workload kind, and parsers and validators for Kubernetes value formats such as
+//! resource quantities, DNS names and labels.
 //! Rules use these views instead of walking raw YAML.
 //!
 //! Allowed internal dependencies: `kubelint_source`, `kubelint_yaml`.
@@ -15,7 +15,7 @@ mod quantity;
 mod validation;
 mod workload;
 
-pub use gvk::{GroupVersion, GroupVersionKind, stable_api_version};
+pub use gvk::{BuiltinKind, GroupVersion, GroupVersionKind, stable_api_version};
 pub use object::{Object, objects};
 pub use quantity::{Quantity, QuantityError, Suffix};
 pub use validation::{

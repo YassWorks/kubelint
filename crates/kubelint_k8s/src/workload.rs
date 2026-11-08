@@ -6,39 +6,43 @@
 
 use kubelint_yaml::Node;
 
-use crate::Object;
+use crate::{BuiltinKind, Object};
 
 /// Where each workload kind keeps its pod spec, and the API groups it is served from.
 ///
 /// Old groups (`extensions`, `apps/v1beta*`, `batch/v1beta1`) are included because
 /// manifests written for them still circulate; their pod specs have the same shape.
 /// Source: the Kubernetes API reference, "Workload Resources".
-const WORKLOADS: &[(&str, &[&str], &[&str])] = &[
-    ("Pod", &[""], &["spec"]),
+const WORKLOADS: &[(BuiltinKind, &[&str], &[&str])] = &[
+    (BuiltinKind::Pod, &[""], &["spec"]),
     (
-        "ReplicationController",
+        BuiltinKind::ReplicationController,
         &[""],
         &["spec", "template", "spec"],
     ),
     (
-        "Deployment",
+        BuiltinKind::Deployment,
         &["apps", "extensions"],
         &["spec", "template", "spec"],
     ),
     (
-        "ReplicaSet",
+        BuiltinKind::ReplicaSet,
         &["apps", "extensions"],
         &["spec", "template", "spec"],
     ),
     (
-        "DaemonSet",
+        BuiltinKind::DaemonSet,
         &["apps", "extensions"],
         &["spec", "template", "spec"],
     ),
-    ("StatefulSet", &["apps"], &["spec", "template", "spec"]),
-    ("Job", &["batch"], &["spec", "template", "spec"]),
     (
-        "CronJob",
+        BuiltinKind::StatefulSet,
+        &["apps"],
+        &["spec", "template", "spec"],
+    ),
+    (BuiltinKind::Job, &["batch"], &["spec", "template", "spec"]),
+    (
+        BuiltinKind::CronJob,
         &["batch"],
         &["spec", "jobTemplate", "spec", "template", "spec"],
     ),
@@ -62,7 +66,7 @@ impl<'a> Object<'a> {
     /// assert!(object.pod_spec().is_some());
     /// ```
     pub fn pod_spec(self) -> Option<PodSpec<'a>> {
-        let kind = self.kind()?.as_str()?;
+        let kind = BuiltinKind::parse(self.kind()?.as_str()?)?;
         let (_, groups, path) = WORKLOADS.iter().find(|(k, _, _)| *k == kind)?;
         if let Some(gv) = self.group_version()
             && !groups.contains(&gv.group)
@@ -81,7 +85,6 @@ pub struct PodSpec<'a> {
 }
 
 impl<'a> PodSpec<'a> {
-    /// The pod spec's mapping node.
     pub fn node(self) -> &'a Node {
         self.node
     }
@@ -157,27 +160,22 @@ pub struct Container<'a> {
 }
 
 impl<'a> Container<'a> {
-    /// The container's mapping node.
     pub fn node(self) -> &'a Node {
         self.node
     }
 
-    /// Which list the container is in.
     pub fn kind(self) -> ContainerKind {
         self.kind
     }
 
-    /// The `name` value.
     pub fn name(self) -> Option<&'a Node> {
         self.node.get("name")
     }
 
-    /// The `image` value.
     pub fn image(self) -> Option<&'a Node> {
         self.node.get("image")
     }
 
-    /// The container-level `securityContext`.
     pub fn security_context(self) -> Option<&'a Node> {
         self.node.get("securityContext")
     }
@@ -192,17 +190,14 @@ impl<'a> Container<'a> {
         self.node.get("env")
     }
 
-    /// The `livenessProbe` value.
     pub fn liveness_probe(self) -> Option<&'a Node> {
         self.node.get("livenessProbe")
     }
 
-    /// The `readinessProbe` value.
     pub fn readiness_probe(self) -> Option<&'a Node> {
         self.node.get("readinessProbe")
     }
 
-    /// The `startupProbe` value.
     pub fn startup_probe(self) -> Option<&'a Node> {
         self.node.get("startupProbe")
     }

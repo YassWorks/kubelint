@@ -1,0 +1,7 @@
+name: ci
+on: push
+---
+just text é
+---
+---
+- kind: Pod

@@ -1,0 +1,8 @@
+apiVersion: a/b/c
+kind: Pod
+---
+apiVersion: v1
+kind: [Pod]
+---
+apiVersion: 1
+kind: ""

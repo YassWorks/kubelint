@@ -1,6 +1,6 @@
 ---
 source: crates/kubelint_k8s/tests/object.rs
-expression: "describe(\"kind: Pod\\n---\\napiVersion: v1\\n---\\nkind:\\nmetadata: {name: é}\\n\")"
+expression: describe(text)
 ---
 doc 0 object 0..9
   kind "Pod" 6..9

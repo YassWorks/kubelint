@@ -1,9 +1,7 @@
-//! The [`Object`] view and the "is this a Kubernetes object" rule.
-
 use kubelint_source::TextRange;
 use kubelint_yaml::{Document, Node};
 
-use crate::{GroupVersion, GroupVersionKind};
+use crate::{BuiltinKind, GroupVersion, GroupVersionKind};
 
 /// A read-only view of one Kubernetes object in a YAML tree.
 ///
@@ -71,22 +69,18 @@ impl<'a> Object<'a> {
         is_object.then_some(Self { node })
     }
 
-    /// The whole object's mapping node.
     pub fn node(self) -> &'a Node {
         self.node
     }
 
-    /// The byte range of the whole object.
     pub fn range(self) -> TextRange {
         self.node.range
     }
 
-    /// The `apiVersion` value.
     pub fn api_version(self) -> Option<&'a Node> {
         self.node.get("apiVersion")
     }
 
-    /// The `kind` value.
     pub fn kind(self) -> Option<&'a Node> {
         self.node.get("kind")
     }
@@ -114,7 +108,28 @@ impl<'a> Object<'a> {
         Some(GroupVersionKind::new(self.group_version()?, kind))
     }
 
-    /// The `metadata` value.
+    /// The built-in kind, unless `apiVersion` names another group (a custom resource
+    /// called `StatefulSet` is not a StatefulSet). Without a usable `apiVersion` the kind
+    /// alone decides.
+    ///
+    /// ```
+    /// use kubelint_k8s::BuiltinKind;
+    ///
+    /// let kind = |text: &str| {
+    ///     kubelint_k8s::objects(&kubelint_yaml::parse(text).documents[0])[0].builtin_kind()
+    /// };
+    /// let statefulset = Some(BuiltinKind::StatefulSet);
+    /// assert_eq!(kind("apiVersion: apps/v1\nkind: StatefulSet\n"), statefulset);
+    /// assert_eq!(kind("kind: StatefulSet\n"), statefulset);
+    /// assert_eq!(kind("apiVersion: example.com/v1\nkind: StatefulSet\n"), None);
+    /// ```
+    pub fn builtin_kind(self) -> Option<BuiltinKind> {
+        let kind = BuiltinKind::parse(self.kind()?.as_str()?)?;
+        self.group_version()
+            .is_none_or(|gv| gv.group == kind.group())
+            .then_some(kind)
+    }
+
     pub fn metadata(self) -> Option<&'a Node> {
         self.node.get("metadata")
     }
@@ -145,7 +160,6 @@ impl<'a> Object<'a> {
         self.metadata()?.get("annotations")
     }
 
-    /// Whether this is a `kind: List` wrapper whose `items` are the real objects.
     fn is_list(self) -> bool {
         self.kind().and_then(Node::as_str) == Some("List")
     }

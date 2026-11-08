@@ -1,10 +1,11 @@
-//! `Object` views over parsed manifests. Inputs contain non-ASCII text so the ranges in
+//! `Object` views over parsed manifests, most of them fixtures in
+//! `resources/test/fixtures/objects/`. Inputs contain non-ASCII text so the ranges in
 //! snapshots are byte offsets.
 
 use std::fmt::Write as _;
 
-use kubelint_k8s::objects;
-use kubelint_yaml::{Node, parse};
+use kubelint_k8s::{BuiltinKind, objects};
+use kubelint_yaml::parse;
 
 /// One block per object: its range and each accessor's value with its range.
 fn describe(text: &str) -> String {
@@ -13,7 +14,7 @@ fn describe(text: &str) -> String {
     let mut out = String::new();
     for (i, doc) in parse.documents.iter().enumerate() {
         for object in objects(doc) {
-            let _ = writeln!(out, "doc {i} object {}", fmt_range(object.node()));
+            let _ = writeln!(out, "doc {i} object {:?}", object.range());
             let fields = [
                 ("apiVersion", object.api_version()),
                 ("kind", object.kind()),
@@ -27,7 +28,7 @@ fn describe(text: &str) -> String {
                     let shown = node
                         .as_str()
                         .map_or_else(|| "<not a string>".into(), |s| format!("{s:?}"));
-                    let _ = writeln!(out, "  {field} {shown} {}", fmt_range(node));
+                    let _ = writeln!(out, "  {field} {shown} {:?}", node.range);
                 }
             }
             match object.gvk() {
@@ -41,20 +42,28 @@ fn describe(text: &str) -> String {
     out
 }
 
-fn fmt_range(node: &Node) -> String {
-    format!(
-        "{}..{}",
-        u32::from(node.range.start()),
-        u32::from(node.range.end())
-    )
+macro_rules! fixture_tests {
+    ($($name:ident),* $(,)?) => {$(
+        #[test]
+        fn $name() {
+            let text = include_str!(concat!(
+                "../resources/test/fixtures/objects/",
+                stringify!($name),
+                ".yaml"
+            ));
+            insta::assert_snapshot!(describe(text));
+        }
+    )*};
 }
 
-#[test]
-fn deployment_with_full_metadata() {
-    insta::assert_snapshot!(describe(
-        "# é\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: wéb\n  namespace: prod\n  labels:\n    app: web\n  annotations:\n    note: \"ü\"\n"
-    ));
-}
+fixture_tests!(
+    deployment_with_full_metadata,
+    // A GitHub workflow, a scalar document, an empty document and a sequence.
+    documents_that_are_not_objects_are_skipped,
+    either_key_alone_makes_an_object,
+    invalid_api_versions_and_kinds_have_no_gvk,
+    list_is_expanded_into_its_items,
+);
 
 #[test]
 fn core_group_object_in_flow_style() {
@@ -64,35 +73,33 @@ fn core_group_object_in_flow_style() {
 }
 
 #[test]
-fn documents_that_are_not_objects_are_skipped() {
-    // A GitHub workflow, a scalar document, an empty document and a sequence.
-    insta::assert_snapshot!(describe(
-        "name: ci\non: push\n---\njust text é\n---\n---\n- kind: Pod\n"
-    ));
-}
-
-#[test]
-fn either_key_alone_makes_an_object() {
-    insta::assert_snapshot!(describe(
-        "kind: Pod\n---\napiVersion: v1\n---\nkind:\nmetadata: {name: é}\n"
-    ));
-}
-
-#[test]
-fn invalid_api_versions_and_kinds_have_no_gvk() {
-    insta::assert_snapshot!(describe(
-        "apiVersion: a/b/c\nkind: Pod\n---\napiVersion: v1\nkind: [Pod]\n---\napiVersion: 1\nkind: \"\"\n"
-    ));
-}
-
-#[test]
-fn list_is_expanded_into_its_items() {
-    insta::assert_snapshot!(describe(
-        "apiVersion: v1\nkind: List\nitems:\n- apiVersion: v1\n  kind: Service\n  metadata: {name: é}\n- not an object\n- metadata: {name: no-kind}\n---\nkind: List\nitems: nope\n"
-    ));
-}
-
-#[test]
 fn duplicate_keys_use_the_last_value() {
     insta::assert_snapshot!(describe("kind: Pod\nkind: Service\napiVersion: v1\n"));
+}
+
+#[test]
+fn builtin_kind_checks_the_group_of_a_usable_api_version() {
+    let statefulset = Some(BuiltinKind::StatefulSet);
+    let cases = [
+        ("{apiVersion: v1, kind: Pod}", Some(BuiltinKind::Pod)),
+        ("{apiVersion: apps/v1, kind: StatefulSet}", statefulset),
+        ("{apiVersion: apps/v1beta2, kind: StatefulSet}", statefulset),
+        ("{kind: StatefulSet}", statefulset),
+        ("{apiVersion: a/b/c, kind: StatefulSet}", statefulset),
+        ("{apiVersion: [apps/v1], kind: StatefulSet}", statefulset),
+        ("{apiVersion: example.com/v1, kind: StatefulSet}", None),
+        ("{apiVersion: v1, kind: StatefulSet}", None),
+        ("{apiVersion: extensions/v1beta1, kind: Deployment}", None),
+        ("{apiVersion: v1, kind: pod}", None),
+        ("{apiVersion: v1, kind: [Pod]}", None),
+        ("{apiVersion: example.com/v1, kind: Certificate}", None),
+    ];
+    for (text, expected) in cases {
+        let parse = parse(text);
+        assert_eq!(
+            objects(&parse.documents[0])[0].builtin_kind(),
+            expected,
+            "{text}"
+        );
+    }
 }

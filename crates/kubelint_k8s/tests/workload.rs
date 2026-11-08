@@ -19,18 +19,13 @@ fn describe(text: &str) -> String {
             let _ = writeln!(out, "{kind}: no pod spec");
             continue;
         };
-        let _ = writeln!(out, "{kind}: pod spec {}", fmt_range(pod.node()));
+        let _ = writeln!(out, "{kind}: pod spec {:?}", pod.node().range);
         if let Some(sc) = pod.security_context() {
-            let _ = writeln!(out, "  pod securityContext {}", fmt_range(sc));
+            let _ = writeln!(out, "  pod securityContext {:?}", sc.range);
         }
         for c in pod.containers() {
             let name = c.name().and_then(Node::as_str).unwrap_or("?");
-            let _ = writeln!(
-                out,
-                "  {} {name:?} {}",
-                c.kind().field(),
-                fmt_range(c.node())
-            );
+            let _ = writeln!(out, "  {} {name:?} {:?}", c.kind().field(), c.node().range);
             let fields = [
                 ("image", c.image()),
                 ("securityContext", c.security_context()),
@@ -42,20 +37,12 @@ fn describe(text: &str) -> String {
             ];
             for (field, node) in fields {
                 if let Some(node) = node {
-                    let _ = writeln!(out, "    {field} {}", fmt_range(node));
+                    let _ = writeln!(out, "    {field} {:?}", node.range);
                 }
             }
         }
     }
     out
-}
-
-fn fmt_range(node: &Node) -> String {
-    format!(
-        "{}..{}",
-        u32::from(node.range.start()),
-        u32::from(node.range.end())
-    )
 }
 
 macro_rules! fixture_tests {

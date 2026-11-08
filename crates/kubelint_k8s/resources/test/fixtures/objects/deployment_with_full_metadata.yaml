@@ -1,0 +1,10 @@
+# é
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wéb
+  namespace: prod
+  labels:
+    app: web
+  annotations:
+    note: "ü"

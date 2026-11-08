@@ -1,5 +1,3 @@
-//! `apiVersion` and `kind` as Kubernetes understands them.
-
 use std::fmt;
 
 /// An API group and version, parsed from an `apiVersion` value such as `apps/v1`.
@@ -10,7 +8,6 @@ use std::fmt;
 pub struct GroupVersion<'a> {
     /// The API group, empty for the core group.
     pub group: &'a str,
-    /// The version, such as `v1` or `v1beta1`.
     pub version: &'a str,
 }
 
@@ -48,56 +45,6 @@ impl<'a> GroupVersion<'a> {
     }
 }
 
-/// The stable `apiVersion` of a built-in kind, for help texts such as "add
-/// `apiVersion: apps/v1`". `None` for custom resources and kinds not in the table.
-///
-/// The table lists the GA (non-beta) versions served by every Kubernetes release since
-/// 1.25. Kind names are case-sensitive, as in Kubernetes.
-///
-/// ```
-/// use kubelint_k8s::stable_api_version;
-///
-/// assert_eq!(stable_api_version("Deployment"), Some("apps/v1"));
-/// assert_eq!(stable_api_version("Pod"), Some("v1"));
-/// assert_eq!(stable_api_version("Certificate"), None);
-/// ```
-pub fn stable_api_version(kind: &str) -> Option<&'static str> {
-    let api_version = match kind {
-        "ConfigMap"
-        | "Endpoints"
-        | "LimitRange"
-        | "Namespace"
-        | "PersistentVolume"
-        | "PersistentVolumeClaim"
-        | "Pod"
-        | "PodTemplate"
-        | "ReplicationController"
-        | "ResourceQuota"
-        | "Secret"
-        | "Service"
-        | "ServiceAccount" => "v1",
-        "ControllerRevision" | "DaemonSet" | "Deployment" | "ReplicaSet" | "StatefulSet" => {
-            "apps/v1"
-        }
-        "CronJob" | "Job" => "batch/v1",
-        "HorizontalPodAutoscaler" => "autoscaling/v2",
-        "Ingress" | "IngressClass" | "NetworkPolicy" => "networking.k8s.io/v1",
-        "ClusterRole" | "ClusterRoleBinding" | "Role" | "RoleBinding" => {
-            "rbac.authorization.k8s.io/v1"
-        }
-        "PodDisruptionBudget" => "policy/v1",
-        "CSIDriver" | "StorageClass" | "VolumeAttachment" => "storage.k8s.io/v1",
-        "PriorityClass" => "scheduling.k8s.io/v1",
-        "CustomResourceDefinition" => "apiextensions.k8s.io/v1",
-        "MutatingWebhookConfiguration" | "ValidatingWebhookConfiguration" => {
-            "admissionregistration.k8s.io/v1"
-        }
-        "Lease" => "coordination.k8s.io/v1",
-        _ => return None,
-    };
-    Some(api_version)
-}
-
 impl fmt::Display for GroupVersion<'_> {
     /// Formats back to the `apiVersion` spelling.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -114,9 +61,8 @@ impl fmt::Display for GroupVersion<'_> {
 pub struct GroupVersionKind<'a> {
     /// The API group, empty for the core group.
     pub group: &'a str,
-    /// The version, such as `v1`.
     pub version: &'a str,
-    /// The kind, such as `Deployment`. Case-sensitive, as in Kubernetes.
+    /// Case-sensitive, as in Kubernetes.
     pub kind: &'a str,
 }
 
@@ -138,7 +84,6 @@ impl<'a> GroupVersionKind<'a> {
         }
     }
 
-    /// The group and version part.
     pub fn group_version(&self) -> GroupVersion<'a> {
         GroupVersion {
             group: self.group,
@@ -154,34 +99,86 @@ impl fmt::Display for GroupVersionKind<'_> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::GroupVersion;
+/// The stable `apiVersion` of a built-in kind, for help texts such as "add
+/// `apiVersion: apps/v1`". `None` for custom resources and kinds not in the table.
+///
+/// ```
+/// use kubelint_k8s::stable_api_version;
+///
+/// assert_eq!(stable_api_version("Deployment"), Some("apps/v1"));
+/// assert_eq!(stable_api_version("Pod"), Some("v1"));
+/// assert_eq!(stable_api_version("Certificate"), None);
+/// ```
+pub fn stable_api_version(kind: &str) -> Option<&'static str> {
+    BuiltinKind::parse(kind).map(BuiltinKind::api_version)
+}
 
-    #[test]
-    fn parses_api_versions() {
-        let cases = [
-            ("v1", Some(("", "v1"))),
-            ("apps/v1", Some(("apps", "v1"))),
-            ("networking.k8s.io/v1", Some(("networking.k8s.io", "v1"))),
-            ("batch/v1beta1", Some(("batch", "v1beta1"))),
-            ("", None),
-            ("apps/", None),
-            ("/v1", None),
-            ("a/b/c", None),
-            ("/", None),
-        ];
-        for (input, expected) in cases {
-            let got = GroupVersion::parse(input).map(|gv| (gv.group, gv.version));
-            assert_eq!(got, expected, "input {input:?}");
+/// Defines [`BuiltinKind`] from `"apiVersion" => Kind | Kind,` rows.
+macro_rules! builtin_kinds {
+    ($($api_version:literal => $($kind:ident)|+,)+) => {
+        /// A built-in kind, named as in Kubernetes. The table holds the GA (non-beta)
+        /// `apiVersion` of each kind, served by every Kubernetes release since 1.25.
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        pub enum BuiltinKind {
+            $($($kind,)+)+
         }
-    }
 
-    #[test]
-    fn display_round_trips() {
-        for input in ["v1", "apps/v1", "rbac.authorization.k8s.io/v1"] {
-            let gv = GroupVersion::parse(input).map(|gv| gv.to_string());
-            assert_eq!(gv.as_deref(), Some(input));
+        impl BuiltinKind {
+            /// The built-in kind called `kind`. Case-sensitive, as in Kubernetes.
+            ///
+            /// ```
+            /// use kubelint_k8s::BuiltinKind;
+            ///
+            /// assert_eq!(BuiltinKind::parse("StatefulSet"), Some(BuiltinKind::StatefulSet));
+            /// assert_eq!(BuiltinKind::parse("statefulset"), None);
+            /// assert_eq!(BuiltinKind::parse("Certificate"), None);
+            /// ```
+            pub fn parse(kind: &str) -> Option<Self> {
+                match kind {
+                    $($(stringify!($kind) => Some(Self::$kind),)+)+
+                    _ => None,
+                }
+            }
+
+            pub fn as_str(self) -> &'static str {
+                match self {
+                    $($(Self::$kind => stringify!($kind),)+)+
+                }
+            }
+
+            /// The stable `apiVersion`, such as `apps/v1`.
+            pub fn api_version(self) -> &'static str {
+                match self {
+                    $($(Self::$kind)|+ => $api_version,)+
+                }
+            }
         }
+    };
+}
+
+builtin_kinds! {
+    "v1" => ConfigMap | Endpoints | LimitRange | Namespace | PersistentVolume
+        | PersistentVolumeClaim | Pod | PodTemplate | ReplicationController | ResourceQuota
+        | Secret | Service | ServiceAccount,
+    "apps/v1" => ControllerRevision | DaemonSet | Deployment | ReplicaSet | StatefulSet,
+    "batch/v1" => CronJob | Job,
+    "autoscaling/v2" => HorizontalPodAutoscaler,
+    "networking.k8s.io/v1" => Ingress | IngressClass | NetworkPolicy,
+    "rbac.authorization.k8s.io/v1" => ClusterRole | ClusterRoleBinding | Role | RoleBinding,
+    "policy/v1" => PodDisruptionBudget,
+    "storage.k8s.io/v1" => CSIDriver | StorageClass | VolumeAttachment,
+    "scheduling.k8s.io/v1" => PriorityClass,
+    "apiextensions.k8s.io/v1" => CustomResourceDefinition,
+    "admissionregistration.k8s.io/v1" => MutatingWebhookConfiguration
+        | ValidatingWebhookConfiguration,
+    "coordination.k8s.io/v1" => Lease,
+}
+
+impl BuiltinKind {
+    /// The API group, empty for the core group.
+    pub fn group(self) -> &'static str {
+        self.api_version()
+            .split_once('/')
+            .map_or("", |(group, _)| group)
     }
 }

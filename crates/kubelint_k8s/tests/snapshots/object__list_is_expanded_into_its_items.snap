@@ -1,6 +1,6 @@
 ---
 source: crates/kubelint_k8s/tests/object.rs
-expression: "describe(\"apiVersion: v1\\nkind: List\\nitems:\\n- apiVersion: v1\\n  kind: Service\\n  metadata: {name: é}\\n- not an object\\n- metadata: {name: no-kind}\\n---\\nkind: List\\nitems: nope\\n\")"
+expression: describe(text)
 ---
 doc 0 object 35..88
   apiVersion "v1" 47..49

@@ -1,6 +1,6 @@
 ---
 source: crates/kubelint_k8s/tests/object.rs
-expression: "describe(\"apiVersion: a/b/c\\nkind: Pod\\n---\\napiVersion: v1\\nkind: [Pod]\\n---\\napiVersion: 1\\nkind: \\\"\\\"\\n\")"
+expression: describe(text)
 ---
 doc 0 object 0..27
   apiVersion "a/b/c" 12..17
