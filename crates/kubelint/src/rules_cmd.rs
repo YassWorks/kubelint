@@ -4,7 +4,6 @@ use std::fmt::Write as _;
 
 use kubelint_linter::{RuleMeta, rules};
 
-/// The output format of `kubelint rules`.
 #[derive(Debug, Clone, Copy, clap::ValueEnum)]
 pub enum RulesFormat {
     /// An aligned table.
@@ -52,12 +51,8 @@ fn table() -> String {
     let mut out = String::new();
     for row in std::iter::once(&header).chain(&rows) {
         let mut line = String::new();
-        for (i, cell) in row.iter().enumerate() {
-            if i + 1 == row.len() {
-                line.push_str(cell);
-            } else {
-                let _ = write!(line, "{cell:<width$}  ", width = widths[i]);
-            }
+        for (cell, width) in row.iter().zip(widths) {
+            let _ = write!(line, "{cell:<width$}  ");
         }
         out.push_str(line.trim_end());
         out.push('\n');
@@ -83,71 +78,24 @@ fn json() -> String {
     out
 }
 
-/// The documentation of the rule with this code or name, or `None` if there is none.
+/// The documentation of the rule with this code or name.
 pub fn explain(selector: &str) -> Option<String> {
     let meta = metas().find(|meta| meta.code == selector || meta.name == selector)?;
     let enabled = if meta.default_enabled {
-        "enabled by default"
+        "Enabled by default"
     } else {
-        "disabled by default, select it by code or name to run it"
+        "Disabled by default, select it by code or name to run it"
     };
-    Some(
-        format!(
-            "# {} `{}`\n\n{}\n\nCategory: `{}`. Severity: `{}`. {}.\n\n{}",
-            meta.code,
-            meta.name,
-            meta.summary,
-            meta.category.as_str(),
-            meta.default_severity.as_str(),
-            capitalize(enabled),
-            meta.explanation.trim_end_matches('\n'),
-        ) + "\n",
-    )
-}
-
-fn capitalize(text: &str) -> String {
-    let mut chars = text.chars();
-    match chars.next() {
-        Some(first) => first.to_uppercase().chain(chars).collect(),
-        None => String::new(),
-    }
+    Some(format!(
+        "# {} `{}`\n\n{}\n\nCategory: `{}`. Severity: `{}`. {enabled}.\n\n{}\n",
+        meta.code,
+        meta.name,
+        meta.summary,
+        meta.category.as_str(),
+        meta.default_severity.as_str(),
+        meta.explanation.trim_end_matches('\n'),
+    ))
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn table_lists_every_rule_in_code_order() {
-        let table = list(RulesFormat::Text);
-        let codes: Vec<_> = table
-            .lines()
-            .skip(1)
-            .filter_map(|line| line.split_whitespace().next())
-            .collect();
-        let expected: Vec<_> = metas().map(|meta| meta.code).collect();
-        assert_eq!(codes, expected);
-        assert!(table.starts_with("CODE    NAME "), "{table}");
-    }
-
-    #[test]
-    fn json_is_an_array_of_rules() {
-        let value: serde_json::Value =
-            serde_json::from_str(&list(RulesFormat::Json)).expect("valid JSON");
-        let rules = value.as_array().expect("an array");
-        assert_eq!(rules.len(), rules::ALL.len());
-        assert_eq!(rules[0]["code"], "KL0001");
-        assert_eq!(rules[0]["default_enabled"], true);
-    }
-
-    #[test]
-    fn explain_by_code_or_name() {
-        let by_code = explain("KL1002").expect("a rule");
-        assert_eq!(Some(by_code.clone()), explain("missing-kind"));
-        assert!(
-            by_code.starts_with("# KL1002 `missing-kind`\n\n"),
-            "{by_code}"
-        );
-        assert_eq!(explain("KL1"), None);
-    }
-}
+mod tests;

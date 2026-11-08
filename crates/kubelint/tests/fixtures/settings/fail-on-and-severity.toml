@@ -1,0 +1,4 @@
+[lint]
+fail-on = "error"
+[lint.severity]
+KL1002 = "info"

@@ -1,0 +1,8 @@
+---
+source: crates/kubelint/tests/cli.rs
+expression: "run_in(configured(), &[\"check\", \"generated/broken.yaml\", \"generated\"], None)"
+---
+exit: 0
+--- stdout
+All checks passed. Checked 0 files and 0 objects in [TIME].
+--- stderr

@@ -1,0 +1,10 @@
+---
+source: crates/kubelint/tests/cli.rs
+expression: "run(&[\"check\", \"charts/web/Chart.yaml\", \"charts/web/templates/service.yaml\"],\nNone)"
+---
+exit: 0
+--- stdout
+All checks passed. Checked 0 files and 0 objects, skipped 2 files in [TIME].
+--- stderr
+note: skipped 2 files of the Helm chart `charts/web`; kubelint checks rendered manifests, not templates
+  = help: run `helm template charts/web | kubelint check -`

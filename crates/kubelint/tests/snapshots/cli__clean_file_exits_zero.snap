@@ -1,0 +1,8 @@
+---
+source: crates/kubelint/tests/cli.rs
+expression: "run(&[\"check\", \"deploy/web.yaml\"], None)"
+---
+exit: 0
+--- stdout
+All checks passed. Checked 1 file and 1 object in [TIME].
+--- stderr

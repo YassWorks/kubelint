@@ -1,8 +1,5 @@
-//! The `kubelint` command-line interface.
-//!
-//! A thin layer over the library crates: parses arguments, discovers files, calls the linter,
-//! renders output and picks the exit code. Business logic belongs in the library crates.
-//! See `docs/architecture.md`.
+//! The `kubelint` command-line interface: parses arguments, discovers files, calls the
+//! linter, renders output and picks the exit code. Logic belongs in the library crates.
 
 mod discover;
 mod exclude;
@@ -23,7 +20,7 @@ use kubelint_output::{
 };
 use kubelint_source::SourceFile;
 
-use crate::discover::{Input, SkippedChart};
+use crate::discover::{Discovery, Input, SkippedChart};
 use crate::settings::{ConfigSource, Overrides, SettingsError};
 
 /// A fast, friendly linter for Kubernetes manifests.
@@ -147,10 +144,10 @@ fn main() -> ExitCode {
         }
     };
     let result = match cli.command {
-        Command::Check(args) => check(&args),
-        Command::Rules { format } => print(&rules_cmd::list(format)),
+        Command::Check(args) => check(args),
+        Command::Rules { format } => print(&rules_cmd::list(format), ExitCode::SUCCESS),
         Command::Rule { rule } => match rules_cmd::explain(&rule) {
-            Some(text) => print(&text),
+            Some(text) => print(&text, ExitCode::SUCCESS),
             None => Err(match kubelint_linter::suggest_rule(&rule) {
                 Some(suggestion) => anyhow::anyhow!(
                     "unknown rule `{rule}`: did you mean `{suggestion}`? Run `kubelint rules` \
@@ -171,7 +168,7 @@ fn main() -> ExitCode {
     }
 }
 
-fn check(args: &CheckArgs) -> anyhow::Result<ExitCode> {
+fn check(args: CheckArgs) -> anyhow::Result<ExitCode> {
     let start = Instant::now();
     let color = match args.color {
         ColorChoice::Always => true,
@@ -183,17 +180,17 @@ fn check(args: &CheckArgs) -> anyhow::Result<ExitCode> {
     let cwd = std::env::current_dir().context("cannot read the current directory")?;
     let source = if args.isolated {
         ConfigSource::None
-    } else if let Some(path) = &args.config {
-        ConfigSource::File(path.clone())
+    } else if let Some(path) = args.config {
+        ConfigSource::File(path)
     } else {
-        ConfigSource::Discover(cwd.clone())
+        ConfigSource::Discover
     };
     let overrides = Overrides {
-        select: args.select.clone(),
-        ignore: args.ignore.clone(),
+        select: args.select,
+        ignore: args.ignore,
         fail_on: args.fail_on.map(Severity::from),
     };
-    let settings = match settings::load(&source, &overrides, &cwd, color) {
+    let settings = match settings::load(source, &overrides, &cwd, color) {
         Ok(settings) => settings,
         Err(SettingsError::Io(err)) => return Err(err),
         Err(SettingsError::Invalid(message)) => {
@@ -202,66 +199,59 @@ fn check(args: &CheckArgs) -> anyhow::Result<ExitCode> {
         }
     };
     let discovery = discover::inputs(&args.paths, settings.exclude.as_ref())?;
-    if let Some(note) = helm_note(&discovery.skipped_charts) {
+    if let Some(note) = helm_note(&discovery) {
         eprintln!("{note}");
     }
     let files = read_inputs(&discovery.inputs)?;
-    let linter = Linter::new(settings.rules);
-    let result = linter.lint(&files);
+    let result = Linter::new(settings.rules).lint(&files);
     let summary = Summary {
         files_checked: files.len(),
         objects_checked: result.objects_checked,
         files_skipped: discovery.files_skipped(),
         elapsed: Some(start.elapsed()),
     };
+    let diagnostics = &result.diagnostics;
     let output = match args.format {
         OutputFormat::Human => {
-            HumanRenderer::new(color).render(&files, &result.diagnostics, rule_name, &summary)
+            HumanRenderer::new(color).render(&files, diagnostics, rule_name, &summary)
         }
-        OutputFormat::Json => JsonRenderer.render(&files, &result.diagnostics, rule_name, &summary),
-        OutputFormat::Github => {
-            GithubRenderer.render(&files, &result.diagnostics, rule_name, &summary)
-        }
-        OutputFormat::Sarif => {
-            let rules: Vec<SarifRule<'_>> = rules::ALL
-                .iter()
-                .map(|rule| {
-                    let meta = rule.meta();
-                    SarifRule {
-                        code: meta.code,
-                        name: meta.name,
-                        summary: meta.summary,
-                        explanation: meta.explanation,
-                        category: meta.category.as_str(),
-                        default_severity: meta.default_severity,
-                    }
-                })
-                .collect();
-            SarifRenderer::new(env!("CARGO_PKG_VERSION"), &rules)
-                .render(&files, &result.diagnostics)
-        }
+        OutputFormat::Json => JsonRenderer.render(&files, diagnostics, rule_name, &summary),
+        OutputFormat::Github => GithubRenderer.render(&files, diagnostics, rule_name, &summary),
+        OutputFormat::Sarif => SarifRenderer::new(env!("CARGO_PKG_VERSION"), &sarif_rules())
+            .render(&files, diagnostics),
     };
-    let mut stdout = std::io::stdout().lock();
-    stdout
-        .write_all(output.as_bytes())
-        .and_then(|()| stdout.flush())
-        .context("cannot write the output")?;
-
-    let failed = kubelint_linter::fails(&result.diagnostics, settings.fail_on);
-    Ok(ExitCode::from(if failed { EXIT_FINDINGS } else { 0 }))
+    let failed = kubelint_linter::fails(diagnostics, settings.fail_on);
+    let code = ExitCode::from(if failed { EXIT_FINDINGS } else { 0 });
+    print(&output, code)
 }
 
-/// Writes `text` to standard output.
-fn print(text: &str) -> anyhow::Result<ExitCode> {
+fn print(text: &str, code: ExitCode) -> anyhow::Result<ExitCode> {
     let mut stdout = std::io::stdout().lock();
     stdout
         .write_all(text.as_bytes())
         .and_then(|()| stdout.flush())
         .context("cannot write the output")?;
-    Ok(ExitCode::SUCCESS)
+    Ok(code)
 }
 
-/// Reads every input. A file that cannot be read stops the run with exit code 2.
+fn sarif_rules() -> Vec<SarifRule<'static>> {
+    rules::ALL
+        .iter()
+        .map(|rule| {
+            let meta = rule.meta();
+            SarifRule {
+                code: meta.code,
+                name: meta.name,
+                summary: meta.summary,
+                explanation: meta.explanation,
+                category: meta.category.as_str(),
+                default_severity: meta.default_severity,
+            }
+        })
+        .collect()
+}
+
+/// A file that cannot be read stops the run with exit code 2.
 fn read_inputs(inputs: &[Input]) -> anyhow::Result<Vec<SourceFile>> {
     inputs
         .iter()
@@ -283,15 +273,13 @@ fn read_inputs(inputs: &[Input]) -> anyhow::Result<Vec<SourceFile>> {
 }
 
 /// One note for all skipped Helm charts, telling the user how to lint them anyway.
-fn helm_note(charts: &[SkippedChart]) -> Option<String> {
-    let files: usize = charts.iter().map(|chart| chart.files).sum();
-    let files = if files == 1 {
-        "1 file".to_owned()
-    } else {
-        format!("{files} files")
+fn helm_note(discovery: &Discovery) -> Option<String> {
+    let files = match discovery.files_skipped() {
+        1 => "1 file".to_owned(),
+        files => format!("{files} files"),
     };
     let dir = |chart: &SkippedChart| chart.dir.to_string_lossy().replace('\\', "/");
-    let (what, chart) = match charts {
+    let (what, chart) = match discovery.skipped_charts.as_slice() {
         [] => return None,
         [one] => (format!("the Helm chart `{}`", dir(one)), dir(one)),
         many => {

@@ -1,0 +1,8 @@
+---
+source: crates/kubelint/tests/cli.rs
+expression: "run(&[\"rule\", \"KL9999\"], None)"
+---
+exit: 2
+--- stdout
+--- stderr
+error: unknown rule `KL9999`: run `kubelint rules` to list the rule codes and names

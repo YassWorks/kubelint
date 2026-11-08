@@ -1,0 +1,8 @@
+---
+source: crates/kubelint/tests/cli.rs
+expression: "run(&[\"rule\", \"missing-knd\"], None)"
+---
+exit: 2
+--- stdout
+--- stderr
+error: unknown rule `missing-knd`: did you mean `missing-kind`? Run `kubelint rules` to list the rule codes and names
