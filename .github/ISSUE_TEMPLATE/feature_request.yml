@@ -1,0 +1,22 @@
+name: Feature or rule request
+description: A new rule, or a change to how kubelint works.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What goes wrong in your manifests or your workflow today?
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: For a rule, a manifest it should report and one it should not.
+      render: yaml
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What kubelint should do. Check the rule catalog (docs/rules/README.md) first.

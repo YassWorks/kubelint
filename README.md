@@ -1,19 +1,27 @@
 # kubelint
 
+[![CI](https://github.com/YassWorks/kubelint/actions/workflows/ci.yml/badge.svg)](https://github.com/YassWorks/kubelint/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/YassWorks/kubelint)](https://github.com/YassWorks/kubelint/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **A fast, friendly linter for Kubernetes manifests.** The Ruff/ESLint experience, for
 Kubernetes YAML.
 
-> **Status: pre-alpha.** No release yet: build it from source (below). The first release
-> (v0.1) is planned for late November 2026. Follow progress in
-> [`docs/roadmap.md`](docs/roadmap.md).
+> **Status: early development.** Every merge to `main` that changes code is released
+> automatically, so versions move fast and anything may change before 1.0. Follow
+> progress in [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Quickstart
 
-Build and install the binary from a clone of this repository (you need
-[rustup](https://rustup.rs); the pinned toolchain installs itself):
+Download the archive for your platform from the
+[latest release](https://github.com/YassWorks/kubelint/releases/latest), unpack it and
+put `kubelint` on your `PATH`. Linux binaries are static and run on any distribution.
+
+Or build it from source (you need [rustup](https://rustup.rs); the pinned toolchain
+installs itself):
 
 ```bash
-cargo install --path crates/kubelint
+cargo install --locked --git https://github.com/YassWorks/kubelint kubelint
 ```
 
 Lint every Kubernetes YAML file under the current directory:

@@ -163,9 +163,37 @@ and snapshot double as documentation of its behavior.
   - Scope: the crate without the prefix (`yaml`, `linter`, `cli`...), `rules` for rule
     work, `agent` for `docs/agent/` updates, or omitted.
   - Example: `feat(rules): add KL2001 privileged-container`.
-- PRs are squash-merged, so the PR title becomes the commit on `main`. The changelog
-  will be generated from these titles (M3-09).
+- PRs are squash-merged, so the PR title becomes the commit on `main`, and the release
+  notes are built from these titles.
 - Branches: `claude/<topic>` for agent work.
+
+## Releases
+
+- Every push to `main` that changes code (`crates/`, `Cargo.toml`, `Cargo.lock`,
+  `rust-toolchain.toml`) publishes a GitHub Release with binaries for Linux, macOS and
+  Windows (`.github/workflows/release.yml`). Docs-only changes publish nothing.
+- The version comes from the commit titles since the last tag: a breaking change (`!`)
+  or a `feat` bumps the minor version, anything else the patch version. Before 1.0, a
+  breaking change never bumps the major version.
+- The tag is the source of truth. `Cargo.toml` on `main` keeps `0.0.0`; the release
+  build writes the real version into its own copy.
+- Nobody tags or releases by hand.
+
+**Why:** releases need no human step, and every merged feature reaches users the same
+day.
+
+**Rejected:**
+
+- A version bump commit on `main` (release-plz, release-please). The `main` ruleset
+  requires passing checks on every commit, so it would need a bot token and an extra PR
+  per release.
+- Releases on a schedule. Fewer versions, but each merge waits for the next window.
+
+## Workflows and scripts
+
+- A workflow step that needs more than one line of shell calls a script in
+  `.github/scripts/` (`run: bash .github/scripts/<name>.sh`). Inputs come in through
+  `env`.
 
 ## Pull requests
 

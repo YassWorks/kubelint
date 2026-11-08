@@ -1,0 +1,44 @@
+name: Bug report
+description: A wrong finding, a missed problem, a crash, or anything else that misbehaves.
+labels: [bug]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What happened
+      options:
+        - A finding that should not be there (false positive)
+        - A problem kubelint missed (false negative)
+        - A crash or an error message
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: manifest
+    attributes:
+      label: Manifest
+      description: The smallest YAML that shows the problem.
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Command and output
+      description: The command you ran and what kubelint printed.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The output of `kubelint --version`.
+    validations:
+      required: true

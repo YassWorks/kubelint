@@ -176,7 +176,9 @@ jobs:
 ```
 
 Code scanning is free for public repositories and needs GitHub Advanced Security for
-private ones. Release binaries and a ready-made GitHub Action are planned (M3-07, M3-08).
+private ones. Downloading a binary from the
+[latest release](https://github.com/YassWorks/kubelint/releases/latest) is faster than
+`cargo install`; a ready-made GitHub Action is planned.
 
 ## `github`
 

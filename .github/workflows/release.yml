@@ -1,0 +1,97 @@
+name: Release
+
+# Every push to main that changes code publishes a new version (docs/conventions.md#releases).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "crates/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "rust-toolchain.toml"
+      - ".github/workflows/release.yml"
+      - ".github/scripts/**"
+  workflow_dispatch:
+
+# Releases run one at a time, so each one starts from the previous tag.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CODE_PATHS: crates Cargo.toml Cargo.lock rust-toolchain.toml
+
+jobs:
+  plan:
+    name: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.next.outputs.version }}
+      previous: ${{ steps.next.outputs.previous }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - id: next
+        run: bash .github/scripts/next-version.sh
+
+  build:
+    name: build (${{ matrix.target }})
+    needs: plan
+    if: needs.plan.outputs.version != ''
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { target: x86_64-unknown-linux-musl, os: ubuntu-latest }
+          - { target: aarch64-unknown-linux-musl, os: ubuntu-24.04-arm }
+          - { target: x86_64-apple-darwin, os: macos-latest }
+          - { target: aarch64-apple-darwin, os: macos-latest }
+          - { target: x86_64-pc-windows-msvc, os: windows-latest }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: ${{ matrix.target }}
+      - if: contains(matrix.target, 'linux-musl')
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - run: bash .github/scripts/build-release.sh
+        shell: bash
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+          TARGET: ${{ matrix.target }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
+          if-no-files-found: error
+
+  release:
+    name: release
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - run: bash .github/scripts/publish-release.sh
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+          PREVIOUS: ${{ needs.plan.outputs.previous }}
+          GH_TOKEN: ${{ github.token }}
