@@ -53,7 +53,7 @@ impl Rule for PrivilegeEscalationAllowed {
                     entry.key.range.cover(entry.value.range),
                     "allows privilege escalation",
                 ),
-                Some(entry) if !entry.value.is_null() => continue,
+                Some(entry) if !entry.value.is_kubernetes_null() => continue,
                 _ => (
                     container_range(container),
                     "does not set `allowPrivilegeEscalation: false`",

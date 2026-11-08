@@ -1,4 +1,4 @@
-# Reported: no securityContext, an empty one, one without the field and a null value.
+# Reported: no securityContext, an empty one, one without the field and null values.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,6 +24,14 @@ spec:
         image: app:1.0
         securityContext:
           allowPrivilegeEscalation:
+      - name: tilde
+        image: app:1.0
+        securityContext:
+          allowPrivilegeEscalation: ~
+      - name: keyword
+        image: app:1.0
+        securityContext:
+          allowPrivilegeEscalation: null
 ---
 # Reported: set to true (also as a YAML 1.1 boolean), in init and ephemeral
 # containers, and containers without a name (the second is reported at its first key).
@@ -167,7 +175,7 @@ spec:
     securityContext:
       capabilities: {add: [NET_ADMIN, CAP_SYS_ADMIN]}
 ---
-# Not reported: a quoted "true" or a number (schema problems).
+# Not reported: quoted strings and a number (schema problems).
 apiVersion: v1
 kind: Pod
 metadata:
@@ -182,6 +190,14 @@ spec:
     image: app:1.0
     securityContext:
       allowPrivilegeEscalation: 0
+  - name: c
+    image: app:1.0
+    securityContext:
+      allowPrivilegeEscalation: "~"
+  - name: d
+    image: app:1.0
+    securityContext:
+      allowPrivilegeEscalation: "null"
 ---
 # Not reported: a Windows pod, where the field is not allowed.
 apiVersion: v1
