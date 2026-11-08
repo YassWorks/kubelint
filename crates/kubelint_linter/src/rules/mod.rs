@@ -26,4 +26,5 @@ pub static ALL: &[&dyn Rule] = &[
     &correctness::InvalidObjectName,
     &correctness::NonStringEnvValue,
     &correctness::InvalidLabel,
+    &correctness::DuplicateEnvName,
 ];

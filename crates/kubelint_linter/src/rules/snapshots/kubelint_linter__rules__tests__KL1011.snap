@@ -1,0 +1,60 @@
+---
+source: crates/kubelint_linter/src/rules/tests.rs
+expression: check_fixture(rule)
+---
+warning[KL1011]: env var `LOG_LEVEL` is already set in this container
+  --> correctness/KL1011.yaml:21:17
+   |
+21 |         - name: LOG_LEVEL
+   |                 ^^^^^^^^^
+  --> correctness/KL1011.yaml:17:17
+   |
+17 |         - name: LOG_LEVEL
+   |                 --------- first set here
+  = help: remove one of the entries; only the last one takes effect
+
+warning[KL1011]: env var `TOKEN` is already set in this container
+  --> correctness/KL1011.yaml:36:13
+   |
+36 |     - name: TOKEN
+   |             ^^^^^
+  --> correctness/KL1011.yaml:35:14
+   |
+35 |     - {name: TOKEN, value: a}
+   |              ----- first set here
+  = help: remove one of the entries; only the last one takes effect
+
+warning[KL1011]: env var `MODE` is already set in this container
+  --> correctness/KL1011.yaml:44:14
+   |
+44 |     - {name: "MODE", value: b}
+   |              ^^^^^^
+  --> correctness/KL1011.yaml:43:14
+   |
+43 |     - {name: MODE, value: a}
+   |              ---- first set here
+  = help: remove one of the entries; only the last one takes effect
+
+warning[KL1011]: env var `MODE` is already set in this container
+  --> correctness/KL1011.yaml:45:14
+   |
+45 |     - {name: MODE, value: c}
+   |              ^^^^
+  --> correctness/KL1011.yaml:43:14
+   |
+43 |     - {name: MODE, value: a}
+   |              ---- first set here
+  = help: remove one of the entries; only the last one takes effect
+
+warning[KL1011]: env var `GREETING` is already set in this container
+  --> correctness/KL1011.yaml:65:21
+   |
+65 |             - name: GREETING
+   |                     ^^^^^^^^
+  --> correctness/KL1011.yaml:63:21
+   |
+63 |             - name: GREETING
+   |                     -------- first set here
+  = help: remove one of the entries; only the last one takes effect
+
+5 finding(s) in 7 object(s)
