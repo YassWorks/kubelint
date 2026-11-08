@@ -4,6 +4,7 @@
 //! fixture, one line in [`ALL`]. See `docs/CONTRIBUTING.md`.
 
 pub mod correctness;
+pub mod security;
 pub mod syntax;
 #[cfg(test)]
 mod tests;
@@ -27,4 +28,5 @@ pub static ALL: &[&dyn Rule] = &[
     &correctness::NonStringEnvValue,
     &correctness::InvalidLabel,
     &correctness::DuplicateEnvName,
+    &security::PrivilegedContainer,
 ];

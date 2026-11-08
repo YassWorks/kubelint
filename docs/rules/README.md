@@ -77,7 +77,7 @@ and those references must stay valid and readable across releases.
 
 | Code | Name | Default | Severity | Status | Milestone | What it catches |
 | --- | --- | --- | --- | --- | --- | --- |
-| KL2001 | `privileged-container` | on | error | planned | M2 | `securityContext.privileged: true`. |
+| KL2001 | `privileged-container` | on | error | implemented | M2 | `securityContext.privileged: true`. |
 | KL2002 | `privilege-escalation-allowed` | on | warning | planned | M2 | `allowPrivilegeEscalation` is not set to `false`. |
 | KL2003 | `run-as-root` | on | warning | planned | M2 | The container may run as root (`runAsNonRoot` not true, or `runAsUser: 0`), honoring pod-level defaults. |
 | KL2004 | `host-namespace` | on | warning | planned | M2 | `hostNetwork`, `hostPID` or `hostIPC` is enabled. |
