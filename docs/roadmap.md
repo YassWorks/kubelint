@@ -136,6 +136,11 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   `namespace: default` are not reported as KL1004 duplicates.
 - The rule snapshot harness renders secondary labels with the primary file's text, so
   cross-file findings need unit tests.
+- KL2002 and KL2003 are on by default. A container that sets neither
+  `allowPrivilegeEscalation: false` nor `runAsNonRoot: true` (in the container or the
+  pod) gets both warnings, which is common in typical manifests. Measure their noise
+  during the M3 real-world validation and decide whether either should be off by
+  default.
 
 ## Rule ideas
 
