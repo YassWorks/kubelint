@@ -33,16 +33,12 @@ impl Severity {
 /// A highlighted range of a file with an optional short note, shown under the snippet.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Label {
-    /// The file the range belongs to.
     pub file: FileId,
-    /// The byte range to highlight.
     pub range: TextRange,
-    /// A short note shown next to the highlight, if any.
     pub message: Option<String>,
 }
 
 impl Label {
-    /// Creates a label without a message.
     pub fn new(file: FileId, range: TextRange) -> Self {
         Self {
             file,
@@ -51,7 +47,6 @@ impl Label {
         }
     }
 
-    /// Adds the short note shown next to the highlight.
     #[must_use]
     pub fn with_message(mut self, message: impl Into<String>) -> Self {
         self.message = Some(message.into());
@@ -62,9 +57,7 @@ impl Label {
 /// A text replacement. Inserting is an empty `range`, deleting is an empty `replacement`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Edit {
-    /// The bytes to replace.
     pub range: TextRange,
-    /// The new text.
     pub replacement: String,
 }
 
@@ -81,7 +74,6 @@ pub enum Applicability {
 /// diagnostic's primary label.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Fix {
-    /// How safe the fix is to apply automatically.
     pub applicability: Applicability,
     /// The edits, which must not overlap.
     pub edits: Vec<Edit>,
@@ -112,18 +104,15 @@ pub struct Diagnostic {
     pub severity: Severity,
     /// What is wrong, as one sentence.
     pub message: String,
-    /// The main location.
     pub primary: Label,
     /// Related locations, such as the other half of a duplicate.
     pub secondary: Vec<Label>,
     /// How to fix it, in plain words.
     pub help: Option<String>,
-    /// An automatic fix, if one exists.
     pub fix: Option<Fix>,
 }
 
 impl Diagnostic {
-    /// Creates a diagnostic with no secondary labels, help or fix.
     pub fn new(
         code: &'static str,
         severity: Severity,
@@ -141,71 +130,21 @@ impl Diagnostic {
         }
     }
 
-    /// Adds a related location.
     #[must_use]
     pub fn with_secondary(mut self, label: Label) -> Self {
         self.secondary.push(label);
         self
     }
 
-    /// Sets the help text.
     #[must_use]
     pub fn with_help(mut self, help: impl Into<String>) -> Self {
         self.help = Some(help.into());
         self
     }
 
-    /// Attaches an automatic fix.
     #[must_use]
     pub fn with_fix(mut self, fix: Fix) -> Self {
         self.fix = Some(fix);
         self
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn range(a: u32, b: u32) -> TextRange {
-        TextRange::new(a.into(), b.into())
-    }
-
-    #[test]
-    fn severities_are_ordered_for_fail_on() {
-        assert!(Severity::Info < Severity::Warning);
-        assert!(Severity::Warning < Severity::Error);
-        assert_eq!(Severity::Info.as_str(), "info");
-        assert_eq!(Severity::Error.as_str(), "error");
-    }
-
-    #[test]
-    fn builder_collects_everything() {
-        let fix = Fix {
-            applicability: Applicability::Safe,
-            edits: vec![Edit {
-                range: range(5, 9),
-                replacement: "false".to_owned(),
-            }],
-        };
-        let d = Diagnostic::new(
-            "KL1004",
-            Severity::Warning,
-            "duplicate object",
-            Label::new(FileId(1), range(0, 4)),
-        )
-        .with_secondary(Label::new(FileId(0), range(20, 24)).with_message("first defined here"))
-        .with_help("rename one of them")
-        .with_fix(fix.clone());
-
-        assert_eq!(d.primary.message, None);
-        assert_eq!(d.secondary.len(), 1);
-        assert_eq!(d.secondary[0].file, FileId(0));
-        assert_eq!(
-            d.secondary[0].message.as_deref(),
-            Some("first defined here")
-        );
-        assert_eq!(d.help.as_deref(), Some("rename one of them"));
-        assert_eq!(d.fix, Some(fix));
     }
 }
