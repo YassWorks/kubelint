@@ -22,9 +22,15 @@ may change between versions; do not parse it.
 
 ## `json`
 
-One JSON document on standard output. The schema is versioned
-([ADR 0013](../decisions/0013-json-output-schema.md)): fields may be added in any
-release, but renaming or removing one changes `version`. Ignore fields you do not know.
+One JSON document on standard output. The schema is versioned: fields may be added in
+any release, but renaming or removing a field, or changing its meaning, increments
+`version`. Ignore fields you do not know.
+
+- Standard output holds only that document, or nothing when the run stops with exit
+  code 2. Notes (such as skipped Helm charts) and errors go to standard error.
+- Field names are `snake_case`.
+- There is no timing, so the same input always gives byte-identical output.
+- Fixes are not part of version 1. They will be a new optional field.
 
 ```console
 $ kubelint check --format json deploy/
@@ -88,6 +94,17 @@ A **location** has:
 A **position** has `line` (1-based), `column` (1-based, counted in UTF-8 bytes) and
 `offset` (0-based byte offset into the file).
 
+**Why columns in UTF-8 bytes:** they match `offset`, they are what the engine stores, and
+they are exact for every tool that reads the file as bytes. SARIF and `github` convert to
+the UTF-16 columns their consumers expect.
+
+**Rejected:**
+
+- A bare array of diagnostics. It leaves no room for the summary or a version.
+- JSON Lines, one diagnostic per line. kubelint sorts findings before printing anyway,
+  and one document is simpler to consume with `jq`.
+- The elapsed time in the summary. It would make the output differ on every run.
+
 ### Examples with `jq`
 
 ```console
@@ -99,16 +116,38 @@ $ kubelint check --format json . | jq '.summary.by_severity.error'
 
 [SARIF 2.1.0](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html), the
 standard format for static analysis results. GitHub code scanning reads it and shows each
-finding on the pull request and in the repository's "Security" tab. The mapping is
-recorded in [ADR 0014](../decisions/0014-sarif-output.md). In short:
+finding on the pull request and in the repository's "Security" tab.
 
-- Every built-in rule is listed under `runs[0].tool.driver.rules`, with its summary and
-  its full explanation as `help.markdown`.
-- Each finding is a result with `ruleId`, `level` (`error`, `warning`, or `note` for
-  `info`), a message (with the help as a second line), its location and any related
-  locations.
-- Columns count UTF-16 code units, the SARIF default. Relative paths stay relative, so
-  run kubelint from the repository root.
+- One run, with `tool.driver` named `kubelint`, its version and the repository as
+  `informationUri`.
+- Every built-in rule is listed under `runs[0].tool.driver.rules` in code order, whether
+  it found anything or not: `id` (the code), `name`, the summary as `shortDescription`
+  and `fullDescription`, the explanation as `help.text` and `help.markdown`, the default
+  level, and the category as the only tag.
+- Each finding is a result with `ruleId`, `ruleIndex`, `level` (`error`, `warning`, or
+  `note` for `info`), a message with the help as a second line (`help: ...`), its
+  location, and its related locations when it has any.
+- Columns count UTF-16 code units (`columnKind: "utf16CodeUnits"`), the SARIF default.
+- Relative paths stay relative, with `/` separators and `uriBaseId: "%SRCROOT%"`, so run
+  kubelint from the repository root. Absolute paths become `file:` URIs.
+  `originalUriBaseIds` is not written, because it would put the machine's working
+  directory into the output.
+- No timing and no invocation details: the same input gives byte-identical output.
+
+**Why every rule is listed:** `ruleIndex` stays the same whatever the configuration, and
+dashboards can show the documentation of a rule that is enabled later.
+
+**Why the help goes into the message:** SARIF results have no help field, and GitHub shows
+only the message next to the code.
+
+**Rejected:**
+
+- A SARIF crate such as `serde-sarif`. A large generated API for the handful of fields
+  used here.
+- Listing only the rules that ran or fired. Rule indexes would change with
+  configuration.
+- Columns in Unicode code points. UTF-16 is the default, so tools that ignore
+  `columnKind` still read the columns correctly.
 
 ### Uploading to GitHub code scanning
 
@@ -154,10 +193,23 @@ Found 1 error. Checked 2 files and 2 objects.
 
 - `error` and `warning` findings become `::error` and `::warning`; `info` becomes
   `::notice`.
-- The title is the rule code and name; the message has the help as a second line.
+- Each command has `file`, `line`, `col`, `endLine`, `endColumn` and `title`, in that
+  order. The title is the rule code and name (`KL1001 missing-api-version`), or only the
+  code when the name is unknown.
+- The message has the help as a second line. Related locations are not shown, because an
+  annotation has one location.
 - Columns count UTF-16 code units, like SARIF. Paths are printed as found, so run
   kubelint from the repository root.
+- Escaping follows the Actions runner: `%`, `\r` and `\n` in messages, and also `:` and
+  `,` in property values.
 - The summary line (without timing) ends the output as plain log text.
+
+**Rejected:**
+
+- No summary line. The job log would not say how many files were checked, which matters
+  most when nothing is found.
+- One annotation per related location. It would count each finding several times in
+  the annotation totals.
 
 ```yaml
 # a step in a GitHub Actions job
@@ -167,3 +219,32 @@ Found 1 error. Checked 2 files and 2 objects.
 
 The step fails when kubelint finds something at or above `fail-on` (exit code 1), which
 is usually what a CI gate wants.
+
+## `kubelint rules` and `kubelint rule`
+
+`kubelint rules` prints a table with one rule per line, in code order: `CODE`, `NAME`,
+`CATEGORY`, `DEFAULT` (`on` or `off`), `SEVERITY` and `SUMMARY`. The table is for people
+and its layout may change.
+
+`kubelint rules --format json` prints a JSON array in code order. New fields may be
+added; renaming or removing one is a breaking change.
+
+| Field | Type | Example |
+| --- | --- | --- |
+| `code` | string | `"KL0001"` |
+| `name` | string | `"invalid-yaml"` |
+| `category` | string | `"syntax"` |
+| `default_enabled` | boolean | `true` |
+| `default_severity` | string | `"error"` |
+| `summary` | string | `"The file is not valid YAML."` |
+
+`kubelint rule <CODE|NAME>` prints the rule's documentation as Markdown: a heading with
+the code and name, the summary, a line with the category, severity and default state,
+then the explanation. An unknown code or name is an error, exit code 2.
+
+**Rejected:**
+
+- A top-level object with a `version` field for `kubelint rules --format json`. Nothing
+  needs it yet.
+- Plain text for `kubelint rule`. Markdown reads fine in a terminal and is the same text
+  the SARIF output carries.

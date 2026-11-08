@@ -1,9 +1,9 @@
 //! Configuration.
 //!
-//! Finds and parses `kubelint.toml` / `.kubelint.toml` (ADR 0005). Every value keeps the
+//! Finds and parses `kubelint.toml` / `.kubelint.toml`. Every value keeps the
 //! byte range it was written at, so errors found later (an unknown rule selector) can
 //! point at the exact spot in the file. Rule selectors are plain strings here: resolving
-//! them needs the rule registry, which lives in `kubelint_linter` (ADR 0009).
+//! them needs the rule registry, which lives in `kubelint_linter`.
 //!
 //! ```
 //! let config = kubelint_config::parse(r#"

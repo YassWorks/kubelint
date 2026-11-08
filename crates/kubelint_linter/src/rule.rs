@@ -30,7 +30,7 @@ pub trait Rule: Sync {
 }
 
 /// What a rule is and how it behaves by default. Codes and names are permanent once
-/// released (ADR 0004).
+/// released.
 #[derive(Debug)]
 pub struct RuleMeta {
     /// `KL` and four digits, allocated in `docs/rules/README.md`. The first digit is the

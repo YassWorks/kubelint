@@ -9,7 +9,7 @@ use kubelint_linter::{RuleMeta, rules};
 pub enum RulesFormat {
     /// An aligned table.
     Text,
-    /// A JSON array, one object per rule (ADR 0012).
+    /// A JSON array, one object per rule.
     Json,
 }
 

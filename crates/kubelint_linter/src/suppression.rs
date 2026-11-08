@@ -1,4 +1,4 @@
-//! Suppression comments (ADR 0005).
+//! Suppression comments (`docs/user/configuration.md`).
 //!
 //! ```yaml
 //! securityContext:
@@ -11,7 +11,7 @@
 //! A diagnostic is suppressed when its primary label starts on a suppressed line, or when
 //! its rule is disabled for the whole file. Rules are named by code or name, separated by
 //! commas; an optional `-- reason` follows. KL0001 `invalid-yaml` cannot be suppressed,
-//! like it cannot be ignored in configuration (ADR 0009). Rules that cannot be resolved
+//! like it cannot be ignored in configuration. Rules that cannot be resolved
 //! silence nothing; KL0003 `invalid-suppression` reports them.
 
 use std::collections::HashMap;

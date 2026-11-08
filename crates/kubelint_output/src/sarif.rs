@@ -1,7 +1,7 @@
 //! The SARIF renderer: SARIF 2.1.0 for GitHub code scanning and other dashboards.
 //!
 //! Only the parts of SARIF that kubelint needs are modelled, with hand-written `serde`
-//! structs (`docs/architecture.md`). The choices are recorded in ADR 0014.
+//! structs. The mapping is documented in `docs/user/output-formats.md`.
 
 use std::fmt::Write as _;
 

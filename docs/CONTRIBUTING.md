@@ -109,5 +109,6 @@ error[KL1001]: `Deployment` object has no `apiVersion`
 
 ## Decisions
 
-Significant design decisions are recorded as ADRs in [`decisions/`](decisions/). If your
-change contradicts one, write a new ADR that supersedes it, in the same PR.
+Decisions are written into the doc they are about, each with a **Why** and a
+**Rejected** line ([`conventions.md`](conventions.md#documentation)). If your change
+contradicts one, update it in the same PR and explain why in the PR description.

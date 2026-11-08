@@ -3,7 +3,7 @@
 //! Every rule has a fixture at
 //! `crates/kubelint_linter/resources/test/fixtures/<category>/<CODE>.yaml` with cases
 //! that must be reported and cases that must not, one YAML document each, each preceded
-//! by a comment (ADR 0006). A rule's test lints its fixture with only that rule enabled
+//! by a comment. A rule's test lints its fixture with only that rule enabled
 //! and snapshots the result:
 //!
 //! ```ignore
@@ -14,7 +14,7 @@
 //! ```
 //!
 //! The rendering is plain text close to the human output, but owned by this harness, so
-//! renderer changes (M1-12) do not churn every rule snapshot. Positions are shown as
+//! renderer changes do not churn every rule snapshot. Positions are shown as
 //! `line:column` (1-based, column in characters), which keeps snapshots readable and
 //! independent of line endings.
 

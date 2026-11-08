@@ -34,8 +34,8 @@ INSTA_UPDATE=always cargo test --workspace
 - `crates/kubelint_*`: library crates, one per layer. Dependencies point downward only
   (table in `docs/architecture.md`).
 - `crates/kubelint`: the CLI binary. Keep it thin.
-- `docs/`: vision, roadmap, architecture, conventions, ADRs (`decisions/`), rule catalog
-  (`rules/`), agent memory (`agent/`), concept glossary (`learning/`).
+- `docs/`: vision, roadmap, architecture, conventions, user docs (`user/`), rule catalog
+  (`rules/`), the routine's playbook (`agent/`). Decisions live in the doc they concern.
 
 ## Rules of thumb
 
@@ -45,4 +45,6 @@ INSTA_UPDATE=always cargo test --workspace
   convert them in `kubelint_yaml`.
 - No `unwrap()` on user input. Silence lints only with
   `#[expect(clippy::..., reason = "...")]`.
-- Prose: plain sentences, no em dashes.
+- Comments only for what the code cannot show. Multi-line text and tests live in their
+  own files, never in a source file (`docs/conventions.md`).
+- Prose: plain sentences, no dashes as punctuation.

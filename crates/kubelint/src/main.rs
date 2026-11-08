@@ -133,7 +133,6 @@ enum ColorChoice {
     Never,
 }
 
-/// Exit codes (ADR 0003).
 const EXIT_FINDINGS: u8 = 1;
 const EXIT_FAILURE: u8 = 2;
 

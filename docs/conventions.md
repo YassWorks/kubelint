@@ -7,9 +7,11 @@ surrounding code does, then add the convention here.
 ## Rust code
 
 - **Formatting:** `rustfmt` defaults. Never hand-format against it.
-- **Lints:** the workspace lint set (ADR 0007) with warnings denied in CI. To silence a
-  lint, use `#[expect(clippy::name, reason = "why this is fine here")]` on the smallest
-  possible item. Never `#[allow]`, never crate-wide.
+- **Lints:** the workspace lint set (see [Toolchain and lints](#toolchain-and-lints)) with
+  warnings denied in CI. To silence a lint, use
+  `#[expect(clippy::name, reason = "why this is fine here")]` on the smallest possible
+  item, so the exception disappears when it is no longer needed. Never `#[allow]`, never
+  crate-wide.
 - **Naming:** types `UpperCamelCase`, functions and modules `snake_case`, rule structs
   named after the rule (`PrivilegedContainer` for `privileged-container`), rule files
   `snake_case` of the rule name (`privileged_container.rs`).
@@ -20,14 +22,61 @@ surrounding code does, then add the convention here.
   message states the invariant.
 - **Visibility:** keep things private by default. `pub` is a promise to other crates;
   `pub(crate)` is the default for helpers.
-- **Docs:** every public item has a doc comment (enforced by `missing_docs`). Explain
-  *why* and *when to use*, not a restatement of the signature. Public functions with
-  non-obvious behavior get a doc example (it runs as a test).
-- **Comments:** comment the non-obvious: Kubernetes quirks, YAML edge cases, why a rule
-  skips something. Link the Kubernetes source or docs when the behavior comes from there.
+- **Doc comments** only when they add what the name and signature do not: an invariant,
+  a unit, a Kubernetes or YAML behavior, when to use the item. No doc comment that
+  restates the name (`/// The key node.` on `key: Node`). Each crate keeps its `//!`
+  crate doc. Public functions with non-obvious behavior get a doc example.
+- **Comments** explain what the code cannot show: Kubernetes behavior, a YAML spec
+  quirk, a `saphyr-parser` detail, why a rule skips something. Link the Kubernetes source
+  when the behavior comes from there. Default to one line; 3 to 4 lines only for such an
+  external contract. Never comment self-explanatory code.
+- **Comments describe the code as it is,** never how it got there. No "deliberately",
+  "on purpose", "an earlier version", "X was tried", "X is worse than Y". State the
+  behavior or the constraint, then stop.
+- **Multi-line text lives in its own file,** never in a Rust string: rule explanations
+  in `<rule_name>.md` next to the rule (`include_str!`), test inputs as fixture files,
+  expected output as `insta` file snapshots. A one-line message wrapped with `\` is fine.
 - **Performance:** compile regexes once (`std::sync::LazyLock`), avoid cloning YAML
   subtrees, borrow from the tree.
 - **No `unsafe`** (forbidden at the workspace level).
+
+**Why:** a source file should read as code. Comments that restate names and long text
+blocks bury the logic.
+
+**Rejected:** the `missing_docs` lint (it forces a restating comment on every public
+item); rule explanations as raw strings (40 lines of Markdown inside a Rust file).
+
+## Style
+
+Write the shortest clear version. If 200 lines could be 50, rewrite them.
+
+- **No ceremony.** One expression where it reads well, not three statements with
+  throwaway names: `cx.report(cx.diagnostic(range, message).with_help(help))`.
+- **No repeated work.** Compute a value once and name it. Two near-identical helpers in
+  different files become one shared helper.
+- **Typed, not stringly typed.** Kubernetes kinds, groups and other closed sets get a
+  small type or helper in `kubelint_k8s` instead of string literals repeated across
+  rules.
+- **No borrow-checker escape hatches.** A lifetime error means the design is wrong:
+  restructure instead of reaching for `.clone()`, `Rc<RefCell<_>>` or `'static`.
+
+## Toolchain and lints
+
+- The toolchain is pinned in `rust-toolchain.toml`, and `rust-version` in `Cargo.toml`
+  equals it. Bumping it is its own `chore` PR that also fixes any new lints.
+- Edition 2024, Cargo resolver 3.
+- Workspace lints: `unsafe_code = "forbid"`, clippy `pedantic` as warnings with a short
+  allow list in `Cargo.toml`, plus `unwrap_used`, `dbg_macro` and `todo` (tests are
+  exempt through `clippy.toml`). CI denies all warnings.
+
+**Why pinned:** a new Rust release adds lints, and an unpinned toolchain would turn CI red
+overnight with no code change.
+
+**Rejected:**
+
+- Tracking `stable`. Always current, but CI results change without a commit.
+- Default clippy only. `pedantic` catches real issues (casts, needless clones, missing
+  `#[must_use]` on builders) and keeps the codebase uniform.
 
 ## Kubernetes correctness
 
@@ -40,15 +89,36 @@ surrounding code does, then add the convention here.
 
 ## Tests
 
-See ADR 0006. In short:
-
 - Every behavior change comes with tests. Every bug fix starts with a failing test.
+- Anything whose output is text uses `insta` snapshot tests: rule results, renderers,
+  CLI runs, YAML tree dumps. CLI tests run the real binary with `assert_cmd` and
+  snapshot stdout, stderr and the exit code.
+- Rule fixtures live in
+  `crates/kubelint_linter/resources/test/fixtures/<category>/<CODE>.yaml`. The harness
+  lints a fixture with only that rule enabled and snapshots the rendered findings.
+- Pure logic (parsers, validators, selector resolution) gets table-driven unit tests.
+- Tests live in their own files, never in a source file. Integration tests go in
+  `crates/<crate>/tests/`. Tests that need private items go in `<module>/tests.rs`,
+  declared with `#[cfg(test)] mod tests;`. Doc examples are the one exception.
+- No inline snapshots (`@"..."`): expected output goes in `.snap` files.
 - Rule fixtures contain both violating and passing cases, each preceded by a comment
   explaining the case.
 - Fixtures include tricky inputs: non-ASCII text, flow-style YAML, multiple documents,
   every relevant workload kind.
 - Update snapshots with `INSTA_UPDATE=always cargo test --workspace`, then read every
   changed `.snap` file before committing. Never commit `*.snap.new` files.
+
+**Why snapshots:** a linter's output is "which findings, at which positions, with which
+text". Hand-written assertions for that are tedious and brittle, and a rule's fixture
+and snapshot double as documentation of its behavior.
+
+**Why tests have their own files:** a source file holds only product code.
+
+**Rejected:**
+
+- Expected findings written inside fixtures, like rustc's `//~ ERROR`. Precise, but it
+  needs a custom harness.
+- Rust's usual inline `mod tests { ... }`. It puts test code below every module.
 
 ## Dependencies
 
@@ -63,15 +133,24 @@ See ADR 0006. In short:
 
 ## Documentation
 
-- **Where docs live:** user and contributor docs in `docs/`, rule catalog in
-  `docs/rules/`, decisions in `docs/decisions/`, agent memory in `docs/agent/`, learning
-  material in `docs/learning/`. The root keeps only `README.md`, `CLAUDE.md` and
-  `LICENSE`.
+- **Where docs live:** contributor docs in `docs/`, user docs in `docs/user/`, the rule
+  catalog in `docs/rules/`, the routine's manual in `docs/agent/playbook.md`. The root
+  keeps only `README.md`, `CLAUDE.md` and `LICENSE`.
 - **Same PR rule:** a PR that changes behavior updates the docs that describe it.
+- **Decisions live in the doc they are about,** written as plain statements in the same
+  PR as the change: a public contract in `docs/user/`, a design choice in
+  `architecture.md`, a code or process rule in this file. Each decision gets a bold
+  **Why:** line when the reason is not obvious and a bold **Rejected:** line naming the
+  alternatives that lost, so nobody argues the question again. To reverse one, edit it
+  in place and explain the reversal in the PR description. Write a decision down when it
+  adds or replaces a core dependency, changes a public contract (CLI flags, config
+  format, rule codes, output schemas), changes crate boundaries, or answers a question a
+  newcomer would reasonably ask ("why is it like this?").
 - **Prose style:**
   - Plain, direct sentences that make sense without prior context.
-  - Do not use em dashes. End the sentence with a period and start a new one, or use a
-    colon or parentheses.
+  - No dashes as punctuation: no em dash, no en dash, no hyphen standing in for one.
+    End the sentence with a period and start a new one, or use a colon, a comma or
+    parentheses. Compound words (`non-string`, `per-file`) are fine.
   - Use `code formatting` for commands, file paths, field names, rule codes.
   - Prefer short sections with headings and tables over long paragraphs.
 - **Links** are relative so they work on GitHub and in a checkout.

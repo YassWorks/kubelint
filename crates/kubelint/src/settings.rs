@@ -1,5 +1,5 @@
 //! Loading the configuration file and turning it, with the command-line flags, into the
-//! rules and fail threshold of a run (ADR 0005, ADR 0009, ADR 0010).
+//! rules and fail threshold of a run (`docs/user/configuration.md`).
 
 use std::path::{Path, PathBuf};
 

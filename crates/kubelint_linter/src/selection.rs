@@ -1,4 +1,4 @@
-//! Rule selection: which rules run, and at which severity (ADR 0005, ADR 0009).
+//! Rule selection: which rules run, and at which severity (`docs/user/configuration.md`).
 //!
 //! Configuration and the command line name rules with *selectors*, plain strings that
 //! this module resolves against the rule registry:
@@ -189,7 +189,7 @@ impl RuleSelection {
     }
 }
 
-/// Whether the run fails: any diagnostic at or above `fail_on` (ADR 0003).
+/// Whether the run fails: any diagnostic at or above `fail_on`.
 ///
 /// ```
 /// use kubelint_diagnostics::Severity;

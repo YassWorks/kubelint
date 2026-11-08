@@ -1,9 +1,8 @@
 # Architecture
 
-This document describes how kubelint is built. It is the map every contributor (human or
-agent) reads before touching code. The reasoning behind each choice lives in the ADRs in
-[`decisions/`](decisions/). When the code and this document disagree, fix one of them in
-the same PR.
+This document describes how kubelint is built. It is the map every contributor reads
+before touching code. Each decision says why it was made and what was rejected. When the
+code and this document disagree, fix one of them in the same PR.
 
 ## The pipeline
 
@@ -60,13 +59,25 @@ All crates live in `crates/` and are named `kubelint_*` (the CLI binary is just
 
 **Layering rule:** dependencies point downward in the table only. Lower crates never know
 about higher ones. If a lower crate seems to need something from a higher one, the type
-belongs lower, or the design needs an ADR.
+belongs lower, or the layering changes here first.
 
 Planned crates (create them when their milestone starts, not before):
 
-- `kubelint_schema` (v0.2): bundled Kubernetes API schemas and the span-aware validator.
-- `kubelint_lsp` (v0.3): language server.
-- `xtask` (v0.1, M3): developer automation, starting with rule docs generation.
+- `kubelint_schema` (M4): bundled Kubernetes API schemas and the span-aware validator.
+- `kubelint_lsp` (M5): language server.
+- `xtask` (M3): developer automation, starting with rule docs generation.
+
+Publishing the CLI to crates.io means publishing every internal crate too. They are
+internal, with no stability guarantee.
+
+**Why one crate per layer:** boundaries are enforced by the compiler, crates compile in
+parallel, and the language server will not pull in CLI-only dependencies.
+
+**Rejected:**
+
+- A single crate with modules. Module boundaries are not enforced.
+- A few large crates such as `core` and `cli`. `core` becomes the tangle. Ruff and
+  rust-analyzer use many small crates for this reason.
 
 ## Key design decisions
 
@@ -82,7 +93,10 @@ non-ASCII content to keep that conversion honest.
 
 ### Our own YAML tree
 
-`kubelint_yaml` does not expose `saphyr` types. It builds its own tree:
+`kubelint_yaml` parses with `saphyr-parser`, the maintained successor of `yaml-rust`,
+using its event stream, which carries a span for every scalar and collection boundary.
+It builds its own tree and never exposes `saphyr` types, so the parser can be replaced
+without touching rules:
 
 ```rust
 pub struct Document { pub root: Option<Node>, pub range: TextRange }
@@ -91,13 +105,26 @@ pub enum NodeKind {
     Mapping(Vec<Entry>),   // entries in source order, duplicates kept (KL0002 needs them)
     Sequence(Vec<Node>),
     Scalar(Scalar),
-    Null,                  // explicit `~`/`null` or an empty value
+    Null,                  // a missing value (`key:`); an explicit `~` is a plain scalar
 }
 pub struct Entry { pub key: Node, pub value: Node }
 pub struct Scalar { pub value: String, pub style: ScalarStyle /* plain, quoted, block */ }
 ```
 
-The exact shape will evolve in M1, but the principles are fixed:
+**Why:** a linter must point at the exact key or value that is wrong, and must see the
+file as written (duplicate keys, quoting style, comments). `serde_yaml` is archived and
+drops positions. Typed Kubernetes structs drop positions and fail on exactly the broken input
+a linter exists to explain.
+
+**Rejected:**
+
+- `saphyr`'s higher-level `MarkedYaml`. It has spans, but less control over duplicate
+  keys, key spans and styles, and it would tie the public API to its types.
+- `yaml-rust2`. Maintained, but its maintainers now focus on `saphyr`.
+- Writing our own YAML parser. Maximum control, very high cost. Worth revisiting only if
+  autofix or the language server proves the event stream insufficient.
+
+Principles:
 
 - **Every node knows its range,** including mapping keys, so a diagnostic can point at the
   key (`privileged`) or the value (`true`) as appropriate.
@@ -121,6 +148,8 @@ The exact shape will evolve in M1, but the principles are fixed:
 - **Quoted scalar ranges end at the closing quote.** `saphyr-parser` reports a quoted
   scalar's span running on over trailing spaces and a trailing comment, so the builder
   finds the closing quote itself.
+- **Edits apply to the original text.** Autofix (M5) changes the file by byte range,
+  never by re-serializing the tree, so formatting and comments survive.
 
 ### Kubernetes object views, not typed structs
 
@@ -178,17 +207,33 @@ pub struct RuleMeta {
   different rule's job.
 - Rules are pure: no I/O, no global state, no config reading beyond what the context
   passes in. That keeps them parallel-safe and trivially testable.
-- Codes and names are permanent once released. See
-  [ADR 0004](decisions/0004-rule-codes-and-categories.md).
+- Codes, names and categories follow the policy in
+  [`rules/README.md`](rules/README.md#codes-and-names). Both are permanent once released.
 
 ### Diagnostics and exit codes
 
 A `Diagnostic` has a rule code, severity, message, a primary label (range + optional
 short text), optional secondary labels, optional help text and an optional `Fix` (a set
-of text edits with an applicability level, unused until v0.3 autofix).
+of `Edit { range, replacement }` with an `Applicability`, `Safe` or `Unsafe`, unused
+until M5 autofix). Diagnostics are plain data in `kubelint_diagnostics`; rendering lives
+in `kubelint_output`. The human renderer uses `annotate-snippets`, the renderer rustc
+uses, for the familiar `error[KL2001]: ... --> file:line:col` layout.
 
-Severities are `error`, `warning`, `info`. The run fails when any diagnostic is at or
-above `--fail-on` (default `warning`).
+Severities are `error`, `warning`, `info`. Each rule has a default, and users can
+override it per rule. The run fails when any diagnostic is at or above `--fail-on`
+(default `warning`).
+
+**Why severities:** Kubernetes users expect errors and warnings, and some rules are
+advisory by nature.
+
+**Why warnings fail by default:** a linter that does not fail CI rarely gets acted on.
+
+**Rejected:**
+
+- No severities, every finding fails (Ruff, kube-linter).
+- `miette` for rendering. More opinionated; `annotate-snippets` matches rustc exactly
+  and is what Ruff uses.
+- Warnings never fail by default (ESLint). It makes kubelint easy to ignore in CI.
 
 | Exit code | Meaning |
 | --- | --- |
@@ -201,48 +246,42 @@ the user's files rather than in kubelint.
 
 ### Configuration and suppressions
 
-See [ADR 0005](decisions/0005-configuration-and-suppressions.md) for the format and
-[ADR 0009](decisions/0009-rule-selection-semantics.md) for how selectors combine, and
-[ADR 0010](decisions/0010-cli-configuration-flags.md) for the command-line flags and
-[ADR 0011](decisions/0011-exclude-patterns.md) for `exclude` patterns. In short:
+The file format, selector rules, flags, `exclude` patterns and suppressions are a public
+contract, documented in [`user/configuration.md`](user/configuration.md). Where the code
+lives:
 
-```toml
-# kubelint.toml (or .kubelint.toml), found by walking up from the current directory
-[lint]
-select = ["correctness", "security", "KL3001"]   # categories, code prefixes, codes, names
-ignore = ["KL2004"]
-fail-on = "warning"
-
-[lint.severity]
-KL3003 = "error"
-
-[files]
-exclude = ["vendor/**"]
-```
-
-```yaml
-securityContext:
-  # kubelint-disable-next-line KL2001 -- the CNI plugin needs this
-  privileged: true
-  allowPrivilegeEscalation: true  # kubelint-disable-line privilege-escalation-allowed
-```
-
-`# kubelint-disable-file KL3001` anywhere in a file disables a rule for the whole file.
+- `kubelint_config` finds and parses the file. Every value keeps its byte range, so
+  errors are rendered as snippets of the file, with the same renderer as lint findings.
+  It knows selectors only as strings.
+- `kubelint_linter::RuleSelection::resolve` is the only place selectors are resolved,
+  because that needs the rule registry. Configuration, flags and suppression comments
+  all go through it. Its errors carry the list and index of the bad selector.
+- `crates/kubelint/src/settings.rs` merges the file with the flags and remembers which
+  list came from the file, so an error points back at the file only when the selector
+  was written there.
+- `crates/kubelint/src/exclude.rs` normalizes paths lexically (no symlink resolution)
+  before matching. Excluded directories are still walked and their files filtered
+  afterwards.
 
 ### Output formats
 
 | `--format` | For | Notes |
 | --- | --- | --- |
 | `human` (default) | terminals | rustc-style snippets via `annotate-snippets`, colors when stdout is a TTY, summary line with timing. |
-| `json` | scripts | Stable, versioned schema ([ADR 0013](decisions/0013-json-output-schema.md), [`user/output-formats.md`](user/output-formats.md)). Breaking it is a breaking change. |
+| `json` | scripts | Stable, versioned schema. Breaking it is a breaking change. |
 | `sarif` | GitHub code scanning and other security dashboards | SARIF 2.1.0, hand-written `serde` structs (no SARIF crate dependency). |
 | `github` | GitHub Actions logs | `::error file=...,line=...,col=...::message` workflow commands. |
 
+The exact contracts are in [`user/output-formats.md`](user/output-formats.md).
+`kubelint_output` cannot see the rule registry, so the CLI passes rule metadata in (for
+example `SarifRule` for the SARIF rule list).
+
 ## Testing
 
-See [ADR 0006](decisions/0006-testing-strategy.md).
+How tests are written is in [`conventions.md`](conventions.md#tests).
 
-- **Unit tests** live next to the code in `#[cfg(test)] mod tests`.
+- **Unit tests** live in their own files: `crates/<crate>/tests/`, or `<module>/tests.rs`
+  when they need private items ([conventions](conventions.md#tests)).
 - **Rule tests** are snapshot tests: a fixture YAML file per rule in
   `crates/kubelint_linter/resources/test/fixtures/<category>/<CODE>.yaml` containing both
   violating and passing cases, linted with only that rule enabled, rendered as text and

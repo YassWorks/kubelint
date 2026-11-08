@@ -1,7 +1,7 @@
 //! The JSON renderer: one document with a schema version, the findings and the counts.
 //!
-//! The schema is a public contract, documented in `docs/user/output-formats.md` and
-//! ADR 0013. Adding a field is allowed; renaming or removing one needs a new `version`.
+//! The schema is a public contract, documented in `docs/user/output-formats.md`. Adding a
+//! field is allowed; renaming or removing one needs a new `version`.
 
 use kubelint_diagnostics::{Diagnostic, Label, Severity};
 use kubelint_source::{SourceFile, TextSize};

@@ -1,7 +1,7 @@
 use kubelint_source::{FileId, TextRange};
 
 /// How serious a finding is. Ordered `Info < Warning < Error`, so `severity >= fail_on`
-/// decides whether a run fails (ADR 0003).
+/// decides whether a run fails.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Severity {
     /// Advisory. Never fails a run unless the threshold is `info`.
