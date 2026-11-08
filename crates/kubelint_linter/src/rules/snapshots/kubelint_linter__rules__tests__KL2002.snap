@@ -30,67 +30,81 @@ warning[KL2002]: container `unset` does not set `allowPrivilegeEscalation: false
    |               ^^^^^
   = help: set `securityContext.allowPrivilegeEscalation: false`
 
-warning[KL2002]: container `setup` allows privilege escalation
-  --> security/KL2002.yaml:38:23
+warning[KL2002]: container `tilde` does not set `allowPrivilegeEscalation: false`
+  --> security/KL2002.yaml:27:15
    |
-38 |     securityContext: {allowPrivilegeEscalation: true}
+27 |       - name: tilde
+   |               ^^^^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+warning[KL2002]: container `keyword` does not set `allowPrivilegeEscalation: false`
+  --> security/KL2002.yaml:31:15
+   |
+31 |       - name: keyword
+   |               ^^^^^^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+warning[KL2002]: container `setup` allows privilege escalation
+  --> security/KL2002.yaml:46:23
+   |
+46 |     securityContext: {allowPrivilegeEscalation: true}
    |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   = help: set `securityContext.allowPrivilegeEscalation: false`
 
 warning[KL2002]: container allows privilege escalation
-  --> security/KL2002.yaml:42:7
+  --> security/KL2002.yaml:50:7
    |
-42 |       allowPrivilegeEscalation: yes
+50 |       allowPrivilegeEscalation: yes
    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   = help: set `securityContext.allowPrivilegeEscalation: false`
 
 warning[KL2002]: container does not set `allowPrivilegeEscalation: false`
-  --> security/KL2002.yaml:43:5
+  --> security/KL2002.yaml:51:5
    |
-43 |   - image: app:1.0
+51 |   - image: app:1.0
    |     ^^^^^
   = help: set `securityContext.allowPrivilegeEscalation: false`
 
 warning[KL2002]: container `débogage` does not set `allowPrivilegeEscalation: false`
-  --> security/KL2002.yaml:45:11
+  --> security/KL2002.yaml:53:11
    |
-45 |   - name: débogage
+53 |   - name: débogage
    |           ^^^^^^^^
   = help: set `securityContext.allowPrivilegeEscalation: false`
 
 warning[KL2002]: container `report` does not set `allowPrivilegeEscalation: false`
-  --> security/KL2002.yaml:61:19
+  --> security/KL2002.yaml:69:19
    |
-61 |           - name: report
+69 |           - name: report
    |                   ^^^^^^
   = help: set `securityContext.allowPrivilegeEscalation: false`
 
 warning[KL2002]: container `agent` does not set `allowPrivilegeEscalation: false`
-  --> security/KL2002.yaml:77:16
+  --> security/KL2002.yaml:85:16
    |
-77 |       - {name: agent, image: agent:3, securityContext: {privileged: false}}
+85 |       - {name: agent, image: agent:3, securityContext: {privileged: false}}
    |                ^^^^^
   = help: set `securityContext.allowPrivilegeEscalation: false`
 
 warning[KL2002]: container `db` does not set `allowPrivilegeEscalation: false`
-  --> security/KL2002.yaml:93:15
-   |
-93 |       - name: db
-   |               ^^
+   --> security/KL2002.yaml:101:15
+    |
+101 |       - name: db
+    |               ^^
   = help: set `securityContext.allowPrivilegeEscalation: false`
 
 warning[KL2002]: container `migrate` does not set `allowPrivilegeEscalation: false`
-   --> security/KL2002.yaml:109:16
+   --> security/KL2002.yaml:117:16
     |
-109 |       - {name: migrate, image: app:1.0}
+117 |       - {name: migrate, image: app:1.0}
     |                ^^^^^^^
   = help: set `securityContext.allowPrivilegeEscalation: false`
 
 warning[KL2002]: container `app` does not set `allowPrivilegeEscalation: false`
-   --> security/KL2002.yaml:123:11
+   --> security/KL2002.yaml:131:11
     |
-123 |   - name: app
+131 |   - name: app
     |           ^^^
   = help: set `securityContext.allowPrivilegeEscalation: false`
 
-13 finding(s) in 14 object(s)
+15 finding(s) in 14 object(s)
