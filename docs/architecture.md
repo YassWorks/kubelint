@@ -166,6 +166,7 @@ obj.pod_spec()        // Some(PodSpec) for Pod, Deployment, StatefulSet, DaemonS
                       // ReplicaSet, ReplicationController, Job, CronJob
 for c in pod_spec.containers() { c.kind(); c.name(); c.security_context(); }
                       // containers + initContainers + ephemeralContainers
+c.security_setting(SecurityField::RunAsUser)  // the container's, else the pod's
 ```
 
 Most security and reliability rules are "for every container, check X", so the workload

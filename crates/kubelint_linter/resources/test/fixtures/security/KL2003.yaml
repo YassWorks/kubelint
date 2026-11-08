@@ -1,0 +1,250 @@
+# Reported: no settings at all, an empty securityContext and only unrelated settings.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+      - name: empty
+        image: app:1.0
+        securityContext: {}
+      - name: other
+        image: app:1.0
+        securityContext:
+          allowPrivilegeEscalation: false
+---
+# Reported: `runAsUser: 0` in a container, and `runAsUser: 0` from the pod even with
+# `runAsNonRoot: true` (the kubelet then refuses to start it).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: root
+spec:
+  securityContext:
+    runAsUser: 0
+  initContainers:
+  - name: setup
+    image: busybox:1.36
+    securityContext: {runAsUser: 0}
+  containers:
+  - name: app
+    image: app:1.0
+    securityContext:
+      runAsNonRoot: true
+---
+# Reported: a null container value falls back to the pod's `runAsNonRoot: false`, and
+# so does an ephemeral container.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: override
+spec:
+  securityContext:
+    runAsNonRoot: false
+  containers:
+  - name: app
+    image: app:1.0
+    securityContext:
+      runAsNonRoot: ~
+  ephemeralContainers:
+  - name: débogage
+    image: busybox:1.36
+---
+# Reported: `runAsNonRoot: no` in a container without a name overrides the pod's `true`.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: container-override
+spec:
+  securityContext:
+    runAsNonRoot: true
+  containers:
+  - image: app:1.0
+    securityContext:
+      runAsNonRoot: no
+---
+# Reported: a DaemonSet.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: agent
+spec:
+  selector:
+    matchLabels: {app: agent}
+  template:
+    metadata:
+      labels: {app: agent}
+    spec:
+      containers:
+      - {name: agent, image: agent:3}
+---
+# Reported: a CronJob.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - {name: report, image: report:2}
+---
+# Reported: a Job whose container has no name (reported at its first key).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - image: app:1.0
+---
+# Not reported: a pod-level `runAsNonRoot: true` covers every container.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-level
+spec:
+  securityContext:
+    runAsNonRoot: true
+  initContainers:
+  - name: setup
+    image: busybox:1.36
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Not reported: a non-zero `runAsUser` on the pod or the container, or a container
+# `runAsNonRoot: true`.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db
+  selector:
+    matchLabels: {app: db}
+  template:
+    metadata:
+      labels: {app: db}
+    spec:
+      securityContext:
+        runAsUser: 999
+      containers:
+      - name: db
+        image: postgres:17
+      - name: exporter
+        image: exporter:1
+        securityContext: {runAsNonRoot: true}
+      - name: backup
+        image: backup:1
+        securityContext: {runAsUser: 1000, runAsNonRoot: false}
+---
+# Not reported: a non-zero container `runAsUser` overrides a pod-level `0`.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: user-override
+spec:
+  securityContext:
+    runAsUser: 0
+  containers:
+  - name: app
+    image: app:1.0
+    securityContext:
+      runAsUser: 1000
+---
+# Not reported: a container `runAsNonRoot: true` overrides the pod's `false`.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: safe-override
+spec:
+  securityContext:
+    runAsNonRoot: false
+  containers:
+  - name: app
+    image: app:1.0
+    securityContext:
+      runAsNonRoot: true
+---
+# Not reported: null container values fall back to the pod's safe settings.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: null-fallback
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+  containers:
+  - name: a
+    image: app:1.0
+    securityContext:
+      runAsNonRoot: ~
+  - name: b
+    image: app:1.0
+    securityContext:
+      runAsUser:
+---
+# Not reported: values of the wrong type (schema problems).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: typed
+spec:
+  containers:
+  - name: a
+    image: app:1.0
+    securityContext:
+      runAsUser: "0"
+  - name: b
+    image: app:1.0
+    securityContext:
+      runAsNonRoot: "false"
+---
+# Not reported: a Windows pod.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: windows
+spec:
+  os:
+    name: windows
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Not reported: a custom resource with a pod-like shape.
+apiVersion: example.com/v1
+kind: Deployment
+metadata:
+  name: custom
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+# Not reported: an object without a pod spec.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  runAsUser: "0"

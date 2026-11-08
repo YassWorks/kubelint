@@ -1,0 +1,45 @@
+## What it does
+
+Reports a container in `containers`, `initContainers` or `ephemeralContainers` that
+runs as root, or may:
+
+- `runAsUser: 0` is set, so it runs as root.
+- No `runAsUser` and no `runAsNonRoot: true` is set, so the image decides, and many
+  images run as root.
+
+A container's `securityContext` overrides the pod's field by field, so a pod-level
+`runAsNonRoot: true` covers every container that does not set it to `false`. A non-zero
+`runAsUser` is enough on its own. Windows pods (`spec.os.name: windows`) are skipped.
+
+## Why it matters
+
+Root in a container is the same user as root on the node, held back only by the
+container's isolation. A bug in the application, or a kernel or runtime vulnerability,
+then gives an attacker root on the node instead of an unprivileged account. Root can
+also write anywhere in the image and in mounted volumes. The `restricted` Pod Security
+Standard requires `runAsNonRoot: true`.
+
+With `runAsNonRoot: true`, the kubelet refuses to start a container whose user is root,
+so a root image fails loudly instead of running quietly. If the image has no non-root
+`USER`, also set `runAsUser` to a non-zero ID.
+
+## Example
+
+```yaml
+spec:
+  containers:
+  - name: web
+    image: nginx:1.27
+```
+
+Use instead:
+
+```yaml
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+  containers:
+  - name: web
+    image: nginx:1.27
+```
