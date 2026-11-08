@@ -200,7 +200,9 @@ text blocks, test placement, style, and whether every change belongs to the item
 - Wait for **every** check run on the head commit to finish, not only `ci-success`:
   third-party checks can finish minutes later. Poll
   `gh api repos/YassWorks/kubelint/commits/<sha>/check-runs` from a background script
-  (a foreground `sleep` is blocked). While waiting, read ahead for the next item.
+  (a foreground `sleep` is blocked) until at least one exists and every one has
+  `status` `completed`. A count of zero means the checks have not been created yet, not
+  that they passed. While waiting, read ahead for the next item.
 - **Green:** squash-merge the PR (commit title = PR title). Then reset your session
   branch to the new `origin/main` (4.2) and go back to 4.1.
 - **Red:** read the failing job's logs, reproduce locally, fix, push. A fix must address
@@ -291,6 +293,9 @@ Traps earlier runs fell into. Add new ones as you find them.
 - rustfmt lays out long `&[&str]` tables one value per line. Put long test tables in
   module-level `const`s to stay under clippy's `too_many_lines`.
 - A Bash `cat > file` without a heredoc waits on stdin and hangs. Use the Write tool.
+- `Node::is_null` is true only for a missing value (`key:`). Kubernetes also reads
+  plain scalars such as `~` or `null` (not quoted ones) as null: use
+  `Node::is_kubernetes_null` when a null field falls back to a default.
 
 ## Keeping this playbook healthy
 
