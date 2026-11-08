@@ -49,7 +49,7 @@ Correctness rules:
 - [x] KL1008 `invalid-object-name`
 - [x] KL1010 `invalid-label`
 - [x] KL1009 `non-string-env-value`
-- [ ] KL1011 `duplicate-env-name`: the same env `name` twice in one container's `env`.
+- [x] KL1011 `duplicate-env-name`: the same env `name` twice in one container's `env`.
   Report the later one with a "first set here" label, like KL1006. `envFrom` is out of
   scope.
 

@@ -2,6 +2,7 @@
 //! written.
 
 mod duplicate_container_name;
+mod duplicate_env_name;
 mod duplicate_object;
 mod invalid_label;
 mod invalid_object_name;
@@ -13,6 +14,7 @@ mod non_string_env_value;
 mod selector_mismatch;
 
 pub use duplicate_container_name::DuplicateContainerName;
+pub use duplicate_env_name::DuplicateEnvName;
 pub use duplicate_object::DuplicateObject;
 pub use invalid_label::InvalidLabel;
 pub use invalid_object_name::InvalidObjectName;
