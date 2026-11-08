@@ -1,8 +1,8 @@
 //! KL2001 `privileged-container`.
 
 use kubelint_diagnostics::Severity;
-use kubelint_yaml::Node;
 
+use super::container_subject;
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
 /// Reports a container whose `securityContext.privileged` is true. Kubernetes has no
@@ -36,10 +36,7 @@ impl Rule for PrivilegedContainer {
             else {
                 continue;
             };
-            let message = match container.name().and_then(Node::as_str) {
-                Some(name) => format!("container `{name}` runs in privileged mode"),
-                None => "container runs in privileged mode".to_owned(),
-            };
+            let message = format!("{} runs in privileged mode", container_subject(container));
             cx.report(
                 cx.diagnostic(entry.key.range.cover(entry.value.range), message)
                     .with_help(

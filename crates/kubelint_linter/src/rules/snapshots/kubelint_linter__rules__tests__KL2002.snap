@@ -1,0 +1,96 @@
+---
+source: crates/kubelint_linter/src/rules/tests.rs
+expression: check_fixture(rule)
+---
+warning[KL2002]: container `web` does not set `allowPrivilegeEscalation: false`
+  --> security/KL2002.yaml:14:15
+   |
+14 |       - name: web
+   |               ^^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+warning[KL2002]: container `empty` does not set `allowPrivilegeEscalation: false`
+  --> security/KL2002.yaml:16:15
+   |
+16 |       - name: empty
+   |               ^^^^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+warning[KL2002]: container `other` does not set `allowPrivilegeEscalation: false`
+  --> security/KL2002.yaml:19:15
+   |
+19 |       - name: other
+   |               ^^^^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+warning[KL2002]: container `unset` does not set `allowPrivilegeEscalation: false`
+  --> security/KL2002.yaml:23:15
+   |
+23 |       - name: unset
+   |               ^^^^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+warning[KL2002]: container `setup` allows privilege escalation
+  --> security/KL2002.yaml:38:23
+   |
+38 |     securityContext: {allowPrivilegeEscalation: true}
+   |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+warning[KL2002]: container allows privilege escalation
+  --> security/KL2002.yaml:42:7
+   |
+42 |       allowPrivilegeEscalation: yes
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+warning[KL2002]: container does not set `allowPrivilegeEscalation: false`
+  --> security/KL2002.yaml:43:5
+   |
+43 |   - image: app:1.0
+   |     ^^^^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+warning[KL2002]: container `débogage` does not set `allowPrivilegeEscalation: false`
+  --> security/KL2002.yaml:45:11
+   |
+45 |   - name: débogage
+   |           ^^^^^^^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+warning[KL2002]: container `report` does not set `allowPrivilegeEscalation: false`
+  --> security/KL2002.yaml:61:19
+   |
+61 |           - name: report
+   |                   ^^^^^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+warning[KL2002]: container `agent` does not set `allowPrivilegeEscalation: false`
+  --> security/KL2002.yaml:77:16
+   |
+77 |       - {name: agent, image: agent:3, securityContext: {privileged: false}}
+   |                ^^^^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+warning[KL2002]: container `db` does not set `allowPrivilegeEscalation: false`
+  --> security/KL2002.yaml:93:15
+   |
+93 |       - name: db
+   |               ^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+warning[KL2002]: container `migrate` does not set `allowPrivilegeEscalation: false`
+   --> security/KL2002.yaml:109:16
+    |
+109 |       - {name: migrate, image: app:1.0}
+    |                ^^^^^^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+warning[KL2002]: container `app` does not set `allowPrivilegeEscalation: false`
+   --> security/KL2002.yaml:123:11
+    |
+123 |   - name: app
+    |           ^^^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+13 finding(s) in 14 object(s)
