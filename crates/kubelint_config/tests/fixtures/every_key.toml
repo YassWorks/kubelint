@@ -1,0 +1,11 @@
+[lint]
+select = ["correctness", "KL3001"]
+ignore = ["KL2004"]
+fail-on = "info"
+
+[lint.severity]
+KL3003 = "error"
+missing-kind = "warning"
+
+[files]
+exclude = ["vendor/**"]
