@@ -85,7 +85,7 @@ small example to copy.
    Run `INSTA_UPDATE=always cargo test -p kubelint_linter` and read the new file under
    `src/rules/<category>/snapshots/`: every reported position and message should be
    exactly what you expect, and every `Not reported` case should be absent.
-6. **Update the catalog row** status to `implemented` and tick the roadmap task.
+6. **Update the catalog row** status to `implemented` and tick the roadmap item.
 
 A good diagnostic message names the object and the field and says what is wrong; the
 help says how to fix it. This is how `kubelint check` prints one:

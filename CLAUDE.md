@@ -39,7 +39,7 @@ INSTA_UPDATE=always cargo test --workspace
 
 ## Rules of thumb
 
-- One roadmap task per PR, small, using `.github/pull_request_template.md`.
+- One roadmap item per PR, small, using `.github/pull_request_template.md`.
 - Rule codes are allocated only in `docs/rules/README.md`.
 - Positions are byte offsets (`TextRange`). `saphyr-parser` gives character indices:
   convert them in `kubelint_yaml`.

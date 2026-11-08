@@ -297,7 +297,7 @@ How tests are written is in [`conventions.md`](conventions.md#tests).
 - No regex compilation per object (compile once, `std::sync::LazyLock`).
 - No per-object allocation of the whole document. Views borrow from the tree.
 
-A benchmark corpus and a check against this budget are part of the v0.1 roadmap.
+A benchmark corpus and a check against this budget are part of the M3 roadmap.
 
 ## Dependencies
 

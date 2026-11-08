@@ -119,7 +119,7 @@ what is implemented and what is planned.
 ## What it catches
 
 - **Broken manifests:** missing fields, selectors that match nothing, invalid resource
-  quantities, env values YAML reads as numbers or booleans, and (in v0.2) full schema
+  quantities, env values YAML reads as numbers or booleans, and (planned) full schema
   validation against real Kubernetes API versions, including removed APIs.
 - **Security risks:** privileged containers, running as root, host namespaces and paths,
   dangerous capabilities, secrets in plain env vars.
@@ -139,6 +139,9 @@ See the full [rule catalog](docs/rules/README.md).
 
 ## Documentation
 
+- [Configuration](docs/user/configuration.md): config file, rule selection, flags,
+  exclusions and suppressions.
+- [Output formats](docs/user/output-formats.md): human, JSON, SARIF and GitHub output.
 - [Vision](docs/vision.md): goals and non-goals.
 - [Roadmap](docs/roadmap.md): what is being built, in order.
 - [Architecture](docs/architecture.md): how it works inside.

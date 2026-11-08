@@ -128,8 +128,7 @@ and snapshot double as documentation of its behavior.
   architecture dependency table. Prefer crates that are widely used, actively
   maintained, and licensed MIT, Apache-2.0, BSD, ISC, Zlib or Unicode.
 - Do not add a dependency for something that takes under about 50 lines to write well.
-- Never add a dependency with a copyleft license (GPL, AGPL, LGPL, MPL) without owner
-  approval.
+- Never add a dependency with a copyleft license (GPL, AGPL, LGPL, MPL).
 
 ## Documentation
 
@@ -198,8 +197,7 @@ day.
 ## Pull requests
 
 - Use `.github/pull_request_template.md`. Every required section is filled.
-- **One concern per PR.** One roadmap task, or one fix, or one docs topic.
+- **One concern per PR.** One roadmap item, or one fix, or one docs topic.
 - **Size:** aim for under about 400 changed lines, excluding snapshots and fixtures. If
   larger, split it unless the change is mechanical.
 - No drive-by changes. Unrelated improvements go to the roadmap or a follow-up PR.
-- The **Concepts** section explains 2 to 4 ideas the PR relies on, in plain language.

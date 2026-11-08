@@ -1,8 +1,8 @@
 # Vision
 
-> Status: locked on 2026-10-30 with the owner (YassWorks). Changing anything in the
-> "Pillars" or "Non-goals" sections requires the owner's approval via
-> [`agent/owner-inbox.md`](agent/owner-inbox.md).
+> Status: locked. Only the owner (YassWorks) changes the "Pillars" and "Non-goals"
+> sections. Everything inside them (milestones, task order, rules, design) is decided by
+> whoever does the work and recorded in the docs.
 
 ## One sentence
 
@@ -49,27 +49,28 @@ These are product requirements, not slogans. Every feature is judged against the
 | Identity | Fast and friendly. Great diagnostics first, breadth of rules second. |
 | What it catches | Broken manifests (structure, then full schema validation), security risks, reliability best practices. Removed/deprecated API versions come with schema validation. |
 | Where it runs | CLI first. Then CI integration (SARIF, GitHub Action, pre-commit). Then editor support (language server). |
-| First release | v0.1, small and solid, around 3 weeks after kickoff (target: late November 2026). |
+| First milestone | "Useful in CI", small and solid, around 3 weeks after kickoff (target: late November 2026). |
+| Releases | Automatic: every merge to `main` that changes code publishes a new version with binaries on GitHub Releases. |
 | Language | Rust. Single static binary. |
 | License | MIT. |
-| Development model | Built mostly by an autonomous daily Claude Code routine, merging its own small PRs on green CI, with all memory kept in this repository. See [`decisions/0008-autonomous-workflow.md`](decisions/0008-autonomous-workflow.md). |
+| Development model | Built mostly by an autonomous daily Claude Code routine, merging its own small PRs on green CI, with all memory kept in this repository. See [`agent/playbook.md`](agent/playbook.md). |
 
-## Release milestones
+## Milestones
 
-The detailed, task-level plan lives in [`roadmap.md`](roadmap.md).
+The detailed plan lives in [`roadmap.md`](roadmap.md).
 
-- **v0.1, "useful in CI":** the CLI, about 20 high-signal rules (correctness, security,
-  reliability), a config file, suppression comments, human/JSON/SARIF/GitHub output,
-  installable from GitHub Releases and crates.io.
-- **v0.2, "catches everything the API server would reject":** schema validation against
+- **"Useful in CI" (M2, M3):** the CLI, about 20 high-signal rules (correctness,
+  security, reliability), a config file, suppression comments, human/JSON/SARIF/GitHub
+  output, installable from GitHub Releases.
+- **"Catches everything the API server would reject" (M4):** schema validation against
   real Kubernetes API schemas for a chosen Kubernetes version, including unknown fields
   with "did you mean" suggestions and removed API versions.
-- **v0.3, "in your editor":** autofix (`--fix`) and a language server so diagnostics and
+- **"In your editor" (M5):** autofix (`--fix`) and a language server so diagnostics and
   fixes appear while typing (VS Code first).
 
 ## Non-goals (for now)
 
-These were explicitly left out of scope by the owner. Do not build them without approval.
+These are out of scope. Do not build them.
 
 - **Helm and Kustomize as inputs.** kubelint lints rendered YAML. Users can pipe
   `helm template` or `kustomize build` output into `kubelint check -`. kubelint must

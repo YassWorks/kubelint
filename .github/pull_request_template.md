@@ -1,19 +1,19 @@
 <!--
 Title format: Conventional Commits, e.g. `feat(linter): add KL2001 privileged-container`.
-One PR = one roadmap task = one concern. Keep every section short.
+One PR = one roadmap item = one concern. Keep every section short.
 -->
 
 ## Summary
 
 <!-- 1-3 sentences: what this PR does and why, in plain language. -->
 
-## Roadmap task
+## Roadmap item
 
-<!-- The task ID from docs/roadmap.md, e.g. `M1-04`, or `docs` / `fix` / `chore` with a reason. -->
+<!-- The item from docs/roadmap.md, e.g. `KL2001 privileged-container`, or `docs` / `fix` / `chore` with a reason. -->
 
 ## Changes
 
-<!-- Bullet list of the concrete changes. If a bullet is unrelated to the task, it belongs in another PR. -->
+<!-- Bullet list of the concrete changes. If a bullet is unrelated to the item, it belongs in another PR. -->
 
 -
 
@@ -26,12 +26,11 @@ One PR = one roadmap task = one concern. Keep every section short.
 - [ ] `cargo test --workspace --all-features --locked`
 - [ ] `cargo doc --workspace --no-deps --all-features --locked`
 
-## Docs and memory
+## Docs
 
-- [ ] Roadmap checkbox ticked (or task split) in `docs/roadmap.md`
+- [ ] Roadmap item ticked (or split) in `docs/roadmap.md`
 - [ ] User-facing behavior change reflected in docs (README, `docs/`), or none
-- [ ] New architectural decision recorded as an ADR in `docs/decisions/`, or none
-- [ ] New Rust/Kubernetes concept added to `docs/learning/glossary.md`, or none
+- [ ] New decision written into the doc it concerns, with **Why** and **Rejected**, or none
 
 ## Size check
 
@@ -40,11 +39,4 @@ Over ~400 lines? Split the PR unless it is mechanical (renames, generated docs).
 
 ## Out of scope / follow-ups
 
-<!-- Things noticed but deliberately not done here, and where they were recorded (roadmap, owner inbox). -->
-
-## Concepts
-
-<!-- 2-4 plain-language bullets on the Rust or Kubernetes ideas this PR relies on, not the diff.
-Link the glossary entry when one exists. -->
-
--
+<!-- Things noticed but not done here, and where they were recorded in docs/roadmap.md. -->
