@@ -1,7 +1,4 @@
-//! The SARIF renderer: SARIF 2.1.0 for GitHub code scanning and other dashboards.
-//!
-//! Only the parts of SARIF that kubelint needs are modelled, with hand-written `serde`
-//! structs. The mapping is documented in `docs/user/output-formats.md`.
+//! SARIF 2.1.0, mapped as documented in `docs/user/output-formats.md`.
 
 use std::fmt::Write as _;
 
@@ -9,7 +6,7 @@ use kubelint_diagnostics::{Diagnostic, Label, Severity};
 use kubelint_source::{SourceFile, TextSize};
 use serde::Serialize;
 
-use crate::human::path_string;
+use crate::{file, message_with_help, path_string};
 
 /// What the SARIF output says about one rule. The renderer cannot read the rule registry
 /// itself (it lives in a higher layer), so the caller describes every rule.
@@ -25,7 +22,6 @@ pub struct SarifRule<'a> {
     pub explanation: &'a str,
     /// The category name, such as `security`.
     pub category: &'a str,
-    /// The severity the rule reports at unless configured otherwise.
     pub default_severity: Severity,
 }
 
@@ -37,8 +33,8 @@ pub struct SarifRenderer<'a> {
 }
 
 impl<'a> SarifRenderer<'a> {
-    /// A renderer describing kubelint `version` with these `rules`. Every rule is listed
-    /// in the output, whether or not it found anything, so rule indexes are stable.
+    /// `version` is kubelint's own. Every rule is listed in the output, whether or not it
+    /// found anything, so rule indexes are stable.
     pub fn new(version: &'a str, rules: &'a [SarifRule<'a>]) -> Self {
         Self { version, rules }
     }
@@ -96,15 +92,13 @@ impl<'a> SarifRenderer<'a> {
     }
 
     fn result<'d>(&self, files: &[SourceFile], diagnostic: &'d Diagnostic) -> SarifResult<'d> {
-        let text = match &diagnostic.help {
-            Some(help) => format!("{}\nhelp: {help}", diagnostic.message),
-            None => diagnostic.message.clone(),
-        };
         SarifResult {
             rule_id: diagnostic.code,
             rule_index: self.rules.iter().position(|r| r.code == diagnostic.code),
             level: level(diagnostic.severity),
-            message: Message { text },
+            message: Message {
+                text: message_with_help(diagnostic),
+            },
             locations: vec![location(files, &diagnostic.primary)],
             related_locations: diagnostic
                 .secondary
@@ -146,7 +140,7 @@ fn reporting_descriptor<'a>(rule: &SarifRule<'a>) -> ReportingDescriptor<'a> {
 }
 
 fn location<'a>(files: &[SourceFile], label: &'a Label) -> Location<'a> {
-    let file = files.get(label.file.0 as usize);
+    let file = file(files, label.file);
     let region = file.map(|file| {
         let position = |offset: TextSize| file.line_index().line_col(file.text(), offset);
         let (start, end) = (position(label.range.start()), position(label.range.end()));
@@ -317,18 +311,4 @@ struct Region {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::{is_relative, uri};
-
-    #[test]
-    fn uris() {
-        assert_eq!(uri("deploy/web.yaml"), "deploy/web.yaml");
-        assert_eq!(uri("my dir/é.yaml"), "my%20dir/%C3%A9.yaml");
-        assert_eq!(uri("<stdin>"), "%3Cstdin%3E");
-        assert_eq!(uri("a:b.yaml"), "a%3Ab.yaml");
-        assert_eq!(uri("/srv/app/x.yaml"), "file:///srv/app/x.yaml");
-        assert_eq!(uri("C:/work/x.yaml"), "file:///C:/work/x.yaml");
-        assert!(is_relative("./x.yaml"));
-        assert!(!is_relative("D:/x"));
-    }
-}
+mod tests;

@@ -1,5 +1,5 @@
 ---
-source: crates/kubelint_output/src/json.rs
+source: crates/kubelint_output/tests/json.rs
 expression: out
 ---
 {

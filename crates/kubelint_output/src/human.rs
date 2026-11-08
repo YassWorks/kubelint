@@ -1,23 +1,20 @@
-//! The human renderer: rustc-style snippets and a summary line.
-
-use std::fmt::Write as _;
+use std::ops::Range;
 use std::time::Duration;
 
 use annotate_snippets::{Annotation, AnnotationKind, Group, Level, Renderer, Snippet};
 use kubelint_diagnostics::{Diagnostic, Label, Severity};
 use kubelint_source::{FileId, SourceFile, TextRange};
 
+use crate::{file, path_string};
+
 /// Counts for the summary line printed after the diagnostics.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Summary {
-    /// How many files were linted.
     pub files_checked: usize,
-    /// How many Kubernetes objects were linted.
     pub objects_checked: usize,
-    /// How many files were found but deliberately not linted (Helm chart templates).
+    /// Files found but not linted (Helm chart templates).
     pub files_skipped: usize,
-    /// How long the run took. `None` leaves the timing out, which keeps test output
-    /// stable.
+    /// `None` leaves the timing out, so the output is the same on every run.
     pub elapsed: Option<Duration>,
 }
 
@@ -64,11 +61,7 @@ impl HumanRenderer {
         rule_name: impl Fn(&str) -> Option<&'n str>,
         summary: &Summary,
     ) -> String {
-        let renderer = if self.color {
-            Renderer::styled()
-        } else {
-            Renderer::plain()
-        };
+        let renderer = self.renderer();
         let mut out = String::new();
         for diagnostic in diagnostics {
             let report = [group(files, diagnostic, rule_name(diagnostic.code))];
@@ -79,9 +72,7 @@ impl HumanRenderer {
         out.push('\n');
         out
     }
-}
 
-impl HumanRenderer {
     /// Renders an error that stops the run before linting, such as an invalid
     /// configuration file: a snippet of `file` pointing at `range`, or just the path and
     /// the message when the position is unknown.
@@ -105,25 +96,25 @@ impl HumanRenderer {
         let Some(range) = range else {
             return format!("error: {path}: {message}\n");
         };
-        let renderer = if self.color {
-            Renderer::styled()
-        } else {
-            Renderer::plain()
-        };
-        let len = file.text().len();
-        let start = usize::from(range.start()).min(len);
-        let end = usize::from(range.end()).clamp(start, len);
         let report = [
             Group::with_title(Level::ERROR.primary_title(message)).element(
                 Snippet::source(file.text())
                     .path(path)
                     .fold(true)
-                    .annotation(AnnotationKind::Primary.span(start..end)),
+                    .annotation(AnnotationKind::Primary.span(span(file, range))),
             ),
         ];
-        let mut out = renderer.render(&report);
+        let mut out = self.renderer().render(&report);
         out.push('\n');
         out
+    }
+
+    fn renderer(self) -> Renderer {
+        if self.color {
+            Renderer::styled()
+        } else {
+            Renderer::plain()
+        }
     }
 }
 
@@ -183,27 +174,19 @@ fn group<'a>(
     group
 }
 
-/// The file with this id. A label pointing at a file that is not part of the run (a bug
-/// elsewhere) is left out rather than panicking.
-fn file(files: &[SourceFile], id: FileId) -> Option<&SourceFile> {
-    files.get(usize::try_from(id.0).ok()?)
-}
-
-/// The annotation for `label`, its range clamped to the file.
 fn annotation<'a>(file: &SourceFile, label: &'a Label, kind: AnnotationKind) -> Annotation<'a> {
-    let len = file.text().len();
-    let start = usize::from(label.range.start()).min(len);
-    let end = usize::from(label.range.end()).clamp(start, len);
-    let annotation = kind.span(start..end);
+    let annotation = kind.span(span(file, label.range));
     match &label.message {
         Some(message) => annotation.label(message.as_str()),
         None => annotation,
     }
 }
 
-/// The file's path with `/` separators, so output looks the same on every platform.
-pub(crate) fn path_string(file: &SourceFile) -> String {
-    file.path().to_string_lossy().replace('\\', "/")
+/// `range` as byte indexes clamped to the file.
+fn span(file: &SourceFile, range: TextRange) -> Range<usize> {
+    let len = file.text().len();
+    let start = usize::from(range.start()).min(len);
+    start..usize::from(range.end()).clamp(start, len)
 }
 
 /// `Found 2 errors and 1 warning. Checked 3 files and 12 objects in 42ms.`, or `All
@@ -224,25 +207,24 @@ pub(crate) fn summary_line(diagnostics: &[Diagnostic], summary: &Summary) -> Str
         (n > 0).then(|| plural(n, noun))
     })
     .collect();
-    let mut line = match parts.as_slice() {
+    let found = match parts.as_slice() {
         [] => "All checks passed.".to_owned(),
         [one] => format!("Found {one}."),
         [init @ .., last] => format!("Found {} and {last}.", init.join(", ")),
     };
-    let _ = write!(
-        line,
-        " Checked {} and {}",
+    let skipped = match summary.files_skipped {
+        0 => String::new(),
+        n => format!(", skipped {}", plural(n, "file")),
+    };
+    let elapsed = summary
+        .elapsed
+        .map(|elapsed| format!(" in {}", format_duration(elapsed)))
+        .unwrap_or_default();
+    format!(
+        "{found} Checked {} and {}{skipped}{elapsed}.",
         plural(summary.files_checked, "file"),
-        plural(summary.objects_checked, "object")
-    );
-    if summary.files_skipped > 0 {
-        let _ = write!(line, ", skipped {}", plural(summary.files_skipped, "file"));
-    }
-    if let Some(elapsed) = summary.elapsed {
-        let _ = write!(line, " in {}", format_duration(elapsed));
-    }
-    line.push('.');
-    line
+        plural(summary.objects_checked, "object"),
+    )
 }
 
 fn plural(n: usize, noun: &str) -> String {

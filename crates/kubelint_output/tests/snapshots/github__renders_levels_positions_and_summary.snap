@@ -1,0 +1,8 @@
+---
+source: crates/kubelint_output/tests/github.rs
+expression: out
+---
+::warning file=dir/a%2Cb.yaml,line=2,col=10,endLine=2,endColumn=11,title=KL1004 duplicate-object::duplicate object: 100%25%0Ahelp: rename one of them
+::notice file=b.yaml,line=1,col=1,endLine=2,endColumn=1,title=KL3005::one replica
+::error title=KL9999::in a file that is not part of the run
+Found 1 error, 1 warning and 1 info. Checked 2 files and 2 objects.

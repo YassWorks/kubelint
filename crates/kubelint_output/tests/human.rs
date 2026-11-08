@@ -29,10 +29,7 @@ fn render(files: &[SourceFile], diagnostics: &[Diagnostic], summary: Summary) ->
 
 fn files() -> Vec<SourceFile> {
     vec![
-        SourceFile::new(
-            "deploy/web.yaml",
-            "# Web frontend: café\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: web\nspec:\n  template:\n    spec:\n      containers:\n      - name: web\n        image: nginx:1.27\n",
-        ),
+        SourceFile::new("deploy/web.yaml", include_str!("fixtures/web.yaml")),
         SourceFile::new(
             "deploy/copy.yaml",
             "kind: Deployment\r\nmetadata:\r\n  name: web\r\n",
