@@ -45,12 +45,10 @@ impl SourceFile {
         &self.path
     }
 
-    /// The full file text.
     pub fn text(&self) -> &str {
         &self.text
     }
 
-    /// The line index for [`SourceFile::text`].
     pub fn line_index(&self) -> &LineIndex {
         &self.line_index
     }
