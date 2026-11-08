@@ -94,6 +94,18 @@ impl<'a> PodSpec<'a> {
         self.node.get("securityContext")
     }
 
+    /// Whether the pod declares `spec.os.name: windows`. Some Linux security fields are
+    /// rejected for such pods.
+    ///
+    /// ```
+    /// let parse = kubelint_yaml::parse("kind: Pod\nspec:\n  os: {name: windows}\n");
+    /// let pod = kubelint_k8s::objects(&parse.documents[0])[0].pod_spec().unwrap();
+    /// assert!(pod.is_windows());
+    /// ```
+    pub fn is_windows(self) -> bool {
+        self.node.get_path(&["os", "name"]).and_then(Node::as_str) == Some("windows")
+    }
+
     /// Every container of the pod: `containers`, then `initContainers`, then
     /// `ephemeralContainers`, each in source order. Items that are not mappings are
     /// skipped.

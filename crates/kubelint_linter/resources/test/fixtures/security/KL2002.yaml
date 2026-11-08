@@ -1,0 +1,215 @@
+# Reported: no securityContext, an empty one, one without the field and a null value.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+      - name: empty
+        image: app:1.0
+        securityContext: {}
+      - name: other
+        image: app:1.0
+        securityContext:
+          runAsNonRoot: true
+      - name: unset
+        image: app:1.0
+        securityContext:
+          allowPrivilegeEscalation:
+---
+# Reported: set to true (also as a YAML 1.1 boolean), in init and ephemeral
+# containers, and containers without a name (the second is reported at its first key).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+spec:
+  initContainers:
+  - name: setup
+    image: busybox:1.36
+    securityContext: {allowPrivilegeEscalation: true}
+  containers:
+  - image: app:1.0
+    securityContext:
+      allowPrivilegeEscalation: yes
+  - image: app:1.0
+  ephemeralContainers:
+  - name: débogage
+    image: busybox:1.36
+---
+# Reported: a CronJob.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: report
+            image: report:2
+---
+# Reported: a DaemonSet, and `privileged: false` does not skip the check.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: agent
+spec:
+  selector:
+    matchLabels: {app: agent}
+  template:
+    metadata:
+      labels: {app: agent}
+    spec:
+      containers:
+      - {name: agent, image: agent:3, securityContext: {privileged: false}}
+---
+# Reported: a StatefulSet, with a capability other than SYS_ADMIN.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db
+  selector:
+    matchLabels: {app: db}
+  template:
+    metadata:
+      labels: {app: db}
+    spec:
+      containers:
+      - name: db
+        image: postgres:17
+        securityContext:
+          capabilities:
+            add: ["NET_BIND_SERVICE"]
+---
+# Reported: a Job.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - {name: migrate, image: app:1.0}
+---
+# Reported: a pod-level securityContext does not set it for the containers, and a
+# Linux pod is checked.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-level
+spec:
+  os:
+    name: linux
+  securityContext:
+    allowPrivilegeEscalation: false
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Not reported: set to false (also as `no`).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ok
+spec:
+  containers:
+  - name: a
+    image: app:1.0
+    securityContext:
+      allowPrivilegeEscalation: false
+  - name: b
+    image: app:1.0
+    securityContext: {allowPrivilegeEscalation: no}
+---
+# Not reported: a privileged container (KL2001 reports it).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: privileged
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    securityContext:
+      privileged: true
+---
+# Not reported: containers that add SYS_ADMIN, with or without the `CAP_` prefix.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sys-admin
+spec:
+  containers:
+  - name: a
+    image: app:1.0
+    securityContext:
+      capabilities:
+        add: ["SYS_ADMIN"]
+  - name: b
+    image: app:1.0
+    securityContext:
+      capabilities: {add: [NET_ADMIN, CAP_SYS_ADMIN]}
+---
+# Not reported: a quoted "true" or a number (schema problems).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: typed
+spec:
+  containers:
+  - name: a
+    image: app:1.0
+    securityContext:
+      allowPrivilegeEscalation: "true"
+  - name: b
+    image: app:1.0
+    securityContext:
+      allowPrivilegeEscalation: 0
+---
+# Not reported: a Windows pod, where the field is not allowed.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: windows
+spec:
+  os:
+    name: windows
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Not reported: a custom resource with a pod-like shape, and a ConfigMap.
+apiVersion: example.com/v1
+kind: Deployment
+metadata:
+  name: custom
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  key: value

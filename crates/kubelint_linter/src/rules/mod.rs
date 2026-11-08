@@ -29,4 +29,5 @@ pub static ALL: &[&dyn Rule] = &[
     &correctness::InvalidLabel,
     &correctness::DuplicateEnvName,
     &security::PrivilegedContainer,
+    &security::PrivilegeEscalationAllowed,
 ];

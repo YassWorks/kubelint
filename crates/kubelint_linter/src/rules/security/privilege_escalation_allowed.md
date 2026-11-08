@@ -1,0 +1,37 @@
+## What it does
+
+Reports a container in `containers`, `initContainers` or `ephemeralContainers` whose
+`securityContext.allowPrivilegeEscalation` is not `false`, either because it is `true`
+or because it is not set. Kubernetes has no pod-level default for this field, so every
+container must set it.
+
+Some containers are skipped because Kubernetes rejects `false` for them: privileged
+containers (KL2001 `privileged-container` reports those), containers that add the
+`SYS_ADMIN` capability, and containers of Windows pods (`spec.os.name: windows`).
+
+## Why it matters
+
+`allowPrivilegeEscalation` controls the Linux `no_new_privs` flag. When it is not
+`false`, which is the default, a process in the container can gain more privileges than
+it started with: a setuid binary such as `sudo` or `su` can turn a compromised
+unprivileged process into root inside the container. That is often the first step of a
+container escape. The `restricted` Pod Security Standard requires `false`, and almost
+no application needs anything else.
+
+## Example
+
+```yaml
+containers:
+- name: web
+  image: nginx:1.27
+```
+
+Use instead:
+
+```yaml
+containers:
+- name: web
+  image: nginx:1.27
+  securityContext:
+    allowPrivilegeEscalation: false
+```
