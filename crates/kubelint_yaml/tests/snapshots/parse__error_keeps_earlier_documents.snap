@@ -1,6 +1,6 @@
 ---
 source: crates/kubelint_yaml/tests/parse.rs
-expression: "dump(\"é: 1\\n---\\na: 1\\n- bad\\n\")"
+expression: "dump(include_str!(\"fixtures/parse/error_keeps_earlier_documents.yaml\"))"
 ---
 document 0..5
   mapping 0..5

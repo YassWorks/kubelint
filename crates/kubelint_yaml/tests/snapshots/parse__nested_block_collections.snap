@@ -1,6 +1,6 @@
 ---
 source: crates/kubelint_yaml/tests/parse.rs
-expression: "dump(\"é: 1\\nitems:\\n- x\\n- b: 1\\n  c: 2\\n\")"
+expression: "dump(include_str!(\"fixtures/parse/nested_block_collections.yaml\"))"
 ---
 document 0..30
   mapping 0..30

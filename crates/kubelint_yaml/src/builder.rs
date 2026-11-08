@@ -1,5 +1,3 @@
-//! Builds the span-preserving tree from `saphyr-parser` events.
-
 use std::collections::HashMap;
 
 use kubelint_source::{TextRange, TextSize};
@@ -8,17 +6,15 @@ use saphyr_parser::{Event, Parser, ScalarStyle as SaphyrStyle, Span};
 use crate::comments::{self, Comment};
 use crate::{Document, Entry, Node, NodeKind, Scalar, ScalarStyle};
 
-/// A YAML syntax error with the place it was found.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParseError {
     /// What went wrong, as reported by the parser.
     pub message: String,
-    /// Where it went wrong. Empty: it marks a position, not a span.
+    /// Always empty: it marks a position, not a span.
     pub range: TextRange,
 }
 
-/// The result of [`parse`]: every document that could be read, the syntax errors, and
-/// the comments.
+/// The result of [`parse`].
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Parse {
     /// Completed documents in source order.
@@ -26,8 +22,7 @@ pub struct Parse {
     /// Syntax errors in source order, at most one per broken document.
     pub errors: Vec<ParseError>,
     /// Comments in source order. Comments between a syntax error and the next document
-    /// marker are not reported, because the parser never told us which `#` there were
-    /// inside scalars.
+    /// marker are missing: there a `#` could be inside a scalar the parser never reported.
     pub comments: Vec<Comment>,
 }
 
@@ -152,7 +147,7 @@ impl ByteOffsets {
         Self { table, len }
     }
 
-    /// Byte offset of a character index. Out-of-range indices clamp to the end.
+    /// Out-of-range indices clamp to the end.
     fn get(&self, char_index: usize) -> TextSize {
         let byte = match &self.table {
             None => u32::try_from(char_index).unwrap_or(u32::MAX).min(self.len),
@@ -319,12 +314,10 @@ impl<'a> Builder<'a> {
         TextSize::new(u32::try_from(pos).unwrap_or(u32::MAX))
     }
 
-    /// The end of a quoted scalar starting at `start`: just past its closing quote.
-    ///
-    /// The parser's span for a quoted scalar runs on over trailing spaces and a trailing
-    /// comment (`'x' # c` spans to the end of the line), so the end is found here. Inside
-    /// single quotes `''` is an escaped quote; inside double quotes `\` escapes the next
-    /// character. Returns `None` if no closing quote is found.
+    /// Just past the closing quote of the quoted scalar starting at `start`, if any. The
+    /// parser's span runs on over trailing spaces and a trailing comment (`'x' # c` spans
+    /// to the end of the line). Inside single quotes `''` is an escaped quote; inside
+    /// double quotes `\` escapes the next character.
     fn closing_quote_end(&self, start: TextSize, style: SaphyrStyle) -> Option<TextSize> {
         let bytes = self.text.as_bytes();
         let quote = if style == SaphyrStyle::SingleQuoted {
@@ -373,8 +366,8 @@ impl<'a> Builder<'a> {
     }
 }
 
-/// Closes a collection. Flow collections span `[`..`]`; block collections span their
-/// children, because the parser reports empty spans for block starts and ends.
+/// Flow collections span `[`..`]`; block collections span their children, because the
+/// parser reports empty spans for block starts and ends.
 fn close(frame: Frame, end_marker: TextSize) -> (Node, usize) {
     let (flow, start, anchor, kind, child_range) = match frame {
         Frame::Seq {
@@ -383,7 +376,7 @@ fn close(frame: Frame, end_marker: TextSize) -> (Node, usize) {
             anchor,
             items,
         } => {
-            let r = cover(items.iter().map(|n| n.range));
+            let r = items.iter().map(|n| n.range).reduce(TextRange::cover);
             (flow, start, anchor, NodeKind::Sequence(items), r)
         }
         Frame::Map {
@@ -393,7 +386,10 @@ fn close(frame: Frame, end_marker: TextSize) -> (Node, usize) {
             entries,
             ..
         } => {
-            let r = cover(entries.iter().flat_map(|e| [e.key.range, e.value.range]));
+            let r = entries
+                .iter()
+                .flat_map(|e| [e.key.range, e.value.range])
+                .reduce(TextRange::cover);
             (flow, start, anchor, NodeKind::Mapping(entries), r)
         }
     };
@@ -403,10 +399,6 @@ fn close(frame: Frame, end_marker: TextSize) -> (Node, usize) {
         child_range.unwrap_or_else(|| TextRange::empty(start))
     };
     (Node { kind, range }, anchor)
-}
-
-fn cover(ranges: impl Iterator<Item = TextRange>) -> Option<TextRange> {
-    ranges.reduce(TextRange::cover)
 }
 
 fn convert_style(style: SaphyrStyle) -> ScalarStyle {

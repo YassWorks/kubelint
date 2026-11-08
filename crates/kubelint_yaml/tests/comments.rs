@@ -9,32 +9,31 @@ use kubelint_yaml::parse;
 fn comments(text: &str) -> String {
     let mut out = String::new();
     for c in parse(text).comments {
-        let (start, end) = (u32::from(c.range.start()), u32::from(c.range.end()));
-        let _ = writeln!(out, "{start}..{end} {:?}", &text[c.range]);
         assert_eq!(
             c.text,
             text[c.range][1..],
             "text is the range minus the `#`"
         );
+        let _ = writeln!(out, "{:?} {:?}", c.range, &text[c.range]);
     }
     out
 }
 
 #[test]
 fn whole_line_and_trailing_comments() {
-    let text = "# ünï\né: 1 # trailing\n  # indented\nb: 2\n";
+    let text = include_str!("fixtures/comments/whole_line_and_trailing_comments.yaml");
     insta::assert_snapshot!(comments(text));
 }
 
 #[test]
 fn hash_inside_quoted_scalars_is_not_a_comment() {
-    let text = "é: \"a #b\"\nc: 'd #e' # real\nf: \"g\n  #h\"\n";
+    let text = include_str!("fixtures/comments/hash_inside_quoted_scalars_is_not_a_comment.yaml");
     insta::assert_snapshot!(comments(text));
 }
 
 #[test]
 fn hash_inside_block_scalars_is_not_a_comment() {
-    let text = "é: | # header\n  #!/bin/sh\n  echo hi # not a comment\n\n  # still text\nf: > # folded\n  x # y\n# after\n";
+    let text = include_str!("fixtures/comments/hash_inside_block_scalars_is_not_a_comment.yaml");
     insta::assert_snapshot!(comments(text));
 }
 
@@ -46,7 +45,9 @@ fn hash_without_preceding_space_is_part_of_the_scalar() {
 
 #[test]
 fn comments_in_flow_collections_and_after_document_markers() {
-    let text = "--- # first\né: [1, # one\n  2]\n...\n# between\n---\nb: {c: d} # map\n";
+    let text = include_str!(
+        "fixtures/comments/comments_in_flow_collections_and_after_document_markers.yaml"
+    );
     insta::assert_snapshot!(comments(text));
 }
 
@@ -58,7 +59,8 @@ fn tab_before_hash_and_crlf_line_endings() {
 
 #[test]
 fn comments_after_a_syntax_error_are_not_reported() {
-    let text = "é: 1 # kept\n---\na: [b # lost?\nc: \"unterminated # dropped\n";
+    let text =
+        include_str!("fixtures/comments/comments_after_a_syntax_error_are_not_reported.yaml");
     let parse = parse(text);
     assert_eq!(parse.errors.len(), 1);
     insta::assert_snapshot!(comments(text));
@@ -73,6 +75,7 @@ fn empty_and_comment_only_files() {
 #[test]
 fn comments_resume_after_the_next_document_marker() {
     // The error is reported at the `---` line, so parsing resumes there.
-    let text = "a: 1 # kept\n---\nb: [1 # kept too\n--- # é kept\nc: 2 # kept\n";
+    let text =
+        include_str!("fixtures/comments/comments_resume_after_the_next_document_marker.yaml");
     insta::assert_snapshot!(comments(text));
 }

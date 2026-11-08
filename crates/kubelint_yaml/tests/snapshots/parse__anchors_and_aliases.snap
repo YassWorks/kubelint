@@ -1,6 +1,6 @@
 ---
 source: crates/kubelint_yaml/tests/parse.rs
-expression: "dump(\"é: &a x\\nb: *a\\nc: &m {k: v}\\nd: *m\\n\")"
+expression: "dump(include_str!(\"fixtures/parse/anchors_and_aliases.yaml\"))"
 ---
 document 0..29
   mapping 0..29

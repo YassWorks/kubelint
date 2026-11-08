@@ -1,11 +1,7 @@
-//! Comment extraction.
-//!
-//! `saphyr-parser` does not report comments, so they are found by scanning the text with
-//! the rule from `docs/architecture.md`: a `#` that starts a line or follows a space or
-//! tab, and is not inside any scalar's range, starts a comment that runs to the end of
-//! the line. YAML forbids `#` right after other characters from starting a comment
-//! (`a#b` is one plain scalar), and every `#` inside quotes or block scalars is covered
-//! by that scalar's range.
+//! `saphyr-parser` does not report comments, so they are found by scanning the text: a
+//! `#` that starts a line or follows a space or tab, and is not inside any scalar's range,
+//! starts a comment that runs to the end of the line. YAML never starts a comment right
+//! after another character (`a#b` is one plain scalar).
 
 use kubelint_source::{TextRange, TextSize};
 

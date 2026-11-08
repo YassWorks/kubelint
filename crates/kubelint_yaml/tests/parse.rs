@@ -1,25 +1,20 @@
 //! Snapshot tests of the builder. Every input contains non-ASCII text before the
 //! interesting nodes, so character-to-byte conversion is exercised.
 
-use std::fmt::Write as _;
-
-use kubelint_yaml::parse;
+use kubelint_yaml::{Document, parse};
 
 fn dump(text: &str) -> String {
     let parse = parse(text);
-    let mut out = String::new();
-    for doc in &parse.documents {
-        out.push_str(&doc.dump());
-    }
-    for err in &parse.errors {
-        let _ = writeln!(
-            out,
-            "error {:?} at {}",
-            err.message,
-            u32::from(err.range.start())
-        );
-    }
-    out
+    let errors = parse
+        .errors
+        .iter()
+        .map(|e| format!("error {:?} at {}\n", e.message, u32::from(e.range.start())));
+    parse
+        .documents
+        .iter()
+        .map(Document::dump)
+        .chain(errors)
+        .collect()
 }
 
 #[test]
@@ -29,7 +24,9 @@ fn block_mapping_with_non_ascii() {
 
 #[test]
 fn nested_block_collections() {
-    insta::assert_snapshot!(dump("é: 1\nitems:\n- x\n- b: 1\n  c: 2\n"));
+    insta::assert_snapshot!(dump(include_str!(
+        "fixtures/parse/nested_block_collections.yaml"
+    )));
 }
 
 #[test]
@@ -39,7 +36,7 @@ fn flow_collections() {
 
 #[test]
 fn block_scalars() {
-    insta::assert_snapshot!(dump("é: |\n  a\n  b\nf: >\n  c\n  d\n"));
+    insta::assert_snapshot!(dump(include_str!("fixtures/parse/block_scalars.yaml")));
 }
 
 #[test]
@@ -56,17 +53,22 @@ fn quoted_scalars_end_at_their_closing_quote() {
 
 #[test]
 fn missing_values_are_null() {
+    // `.editorconfig` would trim the trailing space after `-` in a fixture file.
     insta::assert_snapshot!(dump("é:\nb: ~\nc:\n- \n"));
 }
 
 #[test]
 fn anchors_and_aliases() {
-    insta::assert_snapshot!(dump("é: &a x\nb: *a\nc: &m {k: v}\nd: *m\n"));
+    insta::assert_snapshot!(dump(include_str!(
+        "fixtures/parse/anchors_and_aliases.yaml"
+    )));
 }
 
 #[test]
 fn multiple_documents_and_empty_ones() {
-    insta::assert_snapshot!(dump("# é\n---\na: 1\n---\n---\nb: 2\n"));
+    insta::assert_snapshot!(dump(include_str!(
+        "fixtures/parse/multiple_documents_and_empty_ones.yaml"
+    )));
 }
 
 #[test]
@@ -76,7 +78,9 @@ fn empty_input_has_no_documents() {
 
 #[test]
 fn error_keeps_earlier_documents() {
-    insta::assert_snapshot!(dump("é: 1\n---\na: 1\n- bad\n"));
+    insta::assert_snapshot!(dump(include_str!(
+        "fixtures/parse/error_keeps_earlier_documents.yaml"
+    )));
 }
 
 #[test]
@@ -92,21 +96,25 @@ fn error_position_is_a_byte_offset() {
 fn error_resumes_at_the_next_document_marker() {
     // The second and fourth documents are broken; `----` and `---x` are not markers, so
     // the fourth document runs until `--- # é` and recovery resumes there.
-    insta::assert_snapshot!(dump(
-        "a: 1\n---\nb: [1\nc: 2\n---\nd: é\n---\ne: 1\n- bad\n----\n---x\n--- # é\nf: 1\n"
-    ));
+    insta::assert_snapshot!(dump(include_str!(
+        "fixtures/parse/error_resumes_at_the_next_document_marker.yaml"
+    )));
 }
 
 #[test]
 fn error_in_the_last_document_stops_parsing() {
-    let parse = parse("a: 1\n---\nb: [1\nc: 2\n");
+    let parse = parse(include_str!(
+        "fixtures/parse/error_in_the_last_document_stops_parsing.yaml"
+    ));
     assert_eq!(parse.documents.len(), 1);
     assert_eq!(parse.errors.len(), 1);
 }
 
 #[test]
 fn every_broken_document_reports_one_error() {
-    let parse = parse("a: [\n---\nb: ]\n---\nc: 1\n");
+    let parse = parse(include_str!(
+        "fixtures/parse/every_broken_document_reports_one_error.yaml"
+    ));
     assert_eq!(parse.errors.len(), 2);
     assert_eq!(parse.documents.len(), 1);
     let starts: Vec<u32> = parse

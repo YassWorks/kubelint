@@ -1,0 +1,16 @@
+---
+source: crates/kubelint_yaml/tests/dump.rs
+expression: doc.dump()
+---
+document 0..28
+  mapping 0..27
+    entry
+      scalar Plain "name" 0..4
+      scalar DoubleQuoted "é" 6..9
+    entry
+      scalar Plain "ports" 10..15
+      sequence 17..21
+        scalar Plain "80" 18..20
+    entry
+      scalar Plain "none" 22..26
+      null 27..27

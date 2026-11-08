@@ -1,6 +1,6 @@
 ---
 source: crates/kubelint_yaml/tests/parse.rs
-expression: "dump(\"a: 1\\n---\\nb: [1\\nc: 2\\n---\\nd: é\\n---\\ne: 1\\n- bad\\n----\\n---x\\n--- # é\\nf: 1\\n\")"
+expression: "dump(include_str!(\"fixtures/parse/error_resumes_at_the_next_document_marker.yaml\"))"
 ---
 document 0..4
   mapping 0..4

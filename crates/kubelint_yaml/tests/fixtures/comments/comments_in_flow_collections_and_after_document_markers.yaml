@@ -1,0 +1,7 @@
+--- # first
+é: [1, # one
+  2]
+...
+# between
+---
+b: {c: d} # map

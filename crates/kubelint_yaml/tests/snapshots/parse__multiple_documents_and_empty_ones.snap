@@ -1,6 +1,6 @@
 ---
 source: crates/kubelint_yaml/tests/parse.rs
-expression: "dump(\"# é\\n---\\na: 1\\n---\\n---\\nb: 2\\n\")"
+expression: "dump(include_str!(\"fixtures/parse/multiple_documents_and_empty_ones.yaml\"))"
 ---
 document 5..13
   mapping 9..13

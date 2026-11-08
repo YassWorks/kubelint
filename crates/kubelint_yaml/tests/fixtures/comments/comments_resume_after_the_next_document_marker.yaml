@@ -1,0 +1,5 @@
+a: 1 # kept
+---
+b: [1 # kept too
+--- # é kept
+c: 2 # kept

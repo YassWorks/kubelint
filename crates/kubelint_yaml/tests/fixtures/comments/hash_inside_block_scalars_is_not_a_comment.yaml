@@ -1,0 +1,8 @@
+é: | # header
+  #!/bin/sh
+  echo hi # not a comment
+
+  # still text
+f: > # folded
+  x # y
+# after

@@ -1,6 +1,6 @@
 ---
 source: crates/kubelint_yaml/tests/parse.rs
-expression: "dump(\"é: |\\n  a\\n  b\\nf: >\\n  c\\n  d\\n\")"
+expression: "dump(include_str!(\"fixtures/parse/block_scalars.yaml\"))"
 ---
 document 0..27
   mapping 0..27
