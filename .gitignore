@@ -11,6 +11,7 @@
 *.swp
 .DS_Store
 
-# Personal Claude Code files; only the project skills are shared
+# Personal Claude Code files; only the project skills and settings are shared
 .claude/*
 !.claude/skills/
+!.claude/settings.json
