@@ -34,4 +34,5 @@ pub static ALL: &[&dyn Rule] = &[
     &security::HostNamespace,
     &security::HostPathVolume,
     &security::DangerousCapability,
+    &security::DockerSocketMount,
 ];

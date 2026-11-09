@@ -106,6 +106,11 @@ impl<'a> PodSpec<'a> {
         self.node.get_path(&["os", "name"]).and_then(Node::as_str) == Some("windows")
     }
 
+    /// The items of `volumes`, in source order.
+    pub fn volumes(self) -> impl Iterator<Item = &'a Node> {
+        self.node.get("volumes").into_iter().flat_map(Node::items)
+    }
+
     /// Every container of the pod: `containers`, then `initContainers`, then
     /// `ephemeralContainers`, each in source order. Items that are not mappings are
     /// skipped.

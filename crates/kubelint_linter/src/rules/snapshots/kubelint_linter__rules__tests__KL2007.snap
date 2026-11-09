@@ -1,0 +1,54 @@
+---
+source: crates/kubelint_linter/src/rules/tests.rs
+expression: check_fixture(rule)
+---
+error[KL2007]: volume `docker` mounts the container runtime socket `/var/run/docker.sock`
+  --> security/KL2007.yaml:15:7
+   |
+15 |       path: /var/run/docker.sock
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: remove the volume; to build images in the cluster, use a builder that needs no daemon, such as BuildKit in rootless mode or Kaniko
+
+error[KL2007]: volume `containerd` mounts the container runtime socket `/run/containerd/containerd.sock`
+  --> security/KL2007.yaml:34:39
+   |
+34 |       - {name: containerd, hostPath: {path: /run/containerd/containerd.sock}}
+   |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: remove the volume; to build images in the cluster, use a builder that needs no daemon, such as BuildKit in rootless mode or Kaniko
+
+error[KL2007]: volume mounts the container runtime socket `/var/run/crio/crio.sock/`
+  --> security/KL2007.yaml:35:20
+   |
+35 |       - hostPath: {path: /var/run/crio/crio.sock/}
+   |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: remove the volume; to build images in the cluster, use a builder that needs no daemon, such as BuildKit in rootless mode or Kaniko
+
+error[KL2007]: volume `cri` mounts the container runtime socket `/run/cri-dockerd.sock`
+  --> security/KL2007.yaml:52:32
+   |
+52 |       - {name: cri, hostPath: {path: /run/cri-dockerd.sock}}
+   |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: remove the volume; to build images in the cluster, use a builder that needs no daemon, such as BuildKit in rootless mode or Kaniko
+
+error[KL2007]: volume `podman` mounts the container runtime socket `/run/podman/podman.sock`
+  --> security/KL2007.yaml:70:35
+   |
+70 |       - {name: podman, hostPath: {path: /run/podman/podman.sock}}
+   |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: remove the volume; to build images in the cluster, use a builder that needs no daemon, such as BuildKit in rootless mode or Kaniko
+
+error[KL2007]: volume `docker` mounts the container runtime socket `/var/run/docker.sock`
+  --> security/KL2007.yaml:84:35
+   |
+84 |       - {name: docker, hostPath: {path: /var/run/docker.sock}}
+   |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: remove the volume; to build images in the cluster, use a builder that needs no daemon, such as BuildKit in rootless mode or Kaniko
+
+error[KL2007]: volume `docker` mounts the container runtime socket `/var/snap/docker/current/run/docker.sock`
+   --> security/KL2007.yaml:101:39
+    |
+101 |           - {name: docker, hostPath: {path: /var/snap/docker/current/run/docker.sock}}
+    |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: remove the volume; to build images in the cluster, use a builder that needs no daemon, such as BuildKit in rootless mode or Kaniko
+
+7 finding(s) in 9 object(s)

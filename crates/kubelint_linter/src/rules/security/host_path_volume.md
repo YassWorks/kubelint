@@ -1,7 +1,7 @@
 ## What it does
 
 Reports every `hostPath` volume in a Pod and in the pod template of every workload
-kind.
+kind, except a container runtime socket, which KL2007 `docker-socket-mount` reports.
 
 ## Why it matters
 
