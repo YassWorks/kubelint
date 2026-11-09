@@ -31,4 +31,5 @@ pub static ALL: &[&dyn Rule] = &[
     &security::PrivilegedContainer,
     &security::PrivilegeEscalationAllowed,
     &security::RunAsRoot,
+    &security::HostNamespace,
 ];

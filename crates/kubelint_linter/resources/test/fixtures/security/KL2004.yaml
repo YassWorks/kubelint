@@ -1,0 +1,152 @@
+# Reported: all three fields in a Pod.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: node-debug
+spec:
+  hostNetwork: true
+  hostPID: true
+  hostIPC: true
+  containers:
+  - name: shell
+    image: busybox:1.36
+---
+# Reported: a DaemonSet with `hostNetwork`, a YAML 1.1 boolean and non-ASCII text.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: agent
+spec:
+  selector:
+    matchLabels: {app: agent}
+  template:
+    metadata:
+      labels: {app: agent, équipe: réseau}
+    spec:
+      hostNetwork: yes
+      containers:
+      - name: agent
+        image: agent:3
+---
+# Reported: a CronJob in flow style.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec: {hostPID: True, restartPolicy: OnFailure, containers: [{name: report, image: report:2}]}
+---
+# Reported: a Deployment.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      hostIPC: true
+      containers:
+      - name: web
+        image: nginx:1.27
+---
+# Reported: a StatefulSet.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db
+  selector:
+    matchLabels: {app: db}
+  template:
+    metadata:
+      labels: {app: db}
+    spec:
+      hostNetwork: true
+      containers:
+      - {name: db, image: postgres:17}
+---
+# Reported: a Job.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+spec:
+  template:
+    spec:
+      hostPID: true
+      restartPolicy: Never
+      containers:
+      - {name: migrate, image: app:1.0}
+---
+# Not reported: the fields set to false, and a pod without them.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ok
+spec:
+  hostNetwork: false
+  hostPID: false
+  hostIPC: false
+  shareProcessNamespace: true
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Not reported: a quoted "true", a number and a null value (schema problems or the
+# default, false).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: typed
+spec:
+  hostNetwork: "true"
+  hostPID: 1
+  hostIPC:
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Not reported: the fields inside a container are not Kubernetes fields.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: container-level
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    hostNetwork: true
+    securityContext:
+      hostPID: true
+---
+# Not reported: a custom resource with a pod-like shape.
+apiVersion: example.com/v1
+kind: Deployment
+metadata:
+  name: custom
+spec:
+  template:
+    spec:
+      hostNetwork: true
+      containers:
+      - name: app
+        image: app:1.0
+---
+# Not reported: a ConfigMap is not a workload.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: settings
+data:
+  hostNetwork: "true"
+spec:
+  hostNetwork: true

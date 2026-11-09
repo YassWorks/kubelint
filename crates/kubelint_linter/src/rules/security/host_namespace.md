@@ -1,0 +1,43 @@
+## What it does
+
+Reports a pod spec that sets `hostNetwork`, `hostPID` or `hostIPC` to `true`, in a Pod
+and in the pod template of every workload kind.
+
+## Why it matters
+
+Each field removes one wall between the pod and its node:
+
+| Field | What the pod gets |
+| --- | --- |
+| `hostNetwork` | The node's network interfaces. It can bind any port of the node, reach services listening only on `localhost` and sniff the node's traffic. |
+| `hostPID` | Every process on the node. It can read their environment and command lines (where secrets often live) and, with enough privileges, signal or trace them. |
+| `hostIPC` | The node's shared memory and message queues, which other processes use to pass data. |
+
+The `baseline` Pod Security Standard forbids all three. Some node agents need one of
+them (a CNI plugin or a node exporter often needs `hostNetwork`). For those, silence
+the finding for that object and say why.
+
+## Example
+
+```yaml
+spec:
+  hostNetwork: true
+  hostPID: true
+  containers:
+  - name: web
+    image: nginx:1.27
+```
+
+Use instead:
+
+```yaml
+spec:
+  containers:
+  - name: web
+    image: nginx:1.27
+    ports:
+    - containerPort: 80
+```
+
+and expose the port with a Service. To let the containers of one pod see each other's
+processes, use `shareProcessNamespace: true` instead of `hostPID`.
