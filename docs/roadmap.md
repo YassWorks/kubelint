@@ -61,7 +61,7 @@ Security rules:
   `kubelint_k8s` that merges the pod and container `securityContext`.
 - [x] KL2004 `host-namespace`
 - [x] KL2005 `host-path-volume`
-- [ ] KL2006 `dangerous-capability`
+- [x] KL2006 `dangerous-capability`
 - [ ] KL2007 `docker-socket-mount`: a `hostPath` volume whose path is a container
   runtime socket. KL2005 then skips the volumes KL2007 reports, so one mount gets one
   finding.

@@ -33,4 +33,5 @@ pub static ALL: &[&dyn Rule] = &[
     &security::RunAsRoot,
     &security::HostNamespace,
     &security::HostPathVolume,
+    &security::DangerousCapability,
 ];
