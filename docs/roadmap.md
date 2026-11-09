@@ -60,9 +60,11 @@ Security rules:
 - [x] KL2003 `run-as-root`: container settings override pod settings. Add a helper in
   `kubelint_k8s` that merges the pod and container `securityContext`.
 - [x] KL2004 `host-namespace`
-- [ ] KL2005 `host-path-volume`
+- [x] KL2005 `host-path-volume`
 - [ ] KL2006 `dangerous-capability`
-- [ ] KL2007 `docker-socket-mount`
+- [ ] KL2007 `docker-socket-mount`: a `hostPath` volume whose path is a container
+  runtime socket. KL2005 then skips the volumes KL2007 reports, so one mount gets one
+  finding.
 - [ ] KL2008 `secret-in-env-literal`
 - [ ] KL2009 `writable-root-filesystem` (off by default)
 

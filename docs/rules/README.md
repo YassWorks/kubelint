@@ -81,7 +81,7 @@ and those references must stay valid and readable across releases.
 | KL2002 | `privilege-escalation-allowed` | on | warning | implemented | M2 | `allowPrivilegeEscalation` is not set to `false`. |
 | KL2003 | `run-as-root` | on | warning | implemented | M2 | The container may run as root (`runAsNonRoot` not true, or `runAsUser: 0`), honoring pod-level defaults. |
 | KL2004 | `host-namespace` | on | warning | implemented | M2 | `hostNetwork`, `hostPID` or `hostIPC` is enabled. |
-| KL2005 | `host-path-volume` | on | warning | planned | M2 | A `hostPath` volume exposes the node's filesystem. |
+| KL2005 | `host-path-volume` | on | warning | implemented | M2 | A `hostPath` volume exposes the node's filesystem. |
 | KL2006 | `dangerous-capability` | on | warning | planned | M2 | Adds Linux capabilities like `SYS_ADMIN`, `NET_ADMIN` or `ALL`. |
 | KL2007 | `docker-socket-mount` | on | error | planned | M2 | Mounts the container runtime socket (`docker.sock`, `containerd.sock`). |
 | KL2008 | `secret-in-env-literal` | on | warning | planned | M2 | An env var whose name looks secret (`PASSWORD`, `TOKEN`, `API_KEY`...) has a literal value instead of `valueFrom.secretKeyRef`. |
