@@ -296,6 +296,10 @@ Traps earlier runs fell into. Add new ones as you find them.
 - `Node::is_null` is true only for a missing value (`key:`). Kubernetes also reads
   plain scalars such as `~` or `null` (not quoted ones) as null: use
   `Node::is_kubernetes_null` when a null field falls back to a default.
+- GitGuardian scans every PR, and its check must pass too. Fake secrets in fixtures
+  and snapshots can trip it (`POSTGRES_PASSWORD: postgres` did). Use values that read
+  as placeholders (`placeholder`, `changeme`), and never add an ignore file to get
+  green.
 
 ## Keeping this playbook healthy
 
