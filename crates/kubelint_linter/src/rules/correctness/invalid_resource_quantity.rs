@@ -52,7 +52,7 @@ impl Rule for InvalidResourceQuantity {
             }
             push_requirements(&mut lists, pod.node().get("resources"));
             lists.extend(pod.node().get("overhead"));
-            for volume in pod.node().get("volumes").into_iter().flat_map(Node::items) {
+            for volume in pod.volumes() {
                 if let Some(size) = volume.get_path(&["emptyDir", "sizeLimit"]) {
                     single.push((size, "sizeLimit"));
                 }

@@ -105,6 +105,30 @@ spec:
           volumes:
           - {name: out, hostPath: {path: /tmp/report}}
 ---
+# Reported: a directory that holds a runtime socket (KL2007 does not report it).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: run
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+  volumes:
+  - {name: run, hostPath: {path: /var/run}}
+---
+# Not reported: a container runtime socket (KL2007 reports it).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: socket
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+  volumes:
+  - {name: docker, hostPath: {path: /var/run/docker.sock}}
+---
 # Not reported: other volume types.
 apiVersion: v1
 kind: Pod

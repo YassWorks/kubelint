@@ -62,7 +62,7 @@ Security rules:
 - [x] KL2004 `host-namespace`
 - [x] KL2005 `host-path-volume`
 - [x] KL2006 `dangerous-capability`
-- [ ] KL2007 `docker-socket-mount`: a `hostPath` volume whose path is a container
+- [x] KL2007 `docker-socket-mount`: a `hostPath` volume whose path is a container
   runtime socket. KL2005 then skips the volumes KL2007 reports, so one mount gets one
   finding.
 - [ ] KL2008 `secret-in-env-literal`
@@ -143,6 +143,8 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   pod) gets both warnings, which is common in typical manifests. Measure their noise
   during the M3 real-world validation and decide whether either should be off by
   default.
+- KL2007 reports a socket file only. A `hostPath` on a directory that holds one
+  (`/var/run`, `/run/containerd`) gets the KL2005 warning, not the KL2007 error.
 
 ## Rule ideas
 

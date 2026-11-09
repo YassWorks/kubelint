@@ -1,0 +1,147 @@
+# Reported: the Docker socket in a Pod.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: build
+spec:
+  containers:
+  - name: build
+    image: docker:27
+    volumeMounts:
+    - {name: docker, mountPath: /var/run/docker.sock}
+  volumes:
+  - name: docker
+    hostPath:
+      path: /var/run/docker.sock
+      type: Socket
+---
+# Reported: containerd and CRI-O sockets in a DaemonSet, flow style, a trailing slash,
+# non-ASCII text and a volume without a name.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: agent
+spec:
+  selector:
+    matchLabels: {app: agent}
+  template:
+    metadata:
+      labels: {app: agent, équipe: sécurité}
+    spec:
+      containers:
+      - {name: agent, image: agent:3}
+      volumes:
+      - {name: containerd, hostPath: {path: /run/containerd/containerd.sock}}
+      - hostPath: {path: /var/run/crio/crio.sock/}
+---
+# Reported: cri-dockerd in a Deployment.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      containers:
+      - {name: web, image: nginx:1.27}
+      volumes:
+      - {name: cri, hostPath: {path: /run/cri-dockerd.sock}}
+---
+# Reported: Podman in a StatefulSet.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db
+  selector:
+    matchLabels: {app: db}
+  template:
+    metadata:
+      labels: {app: db}
+    spec:
+      containers:
+      - {name: db, image: postgres:17}
+      volumes:
+      - {name: podman, hostPath: {path: /run/podman/podman.sock}}
+---
+# Reported: a Job.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ci
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - {name: ci, image: docker:27}
+      volumes:
+      - {name: docker, hostPath: {path: /var/run/docker.sock}}
+---
+# Reported: a CronJob with the socket in a custom location.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: prune
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - {name: prune, image: docker:27}
+          volumes:
+          - {name: docker, hostPath: {path: /var/snap/docker/current/run/docker.sock}}
+---
+# Not reported: other hostPath volumes, a directory that holds a socket, a file name
+# that only contains a socket name, and other volume types.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ok
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+  volumes:
+  - {name: logs, hostPath: {path: /var/log}}
+  - {name: run, hostPath: {path: /var/run}}
+  - {name: backup, hostPath: {path: /srv/docker.sock.bak}}
+  - {name: scratch, emptyDir: {}}
+---
+# Not reported: a non-string path, a hostPath without a path, a hostPath that is not
+# a mapping, and a socket path in `emptyDir`.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: typed
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+  volumes:
+  - {name: a, hostPath: {path: [/var/run/docker.sock]}}
+  - {name: b, hostPath: /var/run/docker.sock}
+  - {name: d, hostPath: {type: Socket}}
+  - {name: c, emptyDir: {path: /var/run/docker.sock}}
+---
+# Not reported: a custom resource with a pod-like shape.
+apiVersion: example.com/v1
+kind: Deployment
+metadata:
+  name: custom
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+      volumes:
+      - {name: docker, hostPath: {path: /var/run/docker.sock}}

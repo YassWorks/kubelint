@@ -58,4 +58,11 @@ warning[KL2005]: volume `out` mounts `/tmp/report` from the node
     |                                    ^^^^^^^^^^^^^^^^^
   = help: use a `configMap`, `secret`, `emptyDir` or `persistentVolumeClaim` volume instead
 
-8 finding(s) in 10 object(s)
+warning[KL2005]: volume `run` mounts `/var/run` from the node
+   --> security/KL2005.yaml:118:28
+    |
+118 |   - {name: run, hostPath: {path: /var/run}}
+    |                            ^^^^^^^^^^^^^^
+  = help: use a `configMap`, `secret`, `emptyDir` or `persistentVolumeClaim` volume instead
+
+9 finding(s) in 12 object(s)

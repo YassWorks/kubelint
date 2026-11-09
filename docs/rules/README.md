@@ -83,7 +83,7 @@ and those references must stay valid and readable across releases.
 | KL2004 | `host-namespace` | on | warning | implemented | M2 | `hostNetwork`, `hostPID` or `hostIPC` is enabled. |
 | KL2005 | `host-path-volume` | on | warning | implemented | M2 | A `hostPath` volume exposes the node's filesystem. |
 | KL2006 | `dangerous-capability` | on | warning | implemented | M2 | Adds a Linux capability outside the `baseline` Pod Security Standard list, like `SYS_ADMIN`, `NET_ADMIN` or `ALL`. |
-| KL2007 | `docker-socket-mount` | on | error | planned | M2 | Mounts the container runtime socket (`docker.sock`, `containerd.sock`). |
+| KL2007 | `docker-socket-mount` | on | error | implemented | M2 | A `hostPath` volume mounts the container runtime socket (`docker.sock`, `containerd.sock`, `crio.sock`...). |
 | KL2008 | `secret-in-env-literal` | on | warning | planned | M2 | An env var whose name looks secret (`PASSWORD`, `TOKEN`, `API_KEY`...) has a literal value instead of `valueFrom.secretKeyRef`. |
 | KL2009 | `writable-root-filesystem` | off | warning | planned | M2 | `readOnlyRootFilesystem` is not `true`. |
 

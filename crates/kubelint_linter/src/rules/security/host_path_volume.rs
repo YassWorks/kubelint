@@ -1,12 +1,12 @@
 //! KL2005 `host-path-volume`.
 
 use kubelint_diagnostics::Severity;
-use kubelint_yaml::Node;
 
+use super::HostPathMount;
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
-/// Reports every pod volume of type `hostPath`. A `hostPath` that is not a mapping is a
-/// schema problem.
+/// Reports every pod volume of type `hostPath`, except the container runtime sockets
+/// KL2007 reports.
 pub struct HostPathVolume;
 
 static META: RuleMeta = RuleMeta {
@@ -28,27 +28,12 @@ impl Rule for HostPathVolume {
         let Some(pod) = cx.object().pod_spec() else {
             return;
         };
-        let volumes = pod.node().get("volumes").into_iter().flat_map(Node::items);
-        for volume in volumes {
-            let Some(host_path) = volume
-                .get_entry("hostPath")
-                .filter(|entry| entry.value.as_mapping().is_some())
-            else {
-                continue;
+        for mount in HostPathMount::all(pod).filter(|mount| mount.runtime_socket().is_none()) {
+            let message = match mount.path() {
+                Some(path) => format!("{} mounts `{path}` from the node", mount.subject()),
+                None => format!("{} mounts a path from the node", mount.subject()),
             };
-            let subject = match volume.get("name").and_then(Node::as_str) {
-                Some(name) => format!("volume `{name}`"),
-                None => "volume".to_owned(),
-            };
-            let path = host_path.value.get_entry("path");
-            let message = match path.and_then(|entry| entry.value.as_str()) {
-                Some(path) => format!("{subject} mounts `{path}` from the node"),
-                None => format!("{subject} mounts a path from the node"),
-            };
-            let range = path.map_or(host_path.key.range, |entry| {
-                entry.key.range.cover(entry.value.range)
-            });
-            cx.report(cx.diagnostic(range, message).with_help(
+            cx.report(cx.diagnostic(mount.range(), message).with_help(
                 "use a `configMap`, `secret`, `emptyDir` or `persistentVolumeClaim` volume \
                  instead",
             ));
