@@ -32,4 +32,5 @@ pub static ALL: &[&dyn Rule] = &[
     &security::PrivilegeEscalationAllowed,
     &security::RunAsRoot,
     &security::HostNamespace,
+    &security::HostPathVolume,
 ];

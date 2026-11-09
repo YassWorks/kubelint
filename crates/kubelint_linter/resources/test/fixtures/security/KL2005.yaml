@@ -1,0 +1,156 @@
+# Reported: a hostPath volume in a Pod, and one without a `path`.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    volumeMounts:
+    - {name: data, mountPath: /data}
+  volumes:
+  - name: data
+    hostPath:
+      path: /srv/app-data
+      type: Directory
+  - name: broken
+    hostPath: {}
+---
+# Reported: a DaemonSet with a read only mount, flow style, non-ASCII text and a
+# volume without a name.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: logs
+spec:
+  selector:
+    matchLabels: {app: logs}
+  template:
+    metadata:
+      labels: {app: logs}
+    spec:
+      containers:
+      - name: collector
+        image: collector:2
+        volumeMounts:
+        - {name: varlog, mountPath: /var/log, readOnly: true}
+      volumes:
+      - {name: varlog, hostPath: {path: /var/log}}
+      - hostPath: {path: /données}
+---
+# Reported: a Deployment.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      containers:
+      - {name: web, image: nginx:1.27}
+      volumes:
+      - {name: etc, hostPath: {path: /etc}}
+---
+# Reported: a StatefulSet.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db
+  selector:
+    matchLabels: {app: db}
+  template:
+    metadata:
+      labels: {app: db}
+    spec:
+      containers:
+      - {name: db, image: postgres:17}
+      volumes:
+      - {name: pgdata, hostPath: {path: /mnt/pg}}
+---
+# Reported: a Job.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - {name: migrate, image: app:1.0}
+      volumes:
+      - {name: root, hostPath: {path: /}}
+---
+# Reported: a CronJob.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - {name: report, image: report:2}
+          volumes:
+          - {name: out, hostPath: {path: /tmp/report}}
+---
+# Not reported: other volume types.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ok
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+  volumes:
+  - {name: config, configMap: {name: app-config}}
+  - {name: scratch, emptyDir: {}}
+  - {name: data, persistentVolumeClaim: {claimName: data}}
+---
+# Not reported: a hostPath that is not a mapping (a schema problem).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: typed
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+  volumes:
+  - {name: a, hostPath: /srv}
+  - {name: b, hostPath:}
+---
+# Not reported: a custom resource with a pod-like shape.
+apiVersion: example.com/v1
+kind: Deployment
+metadata:
+  name: custom
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+      volumes:
+      - {name: data, hostPath: {path: /srv}}
+---
+# Not reported: a ConfigMap is not a workload.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: settings
+spec:
+  volumes:
+  - {name: data, hostPath: {path: /srv}}
