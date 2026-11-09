@@ -1,0 +1,172 @@
+# Reported: literal passwords and tokens in a Deployment.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+        env:
+        - name: DB_PASSWORD
+          value: hunter2
+        - name: GITHUB_TOKEN
+          value: "ghp_example"
+        - name: AWS_SECRET_ACCESS_KEY
+          value: 'abc/def'
+---
+# Reported: lower case, `-` and `.` separators, camel case, two references around
+# a literal, flow style, non-ASCII values, a block scalar, init and ephemeral
+# containers, and a container without a name.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+spec:
+  initContainers:
+  - name: setup
+    image: busybox:1.36
+    env: [{name: api-key, value: clé-secrète}]
+  containers:
+  - image: app:1.0
+    env:
+    - name: smtp.password
+      value: mot-de-passe
+    - name: clientSecret
+      value: |
+        s3cr3t
+    - {name: awsSecretKey, value: abc}
+    - {name: privateKey, value: "-----BEGIN KEY-----"}
+    - {name: API_TOKEN, value: "$(PREFIX)hunter2$(SUFFIX)"}
+  ephemeralContainers:
+  - name: débogage
+    image: busybox:1.36
+    env:
+    - {name: SERVICE_CREDENTIALS, value: "user:pass"}
+---
+# Reported: a DaemonSet.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: agent
+spec:
+  selector:
+    matchLabels: {app: agent}
+  template:
+    metadata:
+      labels: {app: agent}
+    spec:
+      containers:
+      - {name: agent, image: agent:3, env: [{name: AGENT_TOKEN, value: t0k3n}]}
+---
+# Reported: a StatefulSet.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db
+  selector:
+    matchLabels: {app: db}
+  template:
+    metadata:
+      labels: {app: db}
+    spec:
+      containers:
+      - {name: db, image: postgres:17, env: [{name: POSTGRES_PASSWORD, value: placeholder}]}
+---
+# Reported: a Job.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - {name: migrate, image: app:1.0, env: [{name: JWT_SECRET, value: changeme}]}
+---
+# Reported: a CronJob.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - {name: report, image: report:2, env: [{name: SLACK_API_KEY, value: xoxb-1}]}
+---
+# Not reported: values from a Secret, empty and whitespace-only values, a `$(VAR)` or
+# `${VAR}` reference, names with a secret word that is not at the end, other names, an
+# entry without a `value` and one without a `name`.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ok
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    env:
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef: {name: app-db, key: password}
+    - {name: API_TOKEN, value: ""}
+    - {name: ADMIN_PASSWORD, value: "  "}
+    - {name: API_TOKEN, value: $(TOKEN_FROM_SECRET)}
+    - {name: API_TOKEN, value: "${API_TOKEN}"}
+    - {name: TOKEN_URL, value: https://auth.example.com/token}
+    - {name: PASSWORD_FILE, value: /run/secrets/password}
+    - {name: AWS_ACCESS_KEY_ID, value: AKIAEXAMPLE}
+    - {name: SECRET_NAME, value: app-db}
+    - {name: LOG_LEVEL, value: debug}
+    - {name: DB_PASSWORD}
+    - value: hunter2
+---
+# Not reported: non-string values (KL1009 reports them) and a null value.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: typed
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    env:
+    - {name: PIN_PASSWORD, value: 1234}
+    - {name: USE_TOKEN, value: true}
+    - {name: DB_PASSWORD, value: ~}
+    - {name: DB_PASSWORD, value: [a]}
+---
+# Not reported: a custom resource with a pod-like shape.
+apiVersion: example.com/v1
+kind: Deployment
+metadata:
+  name: custom
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+        env: [{name: DB_PASSWORD, value: hunter2}]
+---
+# Not reported: a ConfigMap is not a workload.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: settings
+data:
+  DB_PASSWORD: hunter2
