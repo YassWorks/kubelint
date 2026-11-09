@@ -1,0 +1,61 @@
+---
+source: crates/kubelint_linter/src/rules/tests.rs
+expression: check_fixture(rule)
+---
+warning[KL2004]: the pod shares the node's network namespace (`hostNetwork`)
+ --> security/KL2004.yaml:7:3
+  |
+7 |   hostNetwork: true
+  |   ^^^^^^^^^^^^^^^^^
+  = help: remove `hostNetwork` and reach the pod through a Service
+
+warning[KL2004]: the pod shares the node's process namespace (`hostPID`)
+ --> security/KL2004.yaml:8:3
+  |
+8 |   hostPID: true
+  |   ^^^^^^^^^^^^^
+  = help: remove `hostPID`; to share processes between the containers of one pod, set `shareProcessNamespace: true`
+
+warning[KL2004]: the pod shares the node's IPC namespace (`hostIPC`)
+ --> security/KL2004.yaml:9:3
+  |
+9 |   hostIPC: true
+  |   ^^^^^^^^^^^^^
+  = help: remove `hostIPC`; the containers of one pod already share an IPC namespace
+
+warning[KL2004]: the pod shares the node's network namespace (`hostNetwork`)
+  --> security/KL2004.yaml:26:7
+   |
+26 |       hostNetwork: yes
+   |       ^^^^^^^^^^^^^^^^
+  = help: remove `hostNetwork` and reach the pod through a Service
+
+warning[KL2004]: the pod shares the node's process namespace (`hostPID`)
+  --> security/KL2004.yaml:41:16
+   |
+41 |         spec: {hostPID: True, restartPolicy: OnFailure, containers: [{name: report, image: report:2}]}
+   |                ^^^^^^^^^^^^^
+  = help: remove `hostPID`; to share processes between the containers of one pod, set `shareProcessNamespace: true`
+
+warning[KL2004]: the pod shares the node's IPC namespace (`hostIPC`)
+  --> security/KL2004.yaml:55:7
+   |
+55 |       hostIPC: true
+   |       ^^^^^^^^^^^^^
+  = help: remove `hostIPC`; the containers of one pod already share an IPC namespace
+
+warning[KL2004]: the pod shares the node's network namespace (`hostNetwork`)
+  --> security/KL2004.yaml:73:7
+   |
+73 |       hostNetwork: true
+   |       ^^^^^^^^^^^^^^^^^
+  = help: remove `hostNetwork` and reach the pod through a Service
+
+warning[KL2004]: the pod shares the node's process namespace (`hostPID`)
+  --> security/KL2004.yaml:85:7
+   |
+85 |       hostPID: true
+   |       ^^^^^^^^^^^^^
+  = help: remove `hostPID`; to share processes between the containers of one pod, set `shareProcessNamespace: true`
+
+8 finding(s) in 11 object(s)

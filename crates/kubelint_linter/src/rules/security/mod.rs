@@ -1,9 +1,11 @@
 //! `KL2xxx`: settings that weaken the isolation between a container and its node.
 
+mod host_namespace;
 mod privilege_escalation_allowed;
 mod privileged_container;
 mod run_as_root;
 
+pub use host_namespace::HostNamespace;
 pub use privilege_escalation_allowed::PrivilegeEscalationAllowed;
 pub use privileged_container::PrivilegedContainer;
 pub use run_as_root::RunAsRoot;
