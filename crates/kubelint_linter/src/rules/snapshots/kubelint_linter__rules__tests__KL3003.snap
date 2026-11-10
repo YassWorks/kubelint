@@ -1,0 +1,68 @@
+---
+source: crates/kubelint_linter/src/rules/tests.rs
+expression: check_fixture(rule)
+---
+warning[KL3003]: image `nginx` has no tag, so it pulls `latest`
+  --> reliability/KL3003.yaml:16:16
+   |
+16 |         image: nginx
+   |                ^^^^^
+  = help: pin a version tag, such as `nginx:1.2.3`, or a digest, such as `nginx@sha256:<digest>`
+
+warning[KL3003]: image `nginx:latest` uses the `latest` tag
+  --> reliability/KL3003.yaml:18:16
+   |
+18 |         image: nginx:latest
+   |                ^^^^^^^^^^^^
+  = help: pin a version tag, such as `nginx:1.2.3`, or a digest, such as `nginx@sha256:<digest>`
+
+warning[KL3003]: image `localhost:5000/team/app` has no tag, so it pulls `latest`
+  --> reliability/KL3003.yaml:20:16
+   |
+20 |         image: localhost:5000/team/app
+   |                ^^^^^^^^^^^^^^^^^^^^^^^
+  = help: pin a version tag, such as `localhost:5000/team/app:1.2.3`, or a digest, such as `localhost:5000/team/app@sha256:<digest>`
+
+warning[KL3003]: image `ghcr.io/org/app:latest` uses the `latest` tag
+  --> reliability/KL3003.yaml:22:16
+   |
+22 |         image: "ghcr.io/org/app:latest"
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: pin a version tag, such as `ghcr.io/org/app:1.2.3`, or a digest, such as `ghcr.io/org/app@sha256:<digest>`
+
+warning[KL3003]: image `Registry.Example.com/app` has no tag, so it pulls `latest`
+  --> reliability/KL3003.yaml:24:16
+   |
+24 |         image: Registry.Example.com/app
+   |                ^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: pin a version tag, such as `Registry.Example.com/app:1.2.3`, or a digest, such as `Registry.Example.com/app@sha256:<digest>`
+
+warning[KL3003]: image `busybox` has no tag, so it pulls `latest`
+  --> reliability/KL3003.yaml:35:12
+   |
+35 |     image: busybox
+   |            ^^^^^^^
+  = help: pin a version tag, such as `busybox:1.2.3`, or a digest, such as `busybox@sha256:<digest>`
+
+warning[KL3003]: image `registry.example.com/team/app:latest` uses the `latest` tag
+  --> reliability/KL3003.yaml:37:12
+   |
+37 |   - image: registry.example.com/team/app:latest
+   |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: pin a version tag, such as `registry.example.com/team/app:1.2.3`, or a digest, such as `registry.example.com/team/app@sha256:<digest>`
+
+warning[KL3003]: image `busybox:latest` uses the `latest` tag
+  --> reliability/KL3003.yaml:40:12
+   |
+40 |     image: busybox:latest
+   |            ^^^^^^^^^^^^^^
+  = help: pin a version tag, such as `busybox:1.2.3`, or a digest, such as `busybox@sha256:<digest>`
+
+warning[KL3003]: image `report` has no tag, so it pulls `latest`
+  --> reliability/KL3003.yaml:56:20
+   |
+56 |             image: report
+   |                    ^^^^^^
+  = help: pin a version tag, such as `report:1.2.3`, or a digest, such as `report@sha256:<digest>`
+
+9 finding(s) in 8 object(s)

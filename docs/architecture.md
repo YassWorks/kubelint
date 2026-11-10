@@ -51,7 +51,7 @@ All crates live in `crates/` and are named `kubelint_*` (the CLI binary is just
 | `kubelint_source` | `SourceFile`, `FileId`, `TextRange`/`TextSize` (re-exported from `text-size`), `LineIndex` (byte offset ↔ line/column, UTF-8 and UTF-16 columns for the future LSP). | none |
 | `kubelint_yaml` | Span-preserving YAML tree built from `saphyr-parser` events. Comment extraction. Kubernetes-compatible scalar typing. | source |
 | `kubelint_diagnostics` | `Diagnostic`, `Severity`, `Label`, `Fix`, `Edit`, `Applicability`. Data only, no rendering. | source |
-| `kubelint_k8s` | `Object` view over a YAML document, `GroupVersionKind`, workload helpers (`pod_spec()`, `containers()`), Kubernetes value parsers (quantities, DNS-1123 names, label syntax). Later: schema validation data. | source, yaml |
+| `kubelint_k8s` | `Object` view over a YAML document, `GroupVersionKind`, workload helpers (`pod_spec()`, `containers()`), Kubernetes value parsers (quantities, image references, DNS-1123 names, label syntax). Later: schema validation data. | source, yaml |
 | `kubelint_config` | Config file discovery and parsing (`kubelint.toml`, `.kubelint.toml`), CLI overrides, resolved `Settings`. Knows rule *selectors* as strings, not the rule registry. | source |
 | `kubelint_linter` | `Rule` trait, `RuleMeta`, `Category`, the static rule registry, selector resolution, suppression comments, the lint engine, all built-in rules, and the rule test harness. | source, yaml, k8s, diagnostics, config |
 | `kubelint_output` | Renderers: `human` (`annotate-snippets`), `json`, `sarif`, `github`. | source, diagnostics |

@@ -1,0 +1,136 @@
+# Reported: no tag, the `latest` tag, a registry port that is not a tag, a quoted
+# image and an uppercase registry host.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      containers:
+      - name: web
+        image: nginx
+      - name: latest
+        image: nginx:latest
+      - name: registry
+        image: localhost:5000/team/app
+      - name: quoted
+        image: "ghcr.io/org/app:latest"
+      - name: host
+        image: Registry.Example.com/app
+---
+# Reported: init and ephemeral containers, a container without a name, and a
+# non-ASCII container name.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+spec:
+  initContainers:
+  - name: setup
+    image: busybox
+  containers:
+  - image: registry.example.com/team/app:latest
+  ephemeralContainers:
+  - name: débogage
+    image: busybox:latest
+---
+# Reported: a CronJob.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: report
+            image: report
+---
+# Not reported: version tags, other tags that only look like `latest`, a registry
+# port with a tag, and digests with or without a tag.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pinned
+spec:
+  containers:
+  - name: a
+    image: nginx:1.27
+  - name: b
+    image: nginx:Latest
+  - name: c
+    image: nginx:latest-alpine
+  - name: d
+    image: localhost:5000/app:1.0
+  - name: e
+    image: nginx@sha256:0d17b565c37bcbd895e9d92315a05c1c3c9a29f762b011a10c54a66cd53c9b31
+  - name: f
+    image: nginx:latest@sha256:0d17b565c37bcbd895e9d92315a05c1c3c9a29f762b011a10c54a66cd53c9b31
+---
+# Not reported: a missing, empty, null or non-string image (schema problems).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: typed
+spec:
+  containers:
+  - name: a
+  - name: b
+    image: ""
+  - name: c
+    image:
+  - name: d
+    image: [nginx]
+  - name: e
+    image: "nginx "
+  - name: f
+    image: " nginx:latest"
+  - name: g
+    image: "   "
+---
+# Not reported: templated values, uppercase and non-ASCII repository paths, which are
+# not valid references. An uppercase registry host is valid, so that image is reported above.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: not-references
+spec:
+  containers:
+  - name: a
+    image: "{{ .Values.image }}"
+  - name: b
+    image: ${IMAGE}
+  - name: c
+    image: Nginx
+  - name: d
+    image: registry.example.com/Team/app:latest
+  - name: e
+    image: registry.example.com/équipe/app:latest
+---
+# Not reported: a custom resource with a pod-like shape, and a ConfigMap.
+apiVersion: example.com/v1
+kind: Deployment
+metadata:
+  name: custom
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: nginx
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  image: nginx
