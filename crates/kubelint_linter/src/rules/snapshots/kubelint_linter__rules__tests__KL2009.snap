@@ -1,0 +1,89 @@
+---
+source: crates/kubelint_linter/src/rules/tests.rs
+expression: check_fixture(rule)
+---
+warning[KL2009]: container `web` does not set `readOnlyRootFilesystem: true`
+  --> security/KL2009.yaml:14:15
+   |
+14 |       - name: web
+   |               ^^^
+  = help: set `securityContext.readOnlyRootFilesystem: true`, and mount an `emptyDir` volume on each path the container writes to
+
+warning[KL2009]: container `empty` does not set `readOnlyRootFilesystem: true`
+  --> security/KL2009.yaml:16:15
+   |
+16 |       - name: empty
+   |               ^^^^^
+  = help: set `securityContext.readOnlyRootFilesystem: true`, and mount an `emptyDir` volume on each path the container writes to
+
+warning[KL2009]: container `other` does not set `readOnlyRootFilesystem: true`
+  --> security/KL2009.yaml:19:15
+   |
+19 |       - name: other
+   |               ^^^^^
+  = help: set `securityContext.readOnlyRootFilesystem: true`, and mount an `emptyDir` volume on each path the container writes to
+
+warning[KL2009]: container `unset` does not set `readOnlyRootFilesystem: true`
+  --> security/KL2009.yaml:23:15
+   |
+23 |       - name: unset
+   |               ^^^^^
+  = help: set `securityContext.readOnlyRootFilesystem: true`, and mount an `emptyDir` volume on each path the container writes to
+
+warning[KL2009]: container `tilde` does not set `readOnlyRootFilesystem: true`
+  --> security/KL2009.yaml:27:15
+   |
+27 |       - name: tilde
+   |               ^^^^^
+  = help: set `securityContext.readOnlyRootFilesystem: true`, and mount an `emptyDir` volume on each path the container writes to
+
+warning[KL2009]: container `setup` has a writable root filesystem
+  --> security/KL2009.yaml:42:23
+   |
+42 |     securityContext: {readOnlyRootFilesystem: false}
+   |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: set `securityContext.readOnlyRootFilesystem: true`, and mount an `emptyDir` volume on each path the container writes to
+
+warning[KL2009]: container has a writable root filesystem
+  --> security/KL2009.yaml:46:7
+   |
+46 |       readOnlyRootFilesystem: no
+   |       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: set `securityContext.readOnlyRootFilesystem: true`, and mount an `emptyDir` volume on each path the container writes to
+
+warning[KL2009]: container does not set `readOnlyRootFilesystem: true`
+  --> security/KL2009.yaml:47:5
+   |
+47 |   - image: app:1.0
+   |     ^^^^^
+  = help: set `securityContext.readOnlyRootFilesystem: true`, and mount an `emptyDir` volume on each path the container writes to
+
+warning[KL2009]: container `débogage` does not set `readOnlyRootFilesystem: true`
+  --> security/KL2009.yaml:49:11
+   |
+49 |   - name: débogage
+   |           ^^^^^^^^
+  = help: set `securityContext.readOnlyRootFilesystem: true`, and mount an `emptyDir` volume on each path the container writes to
+
+warning[KL2009]: container `report` does not set `readOnlyRootFilesystem: true`
+  --> security/KL2009.yaml:65:19
+   |
+65 |           - name: report
+   |                   ^^^^^^
+  = help: set `securityContext.readOnlyRootFilesystem: true`, and mount an `emptyDir` volume on each path the container writes to
+
+warning[KL2009]: container `app` does not set `readOnlyRootFilesystem: true`
+  --> security/KL2009.yaml:80:11
+   |
+80 |   - name: app
+   |           ^^^
+  = help: set `securityContext.readOnlyRootFilesystem: true`, and mount an `emptyDir` volume on each path the container writes to
+
+warning[KL2009]: container `privileged` does not set `readOnlyRootFilesystem: true`
+  --> security/KL2009.yaml:82:11
+   |
+82 |   - name: privileged
+   |           ^^^^^^^^^^
+  = help: set `securityContext.readOnlyRootFilesystem: true`, and mount an `emptyDir` volume on each path the container writes to
+
+12 finding(s) in 9 object(s)

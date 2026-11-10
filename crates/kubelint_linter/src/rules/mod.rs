@@ -36,4 +36,5 @@ pub static ALL: &[&dyn Rule] = &[
     &security::DangerousCapability,
     &security::DockerSocketMount,
     &security::SecretInEnvLiteral,
+    &security::WritableRootFilesystem,
 ];

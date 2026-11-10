@@ -8,6 +8,7 @@ mod privilege_escalation_allowed;
 mod privileged_container;
 mod run_as_root;
 mod secret_in_env_literal;
+mod writable_root_filesystem;
 
 pub use dangerous_capability::DangerousCapability;
 pub use docker_socket_mount::DockerSocketMount;
@@ -17,6 +18,7 @@ pub use privilege_escalation_allowed::PrivilegeEscalationAllowed;
 pub use privileged_container::PrivilegedContainer;
 pub use run_as_root::RunAsRoot;
 pub use secret_in_env_literal::SecretInEnvLiteral;
+pub use writable_root_filesystem::WritableRootFilesystem;
 
 use kubelint_k8s::{Container, PodSpec};
 use kubelint_source::TextRange;

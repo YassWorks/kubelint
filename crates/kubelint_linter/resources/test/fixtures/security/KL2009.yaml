@@ -1,0 +1,150 @@
+# Reported: no securityContext, an empty one, one without the field and null values.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+      - name: empty
+        image: app:1.0
+        securityContext: {}
+      - name: other
+        image: app:1.0
+        securityContext:
+          runAsNonRoot: true
+      - name: unset
+        image: app:1.0
+        securityContext:
+          readOnlyRootFilesystem:
+      - name: tilde
+        image: app:1.0
+        securityContext:
+          readOnlyRootFilesystem: ~
+---
+# Reported: set to false (also as a YAML 1.1 boolean), in init and ephemeral
+# containers, and containers without a name (the second is reported at its first key).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+spec:
+  initContainers:
+  - name: setup
+    image: busybox:1.36
+    securityContext: {readOnlyRootFilesystem: false}
+  containers:
+  - image: app:1.0
+    securityContext:
+      readOnlyRootFilesystem: no
+  - image: app:1.0
+  ephemeralContainers:
+  - name: débogage
+    image: busybox:1.36
+---
+# Reported: a CronJob.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: report
+            image: report:2
+---
+# Reported: a pod-level securityContext does not set it for the containers, a
+# privileged container is still checked, and a Linux pod is checked.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-level
+spec:
+  os:
+    name: linux
+  securityContext:
+    readOnlyRootFilesystem: true
+  containers:
+  - name: app
+    image: app:1.0
+  - name: privileged
+    image: app:1.0
+    securityContext: {privileged: true}
+---
+# Not reported: set to true (also as `yes`).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ok
+spec:
+  containers:
+  - name: a
+    image: app:1.0
+    securityContext:
+      readOnlyRootFilesystem: true
+  - name: b
+    image: app:1.0
+    securityContext: {readOnlyRootFilesystem: yes}
+---
+# Not reported: quoted strings and a number (schema problems).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: typed
+spec:
+  containers:
+  - name: a
+    image: app:1.0
+    securityContext:
+      readOnlyRootFilesystem: "false"
+  - name: b
+    image: app:1.0
+    securityContext:
+      readOnlyRootFilesystem: 0
+  - name: c
+    image: app:1.0
+    securityContext:
+      readOnlyRootFilesystem: "~"
+---
+# Not reported: a Windows pod, where the field is not allowed.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: windows
+spec:
+  os:
+    name: windows
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Not reported: a custom resource with a pod-like shape, and a ConfigMap.
+apiVersion: example.com/v1
+kind: Deployment
+metadata:
+  name: custom
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  key: value
