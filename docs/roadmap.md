@@ -66,7 +66,7 @@ Security rules:
   runtime socket. KL2005 then skips the volumes KL2007 reports, so one mount gets one
   finding.
 - [x] KL2008 `secret-in-env-literal`
-- [ ] KL2009 `writable-root-filesystem` (off by default)
+- [x] KL2009 `writable-root-filesystem` (off by default)
 
 Reliability rules:
 
@@ -147,6 +147,9 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   (`/var/run`, `/run/containerd`) gets the KL2005 warning, not the KL2007 error.
 - KL1009, KL1011 and KL2008 each walk `env` and read `name` and `value` by hand. A
   `Container::env_vars()` view in `kubelint_k8s` would share that.
+- KL2002 and KL2009 share the same lookup of one boolean `securityContext` field
+  (wrong value, unset or null, or a schema problem). A helper in `security/mod.rs`
+  would share it.
 
 ## Rule ideas
 
