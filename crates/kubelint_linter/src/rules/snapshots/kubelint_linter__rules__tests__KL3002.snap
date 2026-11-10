@@ -1,0 +1,96 @@
+---
+source: crates/kubelint_linter/src/rules/tests.rs
+expression: check_fixture(rule)
+---
+warning[KL3002]: container `web` has no CPU or memory requests
+  --> reliability/KL3002.yaml:15:15
+   |
+15 |       - name: web
+   |               ^^^
+  = help: set `resources.requests.cpu` and `resources.requests.memory`, for example `cpu: 100m` and `memory: 256Mi`
+
+warning[KL3002]: container `empty` has no CPU or memory requests
+  --> reliability/KL3002.yaml:19:9
+   |
+19 |         resources: {}
+   |         ^^^^^^^^^
+  = help: set `resources.requests.cpu` and `resources.requests.memory`, for example `cpu: 100m` and `memory: 256Mi`
+
+warning[KL3002]: container `empty-requests` has no CPU or memory requests
+  --> reliability/KL3002.yaml:23:11
+   |
+23 |           requests: {}
+   |           ^^^^^^^^
+  = help: set `resources.requests.cpu` and `resources.requests.memory`, for example `cpu: 100m` and `memory: 256Mi`
+
+warning[KL3002]: container `cpu-only` has no memory request
+  --> reliability/KL3002.yaml:27:11
+   |
+27 |           requests:
+   |           ^^^^^^^^
+  = help: set `resources.requests.memory`, for example `memory: 256Mi`
+
+warning[KL3002]: container `memory-only` has no CPU request
+  --> reliability/KL3002.yaml:32:11
+   |
+32 |           requests:
+   |           ^^^^^^^^
+  = help: set `resources.requests.cpu`, for example `cpu: 100m`
+
+warning[KL3002]: container `null-requests` has no CPU or memory requests
+  --> reliability/KL3002.yaml:36:9
+   |
+36 |         resources:
+   |         ^^^^^^^^^
+  = help: set `resources.requests.cpu` and `resources.requests.memory`, for example `cpu: 100m` and `memory: 256Mi`
+
+warning[KL3002]: container `null-cpu` has no CPU request
+  --> reliability/KL3002.yaml:41:11
+   |
+41 |           requests:
+   |           ^^^^^^^^
+  = help: set `resources.requests.cpu`, for example `cpu: 100m`
+
+warning[KL3002]: container `setup` has no CPU or memory requests
+  --> reliability/KL3002.yaml:53:11
+   |
+53 |   - name: setup
+   |           ^^^^^
+  = help: set `resources.requests.cpu` and `resources.requests.memory`, for example `cpu: 100m` and `memory: 256Mi`
+
+warning[KL3002]: container `proxy` has no CPU or memory requests
+  --> reliability/KL3002.yaml:55:11
+   |
+55 |   - name: proxy
+   |           ^^^^^
+  = help: set `resources.requests.cpu` and `resources.requests.memory`, for example `cpu: 100m` and `memory: 256Mi`
+
+warning[KL3002]: container has no CPU or memory requests
+  --> reliability/KL3002.yaml:59:5
+   |
+59 |   - image: app:1.0
+   |     ^^^^^
+  = help: set `resources.requests.cpu` and `resources.requests.memory`, for example `cpu: 100m` and `memory: 256Mi`
+
+warning[KL3002]: container `limited` has no CPU request
+  --> reliability/KL3002.yaml:62:5
+   |
+62 |     resources:
+   |     ^^^^^^^^^
+  = help: set `resources.requests.cpu`, for example `cpu: 100m`
+
+warning[KL3002]: container `base-de-données` has no CPU request
+  --> reliability/KL3002.yaml:84:15
+   |
+84 |       - name: base-de-données
+   |               ^^^^^^^^^^^^^^^
+  = help: set `resources.requests.cpu`, for example `cpu: 100m`
+
+warning[KL3002]: container `report` has no CPU or memory requests
+   --> reliability/KL3002.yaml:100:19
+    |
+100 |           - name: report
+    |                   ^^^^^^
+  = help: set `resources.requests.cpu` and `resources.requests.memory`, for example `cpu: 100m` and `memory: 256Mi`
+
+13 finding(s) in 11 object(s)

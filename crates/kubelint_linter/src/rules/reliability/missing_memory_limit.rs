@@ -2,9 +2,8 @@
 
 use kubelint_diagnostics::Severity;
 use kubelint_k8s::ContainerKind;
-use kubelint_source::TextRange;
-use kubelint_yaml::Entry;
 
+use super::ResourceField;
 use crate::rules::{container_range, container_subject};
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
@@ -35,17 +34,17 @@ impl Rule for MissingMemoryLimit {
         let Some(pod) = cx.object().pod_spec() else {
             return;
         };
-        if matches!(
-            missing_limit(pod.node().get_entry("resources")),
-            Missing::No
-        ) {
+        if ResourceField::lookup(pod.node().get_entry("resources"), "limits", "memory").is_set() {
             return;
         }
         let containers = pod
             .containers()
             .filter(|container| container.kind() != ContainerKind::Ephemeral);
         for container in containers {
-            let Missing::Yes(range) = missing_limit(container.node().get_entry("resources")) else {
+            let resources = container.node().get_entry("resources");
+            let ResourceField::Missing(range) =
+                ResourceField::lookup(resources, "limits", "memory")
+            else {
                 continue;
             };
             cx.report(
@@ -56,32 +55,5 @@ impl Rule for MissingMemoryLimit {
                 .with_help("set `resources.limits.memory`, for example `memory: 512Mi`"),
             );
         }
-    }
-}
-
-enum Missing {
-    /// The limit is missing. The range is the deepest key on the way to it, `limits`
-    /// or `resources`, when there is one.
-    Yes(Option<TextRange>),
-    /// The limit is set, or a value on the way to it is a schema problem.
-    No,
-}
-
-fn missing_limit(resources: Option<&Entry>) -> Missing {
-    let mut found = None;
-    let mut entry = resources;
-    for key in ["limits", "memory"] {
-        let Some(current) = entry.filter(|entry| !entry.value.is_kubernetes_null()) else {
-            return Missing::Yes(found);
-        };
-        if current.value.as_mapping().is_none() {
-            return Missing::No;
-        }
-        found = Some(current.key.range);
-        entry = current.value.get_entry(key);
-    }
-    match entry {
-        Some(memory) if !memory.value.is_kubernetes_null() => Missing::No,
-        _ => Missing::Yes(found),
     }
 }

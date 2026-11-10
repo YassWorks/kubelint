@@ -1,0 +1,218 @@
+# Reported: no resources (at the name), empty resources (at `resources`), empty and
+# partial requests (at `requests`), and null values.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+      - name: empty
+        image: app:1.0
+        resources: {}
+      - name: empty-requests
+        image: app:1.0
+        resources:
+          requests: {}
+      - name: cpu-only
+        image: app:1.0
+        resources:
+          requests:
+            cpu: 100m
+      - name: memory-only
+        image: app:1.0
+        resources:
+          requests:
+            memory: 256Mi
+      - name: null-requests
+        image: app:1.0
+        resources:
+          requests: ~
+      - name: null-cpu
+        image: app:1.0
+        resources:
+          requests:
+            cpu: null
+            memory: 256Mi
+---
+# Reported: a memory limit covers only the memory request, init containers and
+# sidecars, and a container without a name (at its first key).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+spec:
+  initContainers:
+  - name: setup
+    image: busybox:1.36
+  - name: proxy
+    image: proxy:2
+    restartPolicy: Always
+  containers:
+  - image: app:1.0
+  - name: limited
+    image: app:1.0
+    resources:
+      limits:
+        memory: 512Mi
+---
+# Reported: a StatefulSet with a non-ASCII container name, and a pod-level memory
+# request does not cover CPU.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db
+  selector:
+    matchLabels: {app: db}
+  template:
+    metadata:
+      labels: {app: db}
+    spec:
+      resources:
+        requests:
+          memory: 1Gi
+      containers:
+      - name: base-de-données
+        image: postgres:17
+---
+# Reported: a CronJob.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: report
+            image: report:2
+---
+# Not reported: requests, limits that Kubernetes copies into requests, a mix of both,
+# and an invalid quantity that KL1007 reports.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ok
+spec:
+  initContainers:
+  - name: setup
+    image: busybox:1.36
+    resources: {requests: {cpu: 10m, memory: 16Mi}}
+  containers:
+  - name: requests
+    image: app:1.0
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+  - name: limits
+    image: app:1.0
+    resources:
+      limits:
+        cpu: "1"
+        memory: 512Mi
+  - name: mixed
+    image: app:1.0
+    resources:
+      requests:
+        cpu: 100m
+      limits:
+        memory: 512Mi
+  - name: invalid
+    image: app:1.0
+    resources:
+      requests:
+        cpu: lots
+        memory: plenty
+---
+# Not reported: an ephemeral container, where resources are not allowed.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    resources: {requests: {cpu: 100m, memory: 256Mi}}
+  ephemeralContainers:
+  - name: debugger
+    image: busybox:1.36
+---
+# Not reported: pod-level requests and limits cover every container.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-level
+spec:
+  resources:
+    requests:
+      cpu: 500m
+    limits:
+      memory: 1Gi
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Not reported: the pod level covers CPU and the container covers memory.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-level-cpu
+spec:
+  resources:
+    requests:
+      cpu: 500m
+  containers:
+  - name: app
+    image: app:1.0
+    resources:
+      limits:
+        memory: 512Mi
+---
+# Not reported: resources and requests that are not mappings (schema problems).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: typed
+spec:
+  containers:
+  - name: a
+    image: app:1.0
+    resources: big
+  - name: b
+    image: app:1.0
+    resources:
+      requests: [cpu, memory]
+---
+# Not reported: a custom resource with a pod-like shape, and a ConfigMap.
+apiVersion: example.com/v1
+kind: Deployment
+metadata:
+  name: custom
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  key: value
