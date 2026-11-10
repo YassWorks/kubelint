@@ -112,6 +112,6 @@ URLs); a list of known names (misses every name it does not list).
 | --- | --- | --- | --- | --- | --- | --- |
 | KL3001 | `missing-memory-limit` | on | warning | implemented | M2 | A container has no `resources.limits.memory`. |
 | KL3002 | `missing-resource-requests` | on | warning | implemented | M2 | A container has no CPU or memory `requests`. |
-| KL3003 | `unpinned-image-tag` | on | warning | planned | M2 | An image uses `:latest` or no tag at all (digests are fine). |
+| KL3003 | `unpinned-image-tag` | on | warning | implemented | M2 | An image uses `:latest` or no tag at all (digests are fine). |
 | KL3004 | `missing-readiness-probe` | off | info | planned | M2 | A long-running workload container has no `readinessProbe`. |
 | KL3005 | `single-replica` | off | info | planned | M2 | A Deployment or StatefulSet runs exactly one replica. |

@@ -3,9 +3,11 @@
 
 mod missing_memory_limit;
 mod missing_resource_requests;
+mod unpinned_image_tag;
 
 pub use missing_memory_limit::MissingMemoryLimit;
 pub use missing_resource_requests::MissingResourceRequests;
+pub use unpinned_image_tag::UnpinnedImageTag;
 
 use kubelint_source::TextRange;
 use kubelint_yaml::Entry;
