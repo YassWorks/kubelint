@@ -113,5 +113,17 @@ URLs); a list of known names (misses every name it does not list).
 | KL3001 | `missing-memory-limit` | on | warning | implemented | M2 | A container has no `resources.limits.memory`. |
 | KL3002 | `missing-resource-requests` | on | warning | implemented | M2 | A container has no CPU or memory `requests`. |
 | KL3003 | `unpinned-image-tag` | on | warning | implemented | M2 | An image uses `:latest` or no tag at all (digests are fine). |
-| KL3004 | `missing-readiness-probe` | off | info | planned | M2 | A long-running workload container has no `readinessProbe`. |
+| KL3004 | `missing-readiness-probe` | off | info | implemented | M2 | A long-running workload container has no `readinessProbe`. |
 | KL3005 | `single-replica` | off | info | planned | M2 | A Deployment or StatefulSet runs exactly one replica. |
+
+KL3004 checks the regular containers of Deployments, StatefulSets, DaemonSets,
+ReplicaSets and ReplicationControllers only.
+
+**Why:** these run long and are what Services route to. Jobs and CronJobs run to
+completion, so readiness gates nothing. Nothing rolls out a bare Pod, and bare Pods are
+rare in production. Sidecars are usually injected or third-party, so their authors, not
+the manifest's, choose their probes. Kubernetes rejects `readinessProbe` on plain init
+and ephemeral containers.
+
+**Rejected:** checking bare Pods (noise from test and debug pods); checking sidecars
+(findings the manifest author often cannot fix); checking Jobs and CronJobs.
