@@ -20,26 +20,11 @@ pub use run_as_root::RunAsRoot;
 pub use secret_in_env_literal::SecretInEnvLiteral;
 pub use writable_root_filesystem::WritableRootFilesystem;
 
-use kubelint_k8s::{Container, PodSpec};
+use kubelint_k8s::PodSpec;
 use kubelint_source::TextRange;
 use kubelint_yaml::{Entry, Node};
 
-/// "container `web`", or "container" when it has no usable name.
-fn container_subject(container: Container<'_>) -> String {
-    match container.name().and_then(Node::as_str) {
-        Some(name) => format!("container `{name}`"),
-        None => "container".to_owned(),
-    }
-}
-
-/// Where a finding about a missing setting of `container` points: its `name`, or its
-/// first key when it has none.
-fn container_range(container: Container<'_>) -> TextRange {
-    container
-        .name()
-        .or_else(|| container.node().entries().next().map(|entry| &entry.key))
-        .map_or(container.node().range, |node| node.range)
-}
+use super::{container_range, container_subject};
 
 /// File names of the container runtime sockets: Docker, cri-dockerd, containerd, CRI-O
 /// and Podman.

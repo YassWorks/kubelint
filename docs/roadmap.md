@@ -70,7 +70,7 @@ Security rules:
 
 Reliability rules:
 
-- [ ] KL3001 `missing-memory-limit`
+- [x] KL3001 `missing-memory-limit`
 - [ ] KL3002 `missing-resource-requests`
 - [ ] KL3003 `unpinned-image-tag`, with an image reference parser that handles registry
   ports (`host:5000/app`) and digests
