@@ -74,7 +74,7 @@ Reliability rules:
 - [x] KL3002 `missing-resource-requests`
 - [x] KL3003 `unpinned-image-tag`, with an image reference parser that handles registry
   ports (`host:5000/app`) and digests
-- [ ] KL3004 `missing-readiness-probe` (off by default)
+- [x] KL3004 `missing-readiness-probe` (off by default)
 - [ ] KL3005 `single-replica` (off by default)
 
 ## M3: Ready for real use (target: 2026-11-24)

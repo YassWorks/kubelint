@@ -1,0 +1,61 @@
+---
+source: crates/kubelint_linter/src/rules/tests.rs
+expression: check_fixture(rule)
+---
+info[KL3004]: container `web` has no readiness probe
+  --> reliability/KL3004.yaml:14:15
+   |
+14 |       - name: web
+   |               ^^^
+  = help: add a `readinessProbe`, such as an `httpGet` on a health endpoint, so the container gets traffic only once it can serve it
+
+info[KL3004]: container `null-probe` has no readiness probe
+  --> reliability/KL3004.yaml:16:15
+   |
+16 |       - name: null-probe
+   |               ^^^^^^^^^^
+  = help: add a `readinessProbe`, such as an `httpGet` on a health endpoint, so the container gets traffic only once it can serve it
+
+info[KL3004]: container `liveness` has no readiness probe
+  --> reliability/KL3004.yaml:19:15
+   |
+19 |       - name: liveness
+   |               ^^^^^^^^
+  = help: add a `readinessProbe`, such as an `httpGet` on a health endpoint, so the container gets traffic only once it can serve it
+
+info[KL3004]: container `startup` has no readiness probe
+  --> reliability/KL3004.yaml:23:15
+   |
+23 |       - name: startup
+   |               ^^^^^^^
+  = help: add a `readinessProbe`, such as an `httpGet` on a health endpoint, so the container gets traffic only once it can serve it
+
+info[KL3004]: container `base-de-données` has no readiness probe
+  --> reliability/KL3004.yaml:42:15
+   |
+42 |       - name: base-de-données
+   |               ^^^^^^^^^^^^^^^
+  = help: add a `readinessProbe`, such as an `httpGet` on a health endpoint, so the container gets traffic only once it can serve it
+
+info[KL3004]: container has no readiness probe
+  --> reliability/KL3004.yaml:58:9
+   |
+58 |       - image: agent:3
+   |         ^^^^^
+  = help: add a `readinessProbe`, such as an `httpGet` on a health endpoint, so the container gets traffic only once it can serve it
+
+info[KL3004]: container `app` has no readiness probe
+  --> reliability/KL3004.yaml:73:15
+   |
+73 |       - name: app
+   |               ^^^
+  = help: add a `readinessProbe`, such as an `httpGet` on a health endpoint, so the container gets traffic only once it can serve it
+
+info[KL3004]: container `app` has no readiness probe
+  --> reliability/KL3004.yaml:87:15
+   |
+87 |       - name: app
+   |               ^^^
+  = help: add a `readinessProbe`, such as an `httpGet` on a health endpoint, so the container gets traffic only once it can serve it
+
+8 finding(s) in 12 object(s)

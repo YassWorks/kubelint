@@ -1,0 +1,203 @@
+# Reported: no probe, a null probe, and only a liveness or startup probe.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+      - name: null-probe
+        image: app:1.0
+        readinessProbe:
+      - name: liveness
+        image: app:1.0
+        livenessProbe:
+          httpGet: {path: /healthz, port: 8080}
+      - name: startup
+        image: app:1.0
+        startupProbe:
+          tcpSocket: {port: 8080}
+---
+# Reported: a StatefulSet with a non-ASCII container name.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db
+  selector:
+    matchLabels: {app: db}
+  template:
+    metadata:
+      labels: {app: db}
+    spec:
+      containers:
+      - name: base-de-données
+        image: postgres:17
+---
+# Reported: a DaemonSet, and a container without a name (at its first key).
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: agent
+spec:
+  selector:
+    matchLabels: {app: agent}
+  template:
+    metadata:
+      labels: {app: agent}
+    spec:
+      containers:
+      - image: agent:3
+---
+# Reported: a ReplicaSet and a ReplicationController.
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: rs
+spec:
+  selector:
+    matchLabels: {app: rs}
+  template:
+    metadata:
+      labels: {app: rs}
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: rc
+spec:
+  selector: {app: rc}
+  template:
+    metadata:
+      labels: {app: rc}
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+# Not reported: readiness probes of every handler type, init and ephemeral containers
+# (where `readinessProbe` is not allowed), and sidecars (skipped by choice).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ok
+spec:
+  selector:
+    matchLabels: {app: ok}
+  template:
+    metadata:
+      labels: {app: ok}
+    spec:
+      initContainers:
+      - name: setup
+        image: busybox:1.36
+      - name: proxy
+        image: proxy:2
+        restartPolicy: Always
+      containers:
+      - name: http
+        image: app:1.0
+        readinessProbe:
+          httpGet: {path: /ready, port: 8080}
+      - name: tcp
+        image: app:1.0
+        readinessProbe: {tcpSocket: {port: 5432}}
+      - name: exec
+        image: app:1.0
+        readinessProbe:
+          exec:
+            command: ["cat", "/tmp/ready"]
+      - name: grpc
+        image: app:1.0
+        readinessProbe: {grpc: {port: 9090}}
+      ephemeralContainers:
+      - name: debugger
+        image: busybox:1.36
+---
+# Not reported: probes that are not valid probes (schema problems).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: typed
+spec:
+  selector:
+    matchLabels: {app: typed}
+  template:
+    metadata:
+      labels: {app: typed}
+    spec:
+      containers:
+      - name: empty
+        image: app:1.0
+        readinessProbe: {}
+      - name: boolean
+        image: app:1.0
+        readinessProbe: true
+---
+# Not reported: a Pod, a Job and a CronJob.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: migrate
+        image: app:1.0
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: report
+            image: report:2
+---
+# Not reported: a custom resource with a pod-like shape, and a ConfigMap.
+apiVersion: example.com/v1
+kind: Deployment
+metadata:
+  name: custom
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  key: value
