@@ -1,0 +1,96 @@
+---
+source: crates/kubelint_linter/src/rules/tests.rs
+expression: check_fixture(rule)
+---
+warning[KL3001]: container `web` has no memory limit
+  --> reliability/KL3001.yaml:15:15
+   |
+15 |       - name: web
+   |               ^^^
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+
+warning[KL3001]: container `empty` has no memory limit
+  --> reliability/KL3001.yaml:19:9
+   |
+19 |         resources: {}
+   |         ^^^^^^^^^
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+
+warning[KL3001]: container `requests` has no memory limit
+  --> reliability/KL3001.yaml:22:9
+   |
+22 |         resources:
+   |         ^^^^^^^^^
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+
+warning[KL3001]: container `empty-limits` has no memory limit
+  --> reliability/KL3001.yaml:27:11
+   |
+27 |           limits: {}
+   |           ^^^^^^
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+
+warning[KL3001]: container `cpu` has no memory limit
+  --> reliability/KL3001.yaml:31:11
+   |
+31 |           limits:
+   |           ^^^^^^
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+
+warning[KL3001]: container `null-resources` has no memory limit
+  --> reliability/KL3001.yaml:33:15
+   |
+33 |       - name: null-resources
+   |               ^^^^^^^^^^^^^^
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+
+warning[KL3001]: container `null-limits` has no memory limit
+  --> reliability/KL3001.yaml:38:9
+   |
+38 |         resources:
+   |         ^^^^^^^^^
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+
+warning[KL3001]: container `null-memory` has no memory limit
+  --> reliability/KL3001.yaml:43:11
+   |
+43 |           limits:
+   |           ^^^^^^
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+
+warning[KL3001]: container `setup` has no memory limit
+  --> reliability/KL3001.yaml:54:11
+   |
+54 |   - name: setup
+   |           ^^^^^
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+
+warning[KL3001]: container `proxy` has no memory limit
+  --> reliability/KL3001.yaml:56:11
+   |
+56 |   - name: proxy
+   |           ^^^^^
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+
+warning[KL3001]: container has no memory limit
+  --> reliability/KL3001.yaml:60:5
+   |
+60 |   - image: app:1.0
+   |     ^^^^^
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+
+warning[KL3001]: container `report` has no memory limit
+  --> reliability/KL3001.yaml:77:19
+   |
+77 |           - name: report
+   |                   ^^^^^^
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+
+warning[KL3001]: container `base-de-données` has no memory limit
+  --> reliability/KL3001.yaml:98:15
+   |
+98 |       - name: base-de-données
+   |               ^^^^^^^^^^^^^^^
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+
+13 finding(s) in 11 object(s)

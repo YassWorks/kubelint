@@ -1,0 +1,193 @@
+# Reported: no resources (at the name), empty resources and only requests (at
+# `resources`), empty limits and only a CPU limit (at `limits`), and null values.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+      - name: empty
+        image: app:1.0
+        resources: {}
+      - name: requests
+        image: app:1.0
+        resources:
+          requests: {memory: 256Mi}
+      - name: empty-limits
+        image: app:1.0
+        resources:
+          limits: {}
+      - name: cpu
+        image: app:1.0
+        resources:
+          limits:
+            cpu: 500m
+      - name: null-resources
+        image: app:1.0
+        resources:
+      - name: null-limits
+        image: app:1.0
+        resources:
+          limits: ~
+      - name: null-memory
+        image: app:1.0
+        resources:
+          limits:
+            memory: null
+---
+# Reported: an init container, a sidecar, and a container without a name (at its
+# first key).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: app
+spec:
+  initContainers:
+  - name: setup
+    image: busybox:1.36
+  - name: proxy
+    image: proxy:2
+    restartPolicy: Always
+  containers:
+  - image: app:1.0
+---
+# Reported: a CronJob, and a pod-level CPU limit does not bound memory.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          resources:
+            limits: {cpu: "1"}
+          containers:
+          - name: report
+            image: report:2
+---
+# Reported: a StatefulSet with a non-ASCII container name, and a null pod-level
+# memory limit does not bound the containers.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db
+  selector:
+    matchLabels: {app: db}
+  template:
+    metadata:
+      labels: {app: db}
+    spec:
+      resources:
+        limits:
+          memory: ~
+      containers:
+      - name: base-de-données
+        image: postgres:17
+---
+# Not reported: memory limits, including one KL1007 reports as invalid.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ok
+spec:
+  initContainers:
+  - name: setup
+    image: busybox:1.36
+    resources: {limits: {memory: 64Mi}}
+  containers:
+  - name: a
+    image: app:1.0
+    resources:
+      limits:
+        memory: 512Mi
+  - name: b
+    image: app:1.0
+    resources:
+      limits:
+        memory: lots
+---
+# Not reported: an ephemeral container, where resources are not allowed.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    resources: {limits: {memory: 1Gi}}
+  ephemeralContainers:
+  - name: debugger
+    image: busybox:1.36
+---
+# Not reported: a pod-level memory limit bounds every container.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-level
+spec:
+  resources:
+    limits:
+      memory: 1Gi
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Not reported: resources and limits that are not mappings (schema problems).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: typed
+spec:
+  containers:
+  - name: a
+    image: app:1.0
+    resources: big
+  - name: b
+    image: app:1.0
+    resources:
+      limits: [memory]
+---
+# Not reported: a pod-level resources value that is not a mapping (a schema problem).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-level-typed
+spec:
+  resources: big
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Not reported: a custom resource with a pod-like shape, and a ConfigMap.
+apiVersion: example.com/v1
+kind: Deployment
+metadata:
+  name: custom
+spec:
+  template:
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
+data:
+  key: value
