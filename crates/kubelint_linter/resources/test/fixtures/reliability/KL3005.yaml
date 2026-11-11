@@ -1,0 +1,145 @@
+# Reported: a Deployment with one replica.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: web}
+  template:
+    metadata:
+      labels: {app: web}
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+---
+# Reported: a StatefulSet with one replica, in flow style with a non-ASCII name.
+{apiVersion: apps/v1, kind: StatefulSet, metadata: {name: base-de-données}, spec: {serviceName: db, replicas: 1, selector: {matchLabels: {app: db}}, template: {metadata: {labels: {app: db}}, spec: {containers: [{name: db, image: "postgres:17"}]}}}}
+---
+# Not reported: two replicas.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: api}
+  template:
+    metadata:
+      labels: {app: api}
+    spec:
+      containers:
+      - name: api
+        image: api:1.0
+---
+# Not reported: no replicas, which a HorizontalPodAutoscaler usually manages.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: autoscaled
+spec:
+  selector:
+    matchLabels: {app: autoscaled}
+  template:
+    metadata:
+      labels: {app: autoscaled}
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+# Not reported: a null replicas, which also defaults to one.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: null-replicas
+spec:
+  replicas: ~
+  selector:
+    matchLabels: {app: null-replicas}
+  template:
+    metadata:
+      labels: {app: null-replicas}
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+# Not reported: zero replicas, a workload scaled to zero.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: parked
+spec:
+  serviceName: parked
+  replicas: 0
+  selector:
+    matchLabels: {app: parked}
+  template:
+    metadata:
+      labels: {app: parked}
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+# Not reported: a quoted "1" is a schema problem, not an integer.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quoted
+spec:
+  replicas: "1"
+  selector:
+    matchLabels: {app: quoted}
+  template:
+    metadata:
+      labels: {app: quoted}
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+# Not reported: a ReplicaSet with one replica, usually owned by a Deployment.
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: owned
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: owned}
+  template:
+    metadata:
+      labels: {app: owned}
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+# Not reported: a ReplicationController with one replica.
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: legacy
+spec:
+  replicas: 1
+  selector: {app: legacy}
+  template:
+    metadata:
+      labels: {app: legacy}
+    spec:
+      containers:
+      - name: app
+        image: app:1.0
+---
+# Not reported: a custom resource with a replicas field.
+apiVersion: example.com/v1
+kind: Deployment
+metadata:
+  name: custom
+spec:
+  replicas: 1

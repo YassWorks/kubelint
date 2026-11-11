@@ -46,6 +46,7 @@ pub static ALL: &[&dyn Rule] = &[
     &reliability::MissingResourceRequests,
     &reliability::UnpinnedImageTag,
     &reliability::MissingReadinessProbe,
+    &reliability::SingleReplica,
 ];
 
 /// "container `web`", or "container" when it has no usable name.

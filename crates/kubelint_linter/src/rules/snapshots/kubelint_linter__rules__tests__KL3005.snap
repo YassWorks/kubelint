@@ -1,0 +1,19 @@
+---
+source: crates/kubelint_linter/src/rules/tests.rs
+expression: check_fixture(rule)
+---
+info[KL3005]: the Deployment runs a single replica
+ --> reliability/KL3005.yaml:7:3
+  |
+7 |   replicas: 1
+  |   ^^^^^^^^^^^
+  = help: set `replicas` to 2 or more so that one pod failure, node drain or rollout does not take the workload down
+
+info[KL3005]: the StatefulSet runs a single replica
+  --> reliability/KL3005.yaml:19:101
+   |
+19 | {apiVersion: apps/v1, kind: StatefulSet, metadata: {name: base-de-données}, spec: {serviceName: db, replicas: 1, selector: {matchLabels: {app: db}}, template: {metadata: {labels: {app: db}}, spec: {containers: [{name: db, image: "postgres:17"}]}}}}
+   |                                                                                                     ^^^^^^^^^^^
+  = help: set `replicas` to 2 or more so that one pod failure, node drain or rollout does not take the workload down
+
+2 finding(s) in 10 object(s)
