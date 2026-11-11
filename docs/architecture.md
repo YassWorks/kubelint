@@ -266,7 +266,8 @@ the user's files rather than in kubelint.
 ### Configuration and suppressions
 
 The file format, selector rules, flags, `exclude` patterns and suppressions are a public
-contract, documented in [`user/configuration.md`](user/configuration.md). Where the code
+contract, documented in [`user/configuration.md`](user/configuration.md) and
+[`user/suppressions.md`](user/suppressions.md). Where the code
 lives:
 
 - `kubelint_config` finds and parses the file. Every value keeps its byte range, so

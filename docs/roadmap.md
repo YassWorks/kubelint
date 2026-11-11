@@ -34,10 +34,10 @@ GitHub Action integration.
 - [x] Release workflow: every merge to `main` that changes code builds binaries for
   Linux, macOS and Windows and publishes a GitHub Release
 - [x] `kubelint/ignore` annotation to silence rules on one object (designed in
-  [`user/configuration.md`](user/configuration.md#annotations))
+  [`user/suppressions.md`](user/suppressions.md#annotations))
 - [x] `xtask` crate with `cargo xtask gen-rule-docs` writing `docs/rules/<CODE>.md` from
   each rule, and a CI check that fails when the pages are stale
-- [ ] User docs: getting started, suppressions, CI integration; the README links to them
+- [x] User docs: getting started, suppressions, CI integration; the README links to them
 - [ ] Benchmark corpus generator (`cargo xtask gen-corpus`) and a measurement against
   the 10,000 objects in under a second budget; fix hotspots if over
 - [ ] Real-world validation: run kubelint over public manifest collections and fix each

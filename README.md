@@ -104,8 +104,10 @@ A few more things worth knowing:
   ```
 
   `# kubelint-disable-line <rules>` works at the end of a line and
-  `# kubelint-disable-file <rules>` anywhere in a file. KL0001 cannot be suppressed, and a
-  suppression naming an unknown rule is reported (KL0003), so typos do not go unnoticed.
+  `# kubelint-disable-file <rules>` anywhere in a file, and a `kubelint/ignore`
+  annotation silences rules for one object. `KL0001` cannot be suppressed, and a
+  suppression naming an unknown rule is reported (`KL0003`), so typos do not go unnoticed.
+  See [suppressions](docs/user/suppressions.md).
 - **Output formats:** `--format json` prints one JSON document for scripts and
   `--format sarif` feeds GitHub code scanning, `--format github` annotates pull requests
   in GitHub Actions; see
@@ -113,8 +115,10 @@ A few more things worth knowing:
 - **Rules:** `kubelint rules` lists every rule (`--format json` for scripts) and
   `kubelint rule KL1001` (or `kubelint rule missing-api-version`) explains one.
 
-Only a handful of rules exist so far; see the [rule catalog](docs/rules/README.md) for
-what is implemented and what is planned.
+New to kubelint? The [getting started guide](docs/user/getting-started.md) walks through
+installing it and reading its output, and [CI integration](docs/user/ci-integration.md)
+shows ready-made pipelines. The [rule catalog](docs/rules/README.md) lists what is
+implemented and what is planned.
 
 ## What it catches
 
@@ -139,8 +143,13 @@ See the full [rule catalog](docs/rules/README.md).
 
 ## Documentation
 
-- [Configuration](docs/user/configuration.md): config file, rule selection, flags,
-  exclusions and suppressions.
+- [Getting started](docs/user/getting-started.md): install, first run, reading a
+  finding, Helm and Kustomize.
+- [Configuration](docs/user/configuration.md): config file, rule selection, flags and
+  exclusions.
+- [Suppressions](docs/user/suppressions.md): silencing findings with comments and
+  annotations.
+- [CI integration](docs/user/ci-integration.md): GitHub Actions, GitLab CI, pre-commit.
 - [Output formats](docs/user/output-formats.md): human, JSON, SARIF and GitHub output.
 - [Vision](docs/vision.md): goals and non-goals.
 - [Roadmap](docs/roadmap.md): what is being built, in order.
