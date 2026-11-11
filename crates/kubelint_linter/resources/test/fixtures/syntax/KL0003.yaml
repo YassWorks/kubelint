@@ -32,3 +32,27 @@ metadata:
 # kubelint-disable-lines nope
 apiVersion: v1
 kind: ConfigMap
+---
+# Reported: an annotation with a typo and a category, next to a valid name and code.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: annotated
+  annotations:
+    kubelint/ignore: "privileged-containers, KL3003,security, run-as-root"
+---
+# Reported: an annotation that names KL0001, and one that names no rule.
+apiVersion: v1
+kind: List
+items:
+- {apiVersion: v1, kind: ConfigMap, metadata: {name: a, annotations: {kubelint/ignore: invalid-yaml}}}
+- {apiVersion: v1, kind: ConfigMap, metadata: {name: b, annotations: {kubelint/ignore: " , "}}}
+---
+# Not reported: an annotation that is not a string, and other annotations.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: other
+  annotations:
+    kubelint/ignore: [nope]
+    example.com/ignore: nope

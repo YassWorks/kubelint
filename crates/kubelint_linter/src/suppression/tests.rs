@@ -51,7 +51,7 @@ fn diagnostic(code: &'static str, file: &SourceFile, line: u32) -> Diagnostic {
 #[test]
 fn next_line_skips_comment_lines() {
     let file = SourceFile::new("f.yaml", read("resources/test/suppression/next_line.yaml"));
-    let suppressions = Suppressions::new(&file, &kubelint_yaml::parse(file.text()).comments);
+    let suppressions = Suppressions::new(&file, &kubelint_yaml::parse(file.text()).comments, &[]);
     let suppressed = |code, line| suppressions.suppresses(&file, &diagnostic(code, &file, line));
     assert!(suppressed("KL1001", 3));
     assert!(!suppressed("KL1002", 3));
@@ -64,7 +64,7 @@ fn next_line_skips_comment_lines() {
 fn file_directives_cover_every_line_but_not_invalid_yaml() {
     let text = "a: 1\n# kubelint-disable-file KL1001, invalid-yaml, KL0001, nope\n";
     let file = SourceFile::new("f.yaml", text);
-    let suppressions = Suppressions::new(&file, &kubelint_yaml::parse(text).comments);
+    let suppressions = Suppressions::new(&file, &kubelint_yaml::parse(text).comments, &[]);
     assert!(suppressions.suppresses(&file, &diagnostic("KL1001", &file, 1)));
     assert!(!suppressions.suppresses(&file, &diagnostic("KL0001", &file, 1)));
 }

@@ -1,4 +1,5 @@
-//! Suppression comments (`docs/user/configuration.md`).
+//! Suppression comments and the `kubelint/ignore` annotation
+//! (`docs/user/configuration.md`).
 //!
 //! ```yaml
 //! securityContext:
@@ -13,15 +14,35 @@
 //! commas; an optional `-- reason` follows. KL0001 `invalid-yaml` cannot be suppressed,
 //! like it cannot be ignored in configuration. Rules that cannot be resolved silence
 //! nothing; KL0003 `invalid-suppression` reports them.
+//!
+//! An object's `kubelint/ignore` annotation lists rules the same way and silences them
+//! for every diagnostic whose primary label starts inside that object.
 
 use std::collections::HashMap;
 
 use kubelint_diagnostics::Diagnostic;
+use kubelint_k8s::Object;
 use kubelint_source::{SourceFile, TextRange, TextSize};
-use kubelint_yaml::Comment;
+use kubelint_yaml::{Comment, Node};
 
+use crate::context::LintObject;
 use crate::rules::syntax::InvalidYaml;
 use crate::{Rule as _, rules};
+
+const IGNORE_ANNOTATION: &str = "kubelint/ignore";
+
+/// The `kubelint/ignore` annotation of `object`: its value and the rules it names. `None`
+/// when the object has none, or when its value is not a string.
+pub(crate) fn ignore_annotation(object: Object<'_>) -> Option<(&Node, Vec<&str>)> {
+    let value = object.annotations()?.get(IGNORE_ANNOTATION)?;
+    let rules = value
+        .as_str()?
+        .split(',')
+        .map(str::trim)
+        .filter(|rule| !rule.is_empty())
+        .collect();
+    Some((value, rules))
+}
 
 /// Which lines a directive applies to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -119,17 +140,28 @@ pub(crate) fn target(selector: &str) -> Target {
     }
 }
 
+/// The code of the rule `selector` names, when it can be suppressed.
+fn rule_code(selector: &str) -> Option<&'static str> {
+    match target(selector) {
+        Target::Rule(code) => Some(code),
+        Target::AlwaysOn | Target::Unknown => None,
+    }
+}
+
 #[derive(Debug, Default)]
 pub(crate) struct Suppressions {
     /// Rule codes suppressed on each 1-based line.
     lines: HashMap<u32, Vec<&'static str>>,
     /// Rule codes suppressed in the whole file.
     file: Vec<&'static str>,
+    /// Rule codes suppressed inside each object's range, from its annotation.
+    objects: Vec<(TextRange, Vec<&'static str>)>,
 }
 
 impl Suppressions {
-    /// Reads the directives among `comments`, the comments of `file`.
-    pub(crate) fn new(file: &SourceFile, comments: &[Comment]) -> Self {
+    /// Reads the directives among `comments`, the comments of `file`, and the
+    /// annotations of `objects`, the objects of `file`.
+    pub(crate) fn new(file: &SourceFile, comments: &[Comment], objects: &[LintObject<'_>]) -> Self {
         let index = file.line_index();
         let text = file.text();
         let line_of = |offset: TextSize| index.line_col(text, offset).line;
@@ -145,7 +177,17 @@ impl Suppressions {
             })
             .map(|c| line_of(c.range.start()))
             .collect();
-        let mut suppressions = Self::default();
+        let mut suppressions = Self {
+            objects: objects
+                .iter()
+                .filter_map(|lint_object| {
+                    let (_, selectors) = ignore_annotation(lint_object.object)?;
+                    let codes = selectors.into_iter().filter_map(rule_code).collect();
+                    Some((lint_object.object.range(), codes))
+                })
+                .collect(),
+            ..Self::default()
+        };
         for comment in comments {
             let Some(directive) = parse_directive(comment) else {
                 continue;
@@ -153,10 +195,7 @@ impl Suppressions {
             let codes = directive
                 .rules
                 .iter()
-                .filter_map(|(selector, _)| match target(selector) {
-                    Target::Rule(code) => Some(code),
-                    Target::AlwaysOn | Target::Unknown => None,
-                });
+                .filter_map(|(selector, _)| rule_code(selector));
             let line = line_of(comment.range.start());
             match directive.kind {
                 DirectiveKind::File => suppressions.file.extend(codes),
@@ -175,13 +214,16 @@ impl Suppressions {
 
     pub(crate) fn suppresses(&self, file: &SourceFile, diagnostic: &Diagnostic) -> bool {
         let code = diagnostic.code;
-        if self.file.contains(&code) {
+        let start = diagnostic.primary.range.start();
+        if self.file.contains(&code)
+            || self
+                .objects
+                .iter()
+                .any(|(range, codes)| range.contains_inclusive(start) && codes.contains(&code))
+        {
             return true;
         }
-        let line = file
-            .line_index()
-            .line_col(file.text(), diagnostic.primary.range.start())
-            .line;
+        let line = file.line_index().line_col(file.text(), start).line;
         self.lines
             .get(&line)
             .is_some_and(|codes| codes.contains(&code))

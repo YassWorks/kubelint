@@ -271,6 +271,12 @@ fn suppression_comments_silence_findings() {
 }
 
 #[test]
+fn ignore_annotation_silences_rules_on_one_object() {
+    let manifest = include_str!("fixtures/ignore_annotation.yaml");
+    insta::assert_snapshot!(run(&["check", "-", "--color", "never"], Some(manifest)));
+}
+
+#[test]
 fn rules_lists_every_rule() {
     let out = run(&["rules"], None);
     assert!(
