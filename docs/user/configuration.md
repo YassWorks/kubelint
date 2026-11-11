@@ -160,7 +160,7 @@ securityContext:
 **Rejected:** Python-style `# kubelint: ignore[KL2001]`. ESLint's style is more familiar
 to most people who write manifests.
 
-### Annotations (planned)
+### Annotations
 
 ```yaml
 metadata:
@@ -169,6 +169,24 @@ metadata:
 ```
 
 The `kubelint/ignore` annotation silences the listed rules for that one object.
+
+- The value is a comma-separated list of rule codes or names, like a suppression
+  comment, without a `-- reason`.
+- A finding is silenced when its highlighted range starts inside the object. That
+  covers findings about the object made while looking at other objects, such as
+  KL1004 `duplicate-object`, which points at the later of two duplicates.
+- KL0001 `invalid-yaml` cannot be silenced. An annotation that names an unknown rule,
+  names KL0001 or names no rule silences nothing, and KL0003 `invalid-suppression`
+  reports it. A value that is not a string is ignored.
+- In a `kind: List`, each item is an object of its own: put the annotation on the item.
+  An annotation on the List itself silences nothing.
+
+**Why a range:** it covers every finding about the object, including the ones a rule
+makes while comparing objects, with one simple test that does not depend on how a rule
+is written.
+
+**Rejected:** silencing a rule by not running it on the object. Simpler, but findings
+from rules that look at every object at once, such as KL1004, would still appear.
 
 **Why an annotation:** it survives tools that re-serialize YAML and drop comments, such as
 `kustomize build`. `kubelint/ignore` is a valid annotation key that claims no domain.

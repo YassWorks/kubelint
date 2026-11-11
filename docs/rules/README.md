@@ -49,7 +49,7 @@ and those references must stay valid and readable across releases.
 | --- | --- | --- | --- | --- | --- | --- |
 | KL0001 | `invalid-yaml` | on (cannot be disabled) | error | implemented | M1 | The file cannot be parsed as YAML. |
 | KL0002 | `duplicate-key` | on | error | implemented | M2 | The same key appears twice in one mapping; Kubernetes rejects it or silently keeps the last one. |
-| KL0003 | `invalid-suppression` | on | warning | implemented | M2 | A `# kubelint-disable-...` comment names an unknown rule, names KL0001 (which cannot be suppressed) or names no rule, so it silences nothing. |
+| KL0003 | `invalid-suppression` | on | warning | implemented | M2 | A `# kubelint-disable-...` comment or a `kubelint/ignore` annotation names an unknown rule, names KL0001 (which cannot be suppressed) or names no rule, so it silences nothing. |
 
 ## Correctness
 

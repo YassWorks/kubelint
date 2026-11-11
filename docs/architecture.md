@@ -53,7 +53,7 @@ All crates live in `crates/` and are named `kubelint_*` (the CLI binary is just
 | `kubelint_diagnostics` | `Diagnostic`, `Severity`, `Label`, `Fix`, `Edit`, `Applicability`. Data only, no rendering. | source |
 | `kubelint_k8s` | `Object` view over a YAML document, `GroupVersionKind`, workload helpers (`pod_spec()`, `containers()`), Kubernetes value parsers (quantities, image references, DNS-1123 names, label syntax). Later: schema validation data. | source, yaml |
 | `kubelint_config` | Config file discovery and parsing (`kubelint.toml`, `.kubelint.toml`), CLI overrides, resolved `Settings`. Knows rule *selectors* as strings, not the rule registry. | source |
-| `kubelint_linter` | `Rule` trait, `RuleMeta`, `Category`, the static rule registry, selector resolution, suppression comments, the lint engine, all built-in rules, and the rule test harness. | source, yaml, k8s, diagnostics, config |
+| `kubelint_linter` | `Rule` trait, `RuleMeta`, `Category`, the static rule registry, selector resolution, suppression comments and annotations, the lint engine, all built-in rules, and the rule test harness. | source, yaml, k8s, diagnostics, config |
 | `kubelint_output` | Renderers: `human` (`annotate-snippets`), `json`, `sarif`, `github`. | source, diagnostics |
 | `kubelint` | CLI: `clap` argument parsing, file discovery (`ignore` crate, Helm chart detection), stdin, orchestration, exit codes. Thin. | all of the above |
 
@@ -264,6 +264,9 @@ lives:
 - `crates/kubelint/src/settings.rs` merges the file with the flags and remembers which
   list came from the file, so an error points back at the file only when the selector
   was written there.
+- `kubelint_linter`'s `suppression` module reads the suppression comments and the
+  `kubelint/ignore` annotations of each file. The engine drops the findings they cover,
+  per-object and cross-object alike, before sorting.
 - `crates/kubelint/src/exclude.rs` normalizes paths lexically (no symlink resolution)
   before matching. Excluded directories are still walked and their files filtered
   afterwards.

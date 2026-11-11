@@ -1,14 +1,14 @@
 ## What it does
 
 Checks `# kubelint-disable-next-line`, `# kubelint-disable-line` and
-`# kubelint-disable-file` comments. It reports a rule code or name that no rule has, a
-comment that names `KL0001` `invalid-yaml` (syntax errors cannot be suppressed), and a
-comment that names no rule at all.
+`# kubelint-disable-file` comments, and `kubelint/ignore` annotations. It reports a
+rule code or name that no rule has, a suppression that names `KL0001` `invalid-yaml`
+(syntax errors cannot be suppressed), and a suppression that names no rule at all.
 
 ## Why it matters
 
 A suppression with a typo silences nothing, so the finding it was meant to hide is still
-reported, or, worse, the comment looks like it documents an accepted risk that nobody
+reported, or, worse, the suppression looks like it documents an accepted risk that nobody
 actually reviewed. Reporting it keeps suppressions honest.
 
 ## Example

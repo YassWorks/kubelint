@@ -33,8 +33,8 @@ GitHub Action integration.
 
 - [x] Release workflow: every merge to `main` that changes code builds binaries for
   Linux, macOS and Windows and publishes a GitHub Release
-- [ ] `kubelint/ignore` annotation to silence rules on one object (designed in
-  [`user/configuration.md`](user/configuration.md#annotations-planned))
+- [x] `kubelint/ignore` annotation to silence rules on one object (designed in
+  [`user/configuration.md`](user/configuration.md#annotations))
 - [ ] `xtask` crate with `cargo xtask gen-rule-docs` writing `docs/rules/<CODE>.md` from
   each rule, and a CI check that fails when the pages are stale
 - [ ] User docs: getting started, suppressions, CI integration; the README links to them
@@ -102,6 +102,10 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 - KL2002 and KL2009 share the same lookup of one boolean `securityContext` field
   (wrong value, unset or null, or a schema problem). A helper in `security/mod.rs`
   would share it.
+
+- KL0003 points every bad rule in a `kubelint/ignore` annotation at the whole value,
+  not at the rule's own text, and says nothing about a value that is not a string or an
+  annotation on a `kind: List` itself.
 
 ## Rule ideas
 

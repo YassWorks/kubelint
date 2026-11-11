@@ -82,8 +82,9 @@ impl Linter {
     ///
     /// YAML syntax errors are always reported as KL0001, whatever rules are enabled;
     /// the other documents of a file with an error are still checked. Findings silenced
-    /// by suppression comments (`# kubelint-disable-line KL1001`) are dropped; KL0003
-    /// reports the suppression comments that cannot work.
+    /// by suppression comments (`# kubelint-disable-line KL1001`) or by an object's
+    /// `kubelint/ignore` annotation are dropped; KL0003 reports the suppressions that
+    /// cannot work.
     pub fn lint(&self, files: &[SourceFile]) -> LintResult {
         let parses: Vec<_> = files
             .par_iter()
@@ -167,6 +168,7 @@ impl Linter {
             diagnostics.extend(InvalidSuppression::diagnostics(
                 id,
                 &parse.comments,
+                &objects,
                 enabled.severity,
             ));
         }
@@ -185,7 +187,7 @@ impl Linter {
             }
         }
 
-        let suppressions = Suppressions::new(file, &parse.comments);
+        let suppressions = Suppressions::new(file, &parse.comments, &objects);
         diagnostics.retain(|diagnostic| !suppressions.suppresses(file, diagnostic));
         FileLint {
             objects,

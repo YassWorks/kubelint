@@ -44,4 +44,32 @@ warning[KL0003]: suppression comment names no rule
    |           ^^^^^^^^^^^^^^^^^^^^^^^
   = help: list the rule codes or names to silence, such as `# kubelint-disable-line KL1001`
 
-6 finding(s) in 6 object(s)
+warning[KL0003]: `privileged-containers` is not a rule code or name
+  --> syntax/KL0003.yaml:42:22
+   |
+42 |     kubelint/ignore: "privileged-containers, KL3003,security, run-as-root"
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: did you mean `privileged-container`?
+
+warning[KL0003]: `security` is not a rule code or name
+  --> syntax/KL0003.yaml:42:22
+   |
+42 |     kubelint/ignore: "privileged-containers, KL3003,security, run-as-root"
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: name a rule by its code (`KL1001`) or its name (`missing-api-version`); categories and prefixes are not accepted here
+
+warning[KL0003]: `invalid-yaml` cannot be suppressed
+  --> syntax/KL0003.yaml:48:88
+   |
+48 | - {apiVersion: v1, kind: ConfigMap, metadata: {name: a, annotations: {kubelint/ignore: invalid-yaml}}}
+   |                                                                                        ^^^^^^^^^^^^
+  = help: syntax errors are always reported; fix the YAML instead
+
+warning[KL0003]: `kubelint/ignore` annotation names no rule
+  --> syntax/KL0003.yaml:49:88
+   |
+49 | - {apiVersion: v1, kind: ConfigMap, metadata: {name: b, annotations: {kubelint/ignore: " , "}}}
+   |                                                                                        ^^^^^
+  = help: list the rule codes or names to silence, such as `kubelint/ignore: "KL2001,KL3003"`
+
+10 finding(s) in 10 object(s)
