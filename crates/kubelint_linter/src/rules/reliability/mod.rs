@@ -4,11 +4,13 @@
 mod missing_memory_limit;
 mod missing_readiness_probe;
 mod missing_resource_requests;
+mod single_replica;
 mod unpinned_image_tag;
 
 pub use missing_memory_limit::MissingMemoryLimit;
 pub use missing_readiness_probe::MissingReadinessProbe;
 pub use missing_resource_requests::MissingResourceRequests;
+pub use single_replica::SingleReplica;
 pub use unpinned_image_tag::UnpinnedImageTag;
 
 use kubelint_source::TextRange;

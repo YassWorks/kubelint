@@ -114,7 +114,7 @@ URLs); a list of known names (misses every name it does not list).
 | KL3002 | `missing-resource-requests` | on | warning | implemented | M2 | A container has no CPU or memory `requests`. |
 | KL3003 | `unpinned-image-tag` | on | warning | implemented | M2 | An image uses `:latest` or no tag at all (digests are fine). |
 | KL3004 | `missing-readiness-probe` | off | info | implemented | M2 | A long-running workload container has no `readinessProbe`. |
-| KL3005 | `single-replica` | off | info | planned | M2 | A Deployment or StatefulSet runs exactly one replica. |
+| KL3005 | `single-replica` | off | info | implemented | M2 | A Deployment or StatefulSet sets `replicas: 1`. |
 
 KL3004 checks the regular containers of Deployments, StatefulSets, DaemonSets,
 ReplicaSets and ReplicationControllers only.
@@ -127,3 +127,15 @@ and ephemeral containers.
 
 **Rejected:** checking bare Pods (noise from test and debug pods); checking sidecars
 (findings the manifest author often cannot fix); checking Jobs and CronJobs.
+
+KL3005 reports only an explicit `replicas: 1`, not a missing `replicas`, although
+Kubernetes defaults a missing one to 1.
+
+**Why:** a HorizontalPodAutoscaler owns `replicas` when one targets the workload, and
+its documentation asks manifests to leave the field out. The autoscaler often lives in
+another file, chart or repository, so reporting a missing field would flag every
+autoscaled workload.
+
+**Rejected:** reporting a missing `replicas` (noise on every autoscaled workload);
+checking ReplicaSets and ReplicationControllers (a ReplicaSet is usually owned by a
+Deployment, and ReplicationControllers are legacy).

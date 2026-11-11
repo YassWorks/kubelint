@@ -1,0 +1,42 @@
+## What it does
+
+Reports a Deployment or StatefulSet that sets `replicas: 1`. A workload without
+`replicas` is skipped, because a HorizontalPodAutoscaler usually manages that field and
+its documentation asks you to leave it out. `replicas: 0` is skipped too, because it
+scales a workload down on purpose.
+
+This rule is off by default, at `info` severity: a single replica is the right choice
+for many development environments, for singletons that must not run twice, and for
+databases that do not replicate. Enable it with `--select KL3005` or in
+`kubelint.toml`.
+
+## Why it matters
+
+With one replica, every event that stops that pod stops the workload: the pod crashes,
+its node fails or is drained for an upgrade, or the cluster autoscaler removes the
+node. A Deployment rollout with one replica also leaves no spare pod if the new one
+does not become ready. A PodDisruptionBudget cannot help either: with one replica it
+either blocks every node drain or allows the only pod to go. Two or more replicas,
+ideally spread across nodes, keep the workload serving while one of them is replaced.
+
+## Example
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 1
+```
+
+Use instead:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+spec:
+  replicas: 2
+```
