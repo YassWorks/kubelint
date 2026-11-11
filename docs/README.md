@@ -4,7 +4,10 @@
 
 | Document | What it covers |
 | --- | --- |
-| [`user/configuration.md`](user/configuration.md) | The config file, rule selection, command-line flags, exclusions and suppressions. |
+| [`user/getting-started.md`](user/getting-started.md) | Install kubelint, run it, read a finding, exit codes, Helm and Kustomize. |
+| [`user/configuration.md`](user/configuration.md) | The config file, rule selection, command-line flags and exclusions. |
+| [`user/suppressions.md`](user/suppressions.md) | Silencing findings with comments and the `kubelint/ignore` annotation. |
+| [`user/ci-integration.md`](user/ci-integration.md) | Installing in CI, GitHub Actions, GitLab CI, pre-commit. |
 | [`user/output-formats.md`](user/output-formats.md) | Human, JSON, SARIF and GitHub output, and the `rules` commands. |
 | [`rules/`](rules/README.md) | The rule catalog: every rule code, planned or implemented. |
 
