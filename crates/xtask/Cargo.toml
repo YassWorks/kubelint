@@ -1,0 +1,17 @@
+[package]
+name = "xtask"
+description = "Developer automation for kubelint, run with `cargo xtask`."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+publish = false
+
+[dependencies]
+kubelint_linter = { workspace = true }
+
+[lints]
+workspace = true
