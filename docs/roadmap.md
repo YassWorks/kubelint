@@ -11,8 +11,9 @@ needs the items above it. Work on the first unchecked item of the current milest
 
 ## Current focus
 
-**M2: Configuration, output formats and the rule set.** The rules, configuration file,
-suppressions and machine-readable output that make kubelint useful in CI.
+**M3: Ready for real use.** Per-object suppression, generated rule docs, user docs,
+a performance budget, real-world validation, diagnostic polish, and pre-commit and
+GitHub Action integration.
 
 ## Done
 
@@ -21,61 +22,12 @@ suppressions and machine-readable output that make kubelint useful in CI.
 - **M1: Walking skeleton** (2026-11-03). YAML tree with byte ranges and error recovery,
   Kubernetes object and workload views, the rule engine and its snapshot harness, KL0001,
   KL1001, KL1002, human output, `kubelint check` with Helm chart skipping.
-
-## M2: Configuration, output formats and the rule set (target: 2026-11-17)
-
-Engine and user experience:
-
-- [x] KL0002 `duplicate-key`
-- [x] Rule selection: selectors, default set, severity overrides, `fail-on`
-- [x] `kubelint.toml` discovery and parsing with precise errors
-- [x] `--config`, `--isolated`, `--select`, `--ignore`, `--fail-on`
-- [x] `[files] exclude` globs
-- [x] Suppression comments, and KL0003 `invalid-suppression`
-- [x] `kubelint rules` and `kubelint rule <code|name>`
-- [x] Parallel linting with deterministic output order
-- [x] `--format json`, `--format sarif`, `--format github`
-- [x] "Did you mean" suggestions for unknown rule codes and names
-
-Correctness rules:
-
-- [x] KL1003 `missing-object-name`
-- [x] KL1004 `duplicate-object`
-- [x] KL1005 `selector-mismatch`
-- [x] KL1006 `duplicate-container-name`
-- [x] Resource quantity parser matching Kubernetes' `resource.Quantity`
-- [x] KL1007 `invalid-resource-quantity`
-- [x] Validators for DNS-1123 names and label syntax
-- [x] KL1008 `invalid-object-name`
-- [x] KL1010 `invalid-label`
-- [x] KL1009 `non-string-env-value`
-- [x] KL1011 `duplicate-env-name`: the same env `name` twice in one container's `env`.
-  Report the later one with a "first set here" label, like KL1006. `envFrom` is out of
-  scope.
-
-Security rules:
-
-- [x] KL2001 `privileged-container`
-- [x] KL2002 `privilege-escalation-allowed`
-- [x] KL2003 `run-as-root`: container settings override pod settings. Add a helper in
-  `kubelint_k8s` that merges the pod and container `securityContext`.
-- [x] KL2004 `host-namespace`
-- [x] KL2005 `host-path-volume`
-- [x] KL2006 `dangerous-capability`
-- [x] KL2007 `docker-socket-mount`: a `hostPath` volume whose path is a container
-  runtime socket. KL2005 then skips the volumes KL2007 reports, so one mount gets one
-  finding.
-- [x] KL2008 `secret-in-env-literal`
-- [x] KL2009 `writable-root-filesystem` (off by default)
-
-Reliability rules:
-
-- [x] KL3001 `missing-memory-limit`
-- [x] KL3002 `missing-resource-requests`
-- [x] KL3003 `unpinned-image-tag`, with an image reference parser that handles registry
-  ports (`host:5000/app`) and digests
-- [x] KL3004 `missing-readiness-probe` (off by default)
-- [x] KL3005 `single-replica` (off by default)
+- **M2: Configuration, output formats and the rule set** (2026-11-11). `kubelint.toml`
+  with rule selection, severity overrides, `fail-on` and `[files] exclude`; the matching
+  CLI flags; suppression comments; `kubelint rules` and `kubelint rule`; parallel
+  linting with deterministic output order; JSON, SARIF and GitHub output; "did you
+  mean" suggestions; the quantity and image reference parsers and the name and label
+  validators; KL0002, KL0003, KL1003 to KL1011, KL2001 to KL2009 and KL3001 to KL3005.
 
 ## M3: Ready for real use (target: 2026-11-24)
 
