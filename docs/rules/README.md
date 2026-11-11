@@ -5,9 +5,10 @@ find it here. Before inventing a new rule, add a row here first (status `planned
 same PR or an earlier one. Codes and names are permanent once a release ships them (see
 [Codes and names](#codes-and-names)).
 
-Per-rule documentation pages (`docs/rules/<CODE>.md`) will be generated from each rule
-by the rule docs generator in the M3 roadmap. Until then, each rule's explanation is the
-source of truth (`kubelint rule <CODE>` prints it).
+Each rule has a documentation page, `docs/rules/<CODE>.md` (for example
+[`KL2001.md`](KL2001.md)). The pages are generated from the rules with
+`cargo xtask gen-rule-docs` and hold the same text as `kubelint rule <CODE>`. Edit the
+rule's `.md` explanation, never the page.
 
 **Columns.** *Default* is whether the rule is enabled with zero configuration. *Severity*
 is the default severity. *Milestone* is the roadmap milestone that ships it.

@@ -49,6 +49,27 @@ pub struct RuleMeta {
     pub explanation: &'static str,
 }
 
+impl RuleMeta {
+    /// The rule's documentation page in Markdown, printed by `kubelint rule` and written to
+    /// `docs/rules/<CODE>.md`.
+    pub fn documentation(&self) -> String {
+        let enabled = if self.default_enabled {
+            "Enabled by default"
+        } else {
+            "Disabled by default, select it by code or name to run it"
+        };
+        format!(
+            "# {} `{}`\n\n{}\n\nCategory: `{}`. Severity: `{}`. {enabled}.\n\n{}\n",
+            self.code,
+            self.name,
+            self.summary,
+            self.category.as_str(),
+            self.default_severity.as_str(),
+            self.explanation.trim_end_matches('\n'),
+        )
+    }
+}
+
 /// The group a rule belongs to. Users can select a whole category by name (`security`)
 /// or by code prefix (`KL2`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]

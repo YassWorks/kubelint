@@ -82,7 +82,9 @@ small example to copy.
    `src/rules/snapshots/kubelint_linter__rules__tests__<CODE>.snap`: every reported
    position and message should be exactly what you expect, and every `Not reported`
    case should be absent.
-6. **Update the catalog row** status to `implemented` and tick the roadmap item.
+6. **Generate the rule's page** with `cargo xtask gen-rule-docs`, which writes
+   `docs/rules/<CODE>.md`. A test fails while a page is missing or stale.
+7. **Update the catalog row** status to `implemented` and tick the roadmap item.
 
 A good diagnostic message names the object and the field and says what is wrong; the
 help says how to fix it. This is how `kubelint check` prints one:

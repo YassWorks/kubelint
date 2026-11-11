@@ -23,6 +23,12 @@ cargo test --workspace --all-features --locked
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features --locked
 ```
 
+After changing a rule's metadata or explanation, regenerate its page in `docs/rules/`:
+
+```bash
+cargo xtask gen-rule-docs
+```
+
 Accept changed `insta` snapshots, then review the `.snap` diffs:
 
 ```bash

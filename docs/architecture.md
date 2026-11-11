@@ -44,7 +44,7 @@ then rule code) so results are deterministic regardless of thread scheduling.
 ## Crates
 
 All crates live in `crates/` and are named `kubelint_*` (the CLI binary is just
-`kubelint`). Every crate inherits version, edition and lints from the workspace.
+`kubelint`, and the developer tasks are `xtask`). Every crate inherits version, edition and lints from the workspace.
 
 | Crate | Responsibility | May depend on (internal) |
 | --- | --- | --- |
@@ -56,6 +56,7 @@ All crates live in `crates/` and are named `kubelint_*` (the CLI binary is just
 | `kubelint_linter` | `Rule` trait, `RuleMeta`, `Category`, the static rule registry, selector resolution, suppression comments and annotations, the lint engine, all built-in rules, and the rule test harness. | source, yaml, k8s, diagnostics, config |
 | `kubelint_output` | Renderers: `human` (`annotate-snippets`), `json`, `sarif`, `github`. | source, diagnostics |
 | `kubelint` | CLI: `clap` argument parsing, file discovery (`ignore` crate, Helm chart detection), stdin, orchestration, exit codes. Thin. | all of the above |
+| `xtask` | Developer automation run with `cargo xtask <task>`: `gen-rule-docs` writes `docs/rules/<CODE>.md`. Not part of the release binary. | linter |
 
 **Layering rule:** dependencies point downward in the table only. Lower crates never know
 about higher ones. If a lower crate seems to need something from a higher one, the type
@@ -65,7 +66,6 @@ Planned crates (create them when their milestone starts, not before):
 
 - `kubelint_schema` (M4): bundled Kubernetes API schemas and the span-aware validator.
 - `kubelint_lsp` (M5): language server.
-- `xtask` (M3): developer automation, starting with rule docs generation.
 
 Publishing the CLI to crates.io means publishing every internal crate too. They are
 internal, with no stability guarantee.
@@ -214,6 +214,20 @@ pub struct RuleMeta {
   passes in. That keeps them parallel-safe and trivially testable.
 - Codes, names and categories follow the policy in
   [`rules/README.md`](rules/README.md#codes-and-names). Both are permanent once released.
+
+### Rule documentation pages
+
+A rule's page is `RuleMeta::documentation`, the same text `kubelint rule` prints. The
+test `crates/xtask/tests/rule_docs.rs` regenerates every page in memory and fails when a
+committed page differs, or when
+`docs/rules/` holds a page for a code that no rule has.
+
+**Why a test:** CI already runs the tests on every platform, so a stale page fails CI
+with no workflow change, and the check also runs locally with `cargo test`.
+
+**Rejected:** a separate CI job that runs the generator and then `git diff --exit-code`
+(one more job to keep in `ci-success`, and it does not run locally); writing the pages
+from a `build.rs` (a build that writes into the source tree).
 
 ### Diagnostics and exit codes
 

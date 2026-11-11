@@ -80,21 +80,9 @@ fn json() -> String {
 
 /// The documentation of the rule with this code or name.
 pub fn explain(selector: &str) -> Option<String> {
-    let meta = metas().find(|meta| meta.code == selector || meta.name == selector)?;
-    let enabled = if meta.default_enabled {
-        "Enabled by default"
-    } else {
-        "Disabled by default, select it by code or name to run it"
-    };
-    Some(format!(
-        "# {} `{}`\n\n{}\n\nCategory: `{}`. Severity: `{}`. {enabled}.\n\n{}\n",
-        meta.code,
-        meta.name,
-        meta.summary,
-        meta.category.as_str(),
-        meta.default_severity.as_str(),
-        meta.explanation.trim_end_matches('\n'),
-    ))
+    metas()
+        .find(|meta| meta.code == selector || meta.name == selector)
+        .map(RuleMeta::documentation)
 }
 
 #[cfg(test)]

@@ -35,7 +35,7 @@ GitHub Action integration.
   Linux, macOS and Windows and publishes a GitHub Release
 - [x] `kubelint/ignore` annotation to silence rules on one object (designed in
   [`user/configuration.md`](user/configuration.md#annotations))
-- [ ] `xtask` crate with `cargo xtask gen-rule-docs` writing `docs/rules/<CODE>.md` from
+- [x] `xtask` crate with `cargo xtask gen-rule-docs` writing `docs/rules/<CODE>.md` from
   each rule, and a CI check that fails when the pages are stale
 - [ ] User docs: getting started, suppressions, CI integration; the README links to them
 - [ ] Benchmark corpus generator (`cargo xtask gen-corpus`) and a measurement against
@@ -106,6 +106,9 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 - KL0003 points every bad rule in a `kubelint/ignore` annotation at the whole value,
   not at the rule's own text, and says nothing about a value that is not a string or an
   annotation on a `kind: List` itself.
+
+- The release workflow treats every change under `crates/` as code, so a change that
+  touches only `crates/xtask` publishes a release with an unchanged binary.
 
 ## Rule ideas
 
