@@ -85,6 +85,21 @@ alternative examples), and only one of them is applied. On four public repositor
 comparing the files of one directory (65 of those findings were variants side by side
 in one directory, such as `pod-nginx.yaml` and `pod-nginx-specific-node.yaml`).
 
+KL1008 and KL1010 skip a name, namespace, label key or label value with a template
+placeholder: `{{`, or `$` followed by `{`, `(`, a letter or `_`.
+
+**Why:** manifests kept as templates for tools other than Helm (envsubst, Jinja,
+shell scripts) are linted as they are. A placeholder makes the value invalid only
+until it is rendered, and the conventions say a rule that cannot decide stays silent.
+
+**Rejected:** reporting placeholders (every templated name becomes an error); skipping
+the whole object (hides findings that do not depend on the placeholder).
+
+Known costs: the literal text around a placeholder is not checked either
+(`My_App-{{x}}` is silent although no rendering fixes it), and a `$NAME` in a manifest
+that no tool renders is silent too, although Kubernetes expands `$(VAR)` only in
+`command`, `args` and `env`, never in metadata.
+
 ## Security
 
 | Code | Name | Default | Severity | Status | Milestone | What it catches |

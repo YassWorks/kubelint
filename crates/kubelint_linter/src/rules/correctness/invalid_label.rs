@@ -6,7 +6,7 @@ use kubelint_k8s::{
 };
 use kubelint_yaml::{Entry, Node, NodeKind, ResolvedScalar};
 
-use super::shown;
+use super::{has_placeholder, shown};
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
 /// Reports a label key or value that breaks Kubernetes' label syntax, and a label value
@@ -88,7 +88,9 @@ fn check_entry(cx: &mut ObjectContext<'_>, entry: &Entry, what: &str) {
     let Some(key) = entry.key_str() else {
         return;
     };
-    if let Err(error) = is_qualified_name(key) {
+    if !has_placeholder(key)
+        && let Err(error) = is_qualified_name(key)
+    {
         let message = format!("{what} key `{}` is invalid: {error}", shown(key));
         cx.report(cx.diagnostic(entry.key.range, message).with_help(KEY_HELP));
     }
@@ -115,7 +117,9 @@ fn check_entry(cx: &mut ObjectContext<'_>, entry: &Entry, what: &str) {
         );
         return;
     }
-    if let Err(error) = is_valid_label_value(value) {
+    if !has_placeholder(value)
+        && let Err(error) = is_valid_label_value(value)
+    {
         let message = format!(
             "{what} value `{}` of `{}` is invalid: {error}",
             shown(value),

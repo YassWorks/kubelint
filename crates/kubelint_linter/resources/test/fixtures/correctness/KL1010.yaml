@@ -119,3 +119,32 @@ metadata:
 spec:
   selector:
     app: not a label
+---
+# Not reported: placeholders of template tools, whose final text kubelint cannot see.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: templated
+  labels:
+    keyspace: "{{keyspace}}"
+    shard: "{{ .Values.shard }}"
+    tablet: ${TABLET_ALIAS}
+    "{{label_key}}": web
+    build: $(BUILD_ID)
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Reported: a `$` that starts no placeholder, and a single brace.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: almost-templated
+  labels:
+    price: costs-$5
+    team: "{team}"
+spec:
+  containers:
+  - name: app
+    image: app:1.0

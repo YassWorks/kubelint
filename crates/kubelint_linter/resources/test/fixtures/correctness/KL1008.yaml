@@ -80,3 +80,26 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: ""
+---
+# Not reported: placeholders of template tools in a name and a namespace.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: process-item-$ITEM
+  namespace: ${NAMESPACE}
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: etcd-{{cell}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-web"
+---
+# Reported: a `$` that starts no placeholder.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: price-$5

@@ -52,7 +52,7 @@ GitHub Action integration.
     `kubernetes/website`)
   - [x] KL2008 reports a flag whose name contains a secret word, such as
     `MYSQL_ALLOW_EMPTY_PASSWORD: "1"`
-  - [ ] KL1008 and KL1010 report placeholders of other template tools (`etcd-{{cell}}`,
+  - [x] KL1008 and KL1010 report placeholders of other template tools (`etcd-{{cell}}`,
     `process-item-$ITEM`), which a rule that cannot decide should leave alone
   - [ ] KL2002 and KL2003 noise: 415 and 426 findings in 956 objects. Decide whether
     either should be off by default (see the known gap)

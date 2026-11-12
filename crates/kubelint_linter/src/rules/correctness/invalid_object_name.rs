@@ -7,7 +7,7 @@ use kubelint_k8s::{
 };
 use kubelint_yaml::{Node, NodeKind, ResolvedScalar};
 
-use super::shown;
+use super::{has_placeholder, shown};
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
 /// Reports a `metadata.name` that the API server would reject for the object's kind,
@@ -122,14 +122,17 @@ fn name_format(kind: BuiltinKind) -> NameFormat {
     }
 }
 
-/// The text of a non-empty string value. Numbers, booleans and collections are schema
-/// problems; empty names are KL1003's.
+/// The text of a non-empty string value without a template placeholder. Numbers,
+/// booleans and collections are schema problems; empty names are KL1003's.
 fn string_value(node: &Node) -> Option<&str> {
     let NodeKind::Scalar(scalar) = &node.kind else {
         return None;
     };
-    (scalar.resolve_kubernetes() == ResolvedScalar::String && !scalar.value.trim().is_empty())
-        .then_some(scalar.value.as_str())
+    let text = scalar.value.as_str();
+    (scalar.resolve_kubernetes() == ResolvedScalar::String
+        && !text.trim().is_empty()
+        && !has_placeholder(text))
+    .then_some(text)
 }
 
 fn check(name: &str, format: NameFormat) -> Result<(), String> {
