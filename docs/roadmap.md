@@ -48,21 +48,37 @@ GitHub Action integration.
 - [ ] GitHub Action (`action.yml`, composite: install the release binary, run with
   `--format github` or upload SARIF) and docs
 
-## M4: Schema validation (outline)
+## M4: Schema validation (target: 2026-12-08)
 
-- Decide and document in `architecture.md`: the schema source (Kubernetes OpenAPI v3 in
-  `kubernetes/kubernetes` `api/openapi-spec/v3`), the supported version window (latest
-  4 to 5 minor versions), the storage format (generated, compact, embedded in the
-  binary) and the validator design (span-aware, our own, not a generic JSON Schema
-  crate).
-- `kubelint_schema` crate and an `xtask` importer.
-- `--kubernetes-version` flag and config key, defaulting to the latest supported
-  version.
-- Rules KL1101 to KL1106, with "did you mean" for unknown fields. KL1102
-  `invalid-field-type` must not report again the values KL1009 and KL1010 already
-  report.
-- Custom resources: unknown kinds are skipped by schema rules. User-provided CRD schemas
-  come later.
+- [ ] Design: a schema section in [`architecture.md`](architecture.md) that decides the
+  schema source (Kubernetes OpenAPI v3 in `kubernetes/kubernetes` `api/openapi-spec/v3`),
+  the supported version window (latest 4 to 5 minor versions), the storage format
+  (generated, compact, embedded in the binary) and the validator design (span-aware, our
+  own, not a generic JSON Schema crate)
+- [ ] `kubelint_schema` crate: the in-memory schema model (object properties, required
+  fields, scalar types, enums, lists and maps) and a lookup by `apiVersion` and `kind`,
+  tested with small hand-written schemas
+- [ ] `cargo xtask import-schemas`: turn the OpenAPI v3 files of one Kubernetes version,
+  vendored under `crates/kubelint_schema/openapi/<version>/`, into the storage format,
+  and a test that fails when the committed output is stale
+- [ ] Import every version of the window and embed it in the binary; record the binary
+  size
+- [ ] `--kubernetes-version` flag and `kubernetes-version` config key, defaulting to the
+  latest supported version
+- [ ] Span-aware validator that walks an object against its schema and stays silent on
+  kinds it does not know (custom resources). User-provided CRD schemas come after M4
+- [ ] KL1101 `unknown-field`, with "did you mean" suggestions
+- [ ] KL1102 `invalid-field-type`, without reporting again the values KL1009 and KL1010
+  already report
+- [ ] KL1103 `missing-required-field`
+- [ ] KL1106 `invalid-enum-value`
+- [ ] API version lifecycle table (deprecated in, removed in, replacement) and KL1104
+  `removed-api-version` and KL1105 `deprecated-api-version`. Removed versions are absent
+  from the OpenAPI files, so the table is written by hand from the Kubernetes
+  deprecation guide
+- [ ] Measure the lint time against the M3 benchmark with every schema rule enabled; fix
+  hotspots if over budget
+- [ ] User docs: choosing the Kubernetes version, and what schema validation covers
 
 ## M5: Autofix and editor support (outline)
 
@@ -85,7 +101,8 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 - The YAML 1.1 scalar tables in `kubelint_yaml::resolve` were written from memory of
   `gopkg.in/yaml.v2` `resolve.go` and are not yet compared with the upstream source.
 - An empty selector (`selector: {}`) on an `apps/v1` workload is rejected by the API
-  server but not reported (schema validation, M4).
+  server but not reported. The API server's validation code rejects it, not the OpenAPI
+  schema, so M4 schema rules will not catch it: it needs its own correctness rule.
 - A namespaced object without `namespace` and the same object with
   `namespace: default` are not reported as KL1004 duplicates.
 - The rule snapshot harness renders secondary labels with the primary file's text, so
