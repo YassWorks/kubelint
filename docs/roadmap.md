@@ -40,8 +40,22 @@ GitHub Action integration.
 - [x] User docs: getting started, suppressions, CI integration; the README links to them
 - [x] Benchmark corpus generator (`cargo xtask gen-corpus`) and a measurement against
   the 10,000 objects in under a second budget; fix hotspots if over
-- [ ] Real-world validation: run kubelint over public manifest collections and fix each
-  false positive in its own pull request
+- Real-world validation: run kubelint over public manifest collections and fix each
+  false positive in its own pull request. The first run (2026-11-12) covered
+  `kubernetes/examples`, the examples of `kubernetes/website`,
+  `GoogleCloudPlatform/microservices-demo` and `argoproj/argocd-example-apps`: 956
+  objects in 785 files. Its false positives, one item each:
+  - [x] KL1004 compared objects across files, and reported variants of one application
+    kept in separate files or directories (209 findings, all across files)
+  - [ ] KL0001 rejects `\'` in a double-quoted scalar, which the YAML parsers kubectl
+    uses (libyaml and `go-yaml`) accept (`pods/inject/envars-file-container.yaml` in
+    `kubernetes/website`)
+  - [ ] KL2008 reports a flag whose name contains a secret word, such as
+    `MYSQL_ALLOW_EMPTY_PASSWORD: "1"`
+  - [ ] KL1008 and KL1010 report placeholders of other template tools (`etcd-{{cell}}`,
+    `process-item-$ITEM`), which a rule that cannot decide should leave alone
+  - [ ] KL2002 and KL2003 noise: 415 and 426 findings in 956 objects. Decide whether
+    either should be off by default (see the known gap)
 - [ ] Diagnostic polish: review every rule's message, help and explanation against the
   "explains itself" bar in [`vision.md`](vision.md)
 - [ ] `.pre-commit-hooks.yaml` and docs
@@ -103,8 +117,6 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   schema, so M4 schema rules will not catch it: it needs its own correctness rule.
 - A namespaced object without `namespace` and the same object with
   `namespace: default` are not reported as KL1004 duplicates.
-- The rule snapshot harness renders secondary labels with the primary file's text, so
-  cross-file findings need unit tests.
 - KL2002 and KL2003 are on by default. A container that sets neither
   `allowPrivilegeEscalation: false` nor `runAsNonRoot: true` (in the container or the
   pod) gets both warnings, which is common in typical manifests. Measure their noise

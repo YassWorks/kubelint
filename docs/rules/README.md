@@ -59,7 +59,7 @@ and those references must stay valid and readable across releases.
 | KL1001 | `missing-api-version` | on | error | implemented | M1 | Object has no `apiVersion`, or an empty one. |
 | KL1002 | `missing-kind` | on | error | implemented | M1 | Object has no `kind`, or an empty one. |
 | KL1003 | `missing-object-name` | on | error | implemented | M2 | No `metadata.name` (and no `metadata.generateName`). |
-| KL1004 | `duplicate-object` | on | error | implemented | M2 | The same kind/namespace/name is defined more than once across the linted files. |
+| KL1004 | `duplicate-object` | on | error | implemented | M2 | The same kind/namespace/name is defined more than once in one file. |
 | KL1005 | `selector-mismatch` | on | error | implemented | M2 | A workload's `spec.selector` does not match its pod template labels. |
 | KL1006 | `duplicate-container-name` | on | error | implemented | M2 | Two containers (including init containers) in one pod share a name. |
 | KL1007 | `invalid-resource-quantity` | on | error | implemented | M2 | A CPU/memory value like `512mb` or `0.5cores` that Kubernetes cannot parse. |
@@ -73,6 +73,17 @@ and those references must stay valid and readable across releases.
 | KL1104 | `removed-api-version` | on | error | planned | M4 | An `apiVersion` removed in the target Kubernetes version, with its replacement. |
 | KL1105 | `deprecated-api-version` | on | warning | planned | M4 | An `apiVersion` deprecated in the target Kubernetes version. |
 | KL1106 | `invalid-enum-value` | on | error | planned | M4 | A value outside a field's allowed set (for example `imagePullPolicy: Sometimes`). |
+
+KL1004 compares the objects of one file, never objects in different files.
+
+**Why:** repositories keep variants of the same object in separate files and
+directories (a Kustomize base next to plain manifests, one directory per environment,
+alternative examples), and only one of them is applied. On four public repositories
+(956 objects), all 209 findings across files were such variants, and none was a bug.
+
+**Rejected:** comparing every linted file (reports every overlay and environment);
+comparing the files of one directory (65 of those findings were variants side by side
+in one directory, such as `pod-nginx.yaml` and `pod-nginx-specific-node.yaml`).
 
 ## Security
 
