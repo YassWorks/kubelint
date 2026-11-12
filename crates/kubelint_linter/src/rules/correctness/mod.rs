@@ -12,6 +12,8 @@ mod missing_kind;
 mod missing_object_name;
 mod non_string_env_value;
 mod selector_mismatch;
+#[cfg(test)]
+mod tests;
 
 pub use duplicate_container_name::DuplicateContainerName;
 pub use duplicate_env_name::DuplicateEnvName;
@@ -90,4 +92,13 @@ fn shown(text: &str) -> String {
         Some((end, _)) if text.chars().count() > 40 => format!("{}...", &text[..end]),
         _ => text.to_owned(),
     }
+}
+
+/// Whether `value` holds a placeholder of a template tool (`{{ .Values.name }}`,
+/// `${NAME}`, `$(NAME)`, `$NAME`), so its final text is unknown.
+fn has_placeholder(value: &str) -> bool {
+    value.contains("{{")
+        || value.split('$').skip(1).any(|rest| {
+            rest.starts_with(|c: char| matches!(c, '{' | '(' | '_') || c.is_ascii_alphabetic())
+        })
 }

@@ -100,4 +100,18 @@ error[KL1010]: selector label value `web_` of `app.kubernetes.io/name` is invali
    |                             ^^^^
   = help: use letters, digits, `-`, `_` and `.`, for example `web`; free text belongs in an annotation
 
-14 finding(s) in 8 object(s)
+error[KL1010]: label value `costs-$5` of `price` is invalid: a valid label must be an empty string or consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyValue', 'my_value' or '12345')
+   --> correctness/KL1010.yaml:145:12
+    |
+145 |     price: costs-$5
+    |            ^^^^^^^^
+  = help: use letters, digits, `-`, `_` and `.`, for example `costs-5`; free text belongs in an annotation
+
+error[KL1010]: label value `{team}` of `team` is invalid: a valid label must be an empty string or consist of alphanumeric characters, '-', '_' or '.', and must start and end with an alphanumeric character (e.g. 'MyValue', 'my_value' or '12345')
+   --> correctness/KL1010.yaml:146:11
+    |
+146 |     team: "{team}"
+    |           ^^^^^^^^
+  = help: use letters, digits, `-`, `_` and `.`, for example `team`; free text belongs in an annotation
+
+16 finding(s) in 10 object(s)

@@ -58,4 +58,11 @@ error[KL1008]: `Team_A` is not a valid namespace name: a lowercase RFC 1123 labe
    |              ^^^^^^
   = help: use lowercase letters, digits and `-`, for example `team-a`
 
-8 finding(s) in 14 object(s)
+error[KL1008]: `price-$5` is not a valid `ConfigMap` name: a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com')
+   --> correctness/KL1008.yaml:105:9
+    |
+105 |   name: price-$5
+    |         ^^^^^^^^
+  = help: use lowercase letters, digits and `-`, for example `price-5`
+
+9 finding(s) in 18 object(s)

@@ -3,6 +3,10 @@
 Reports a `metadata.name` that is not valid for the object's kind, and a
 `metadata.namespace` that is not a valid namespace name.
 
+A name or namespace with a template placeholder (`{{ .Values.name }}`, `${NAME}`, `$(NAME)`,
+`$NAME`) is not reported, because its final text is only known once the template is
+rendered.
+
 ## Why it matters
 
 Kubernetes uses names in DNS records, URLs and file paths, so it restricts them. Most
