@@ -135,6 +135,49 @@ spec:
     - {name: DB_PASSWORD}
     - value: hunter2
 ---
+# Not reported: quoted switches that turn a secret feature on or off.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: flags
+spec:
+  containers:
+  - name: mysql
+    image: mysql:8.4
+    env:
+    - {name: MYSQL_ALLOW_EMPTY_PASSWORD, value: "1"}
+    - {name: MYSQL_RANDOM_ROOT_PASSWORD, value: "yes"}
+    - {name: REQUIRE_TOKEN, value: "False"}
+    - {name: DISABLE_PASSWORD, value: 'off'}
+    - {name: ENABLE_API_KEY, value: "0"}
+    - name: USE_SECRET
+      value: "true"
+---
+# Not reported: a password that is a switch word, the cost of skipping switches.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: weak
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    env:
+    - {name: DB_PASSWORD, value: "true"}
+---
+# Reported: a value that only starts like a switch.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: almost-flags
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    env:
+    - {name: DB_PASSWORD, value: "10"}
+    - {name: API_TOKEN, value: "yes-really"}
+---
 # Not reported: non-string values (KL1009 reports them) and a null value.
 apiVersion: v1
 kind: Pod

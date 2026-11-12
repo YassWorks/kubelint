@@ -118,6 +118,16 @@ keeps the rule low noise.
 **Rejected:** matching a secret word anywhere in the name (reports file paths and
 URLs); a list of known names (misses every name it does not list).
 
+KL2008 also skips a value that is a switch (`0`, `1`, `true`, `false`, `yes`, `no`,
+`on`, `off`, in any case).
+
+**Why:** names like `MYSQL_ALLOW_EMPTY_PASSWORD` end in a secret word but hold a
+switch. A password that is one of these words (`DB_PASSWORD: "true"`) protects
+nothing, so skipping it costs less than reporting every switch.
+
+**Rejected:** a list of switch name prefixes (`ALLOW_`, `ENABLE_`, `REQUIRE_`), which
+misses `MYSQL_RANDOM_ROOT_PASSWORD` and every prefix it does not list.
+
 ## Reliability
 
 | Code | Name | Default | Severity | Status | Milestone | What it catches |

@@ -32,6 +32,9 @@ const SECRET_SUFFIXES: [&str; 9] = [
     "CREDENTIALS",
 ];
 
+/// Values of a switch such as `MYSQL_ALLOW_EMPTY_PASSWORD: "1"`, compared in any case.
+const SWITCHES: [&str; 8] = ["0", "1", "true", "false", "yes", "no", "on", "off"];
+
 fn is_secret_name(name: &str) -> bool {
     let name = name.to_ascii_uppercase().replace(['_', '-', '.'], "");
     SECRET_SUFFIXES.iter().any(|suffix| name.ends_with(suffix))
@@ -50,6 +53,12 @@ fn is_reference(value: &str) -> bool {
                 .and_then(|rest| rest.strip_suffix('}'))
         });
     inner.is_some_and(|inner| !inner.contains(['$', '(', ')', '{', '}']))
+}
+
+fn is_switch(value: &str) -> bool {
+    SWITCHES
+        .iter()
+        .any(|switch| value.eq_ignore_ascii_case(switch))
 }
 
 impl Rule for SecretInEnvLiteral {
@@ -76,7 +85,9 @@ impl Rule for SecretInEnvLiteral {
                         .as_scalar()
                         .filter(|scalar| scalar.resolve_kubernetes() == ResolvedScalar::String)
                         .map(|scalar| scalar.value.trim())
-                        .is_some_and(|value| !value.is_empty() && !is_reference(value))
+                        .is_some_and(|value| {
+                            !value.is_empty() && !is_reference(value) && !is_switch(value)
+                        })
                 }) else {
                     continue;
                 };
