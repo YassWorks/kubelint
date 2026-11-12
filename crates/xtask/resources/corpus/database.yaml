@@ -1,0 +1,92 @@
+# A database: a StatefulSet with a headless Service, a Secret and a NetworkPolicy.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db-{n}
+  namespace: team-{n}
+spec:
+  serviceName: db-{n}
+  replicas: 3
+  selector:
+    matchLabels:
+      app: db-{n}
+  template:
+    metadata:
+      labels:
+        app: db-{n}
+    spec:
+      initContainers:
+      - name: init-permissions
+        image: busybox:1.36
+        command: ["sh", "-c", "chown -R 999:999 /data"]
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      containers:
+      - name: postgres
+        image: postgres:16.4@sha256:4ec37d2a07a0067f176fdcc9d4bb633a5724d2cc4f892c7a2046d054bb6939e5
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-{n}
+              key: password
+        resources:
+          requests: {cpu: 500m, memory: 1Gi}
+          limits: {memory: 2Gi}
+        readinessProbe:
+          exec:
+            command: [pg_isready, -U, postgres]
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: [ReadWriteOnce]
+      resources:
+        requests:
+          storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-{n}
+  namespace: team-{n}
+spec:
+  clusterIP: None
+  selector:
+    app: db-{n}
+  ports:
+  - port: 5432
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-{n}
+  namespace: team-{n}
+type: Opaque
+stringData:
+  password: changeme
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-{n}
+  namespace: team-{n}
+spec:
+  podSelector:
+    matchLabels:
+      app: db-{n}
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: web-{n}
+    ports:
+    - port: 5432

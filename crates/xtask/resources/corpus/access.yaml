@@ -1,0 +1,51 @@
+# Access control and plumbing: a ServiceAccount, a Role, a RoleBinding, an Ingress.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: web-{n}
+  namespace: team-{n}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: web-{n}-reader
+  namespace: team-{n}
+rules:
+- apiGroups: [""]
+  resources: [configmaps, secrets]
+  verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: web-{n}-reader
+  namespace: team-{n}
+subjects:
+- kind: ServiceAccount
+  name: web-{n}
+  namespace: team-{n}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: web-{n}-reader
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-{n}
+  namespace: team-{n}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: shop-{n}.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-{n}
+            port:
+              name: http

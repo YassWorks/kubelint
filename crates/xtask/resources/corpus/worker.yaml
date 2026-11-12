@@ -1,0 +1,44 @@
+# A background worker with typical findings: no limits, no probe, a latest tag.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker-{n}
+  namespace: team-{n}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: worker-{n}}
+  template:
+    metadata:
+      labels: {app: worker-{n}}
+    spec:
+      containers:
+      - name: worker
+        image: registry.example.com/shop/worker:latest
+        args: ["--queue", "orders-{n}", "--concurrency", "4"]
+        env:
+        - name: QUEUE_URL
+          value: amqp://queue.team-{n}.svc:5672
+        - name: RETRIES
+          value: "5"
+      - name: sidecar
+        image: busybox
+        command: [sh, -c, "tail -f /dev/null"]
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: worker-{n}
+  namespace: team-{n}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: worker-{n}
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target: {type: Utilization, averageUtilization: 80}

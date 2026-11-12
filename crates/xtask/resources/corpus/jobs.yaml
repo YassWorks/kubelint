@@ -1,0 +1,64 @@
+# Batch work and node agents: a CronJob, a Job and a privileged DaemonSet.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report-{n}
+  namespace: team-{n}
+spec:
+  schedule: "0 3 * * *"
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: report
+            image: registry.example.com/shop/report:2.0.{n}
+            resources:
+              requests: {cpu: 50m, memory: 64Mi}
+              limits: {memory: 128Mi}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-{n}
+  namespace: team-{n}
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: migrate
+        image: registry.example.com/shop/migrate:3.1.{n}
+        args: [up]
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-agent-{n}
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels: {app: node-agent-{n}}
+  template:
+    metadata:
+      labels: {app: node-agent-{n}}
+    spec:
+      hostNetwork: true
+      hostPID: true
+      containers:
+      - name: agent
+        image: registry.example.com/infra/agent:0.9.{n}
+        securityContext:
+          privileged: true
+          capabilities:
+            add: [SYS_ADMIN, NET_ADMIN]
+        volumeMounts:
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
