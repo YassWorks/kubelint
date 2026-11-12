@@ -1,6 +1,7 @@
 //! KL1004 `duplicate-object`.
 
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 
 use kubelint_diagnostics::{Label, Severity};
 use kubelint_k8s::Object;
@@ -9,8 +10,8 @@ use kubelint_source::TextRange;
 use super::entry_range;
 use crate::{Category, Rule, RuleMeta, RunContext};
 
-/// Reports an object defined more than once across the linted files: the same API
-/// group, kind, namespace and name.
+/// Reports an object defined more than once in one file: the same API group, kind,
+/// namespace and name.
 ///
 /// The version is not part of the identity, because `apps/v1` and `apps/v1beta2` serve
 /// the same objects. A missing namespace is kept apart from every written one, including
@@ -25,12 +26,12 @@ static META: RuleMeta = RuleMeta {
     category: Category::Correctness,
     default_severity: Severity::Error,
     default_enabled: true,
-    summary: "The same object is defined more than once.",
+    summary: "The same object is defined more than once in one file.",
     explanation: include_str!("duplicate_object.md"),
 };
 
 /// What makes two objects the same object.
-#[derive(PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 struct Identity<'a> {
     group: &'a str,
     kind: &'a str,
@@ -49,9 +50,12 @@ impl Rule for DuplicateObject {
             let Some((identity, range)) = identity(lint.object) else {
                 continue;
             };
-            let Some(&(first_file, first_range)) = first.get(&identity) else {
-                first.insert(identity, (lint.file, range));
-                continue;
+            let first_range = match first.entry((lint.file, identity)) {
+                Entry::Occupied(entry) => *entry.get(),
+                Entry::Vacant(entry) => {
+                    entry.insert(range);
+                    continue;
+                }
             };
             let message = match identity.namespace {
                 Some(namespace) => format!(
@@ -66,7 +70,7 @@ impl Rule for DuplicateObject {
             cx.report(
                 cx.diagnostic(lint.file, range, message)
                     .with_secondary(
-                        Label::new(first_file, first_range).with_message("first defined here"),
+                        Label::new(lint.file, first_range).with_message("first defined here"),
                     )
                     .with_help(
                         "rename one of them or remove the copy; when applied, the last one \
