@@ -49,7 +49,9 @@ GitHub Action integration.
     kept in separate files or directories (209 findings, all across files)
   - [ ] KL0001 rejects `\'` in a double-quoted scalar, which the YAML parsers kubectl
     uses (libyaml and `go-yaml`) accept (`pods/inject/envars-file-container.yaml` in
-    `kubernetes/website`)
+    `kubernetes/website`). `saphyr-parser` rejects it, so the fix lives in
+    `kubelint_yaml` and must not shift any `TextRange` (for example by rewriting `\'` to a
+    same-length sequence before parsing)
   - [x] KL2008 reports a flag whose name contains a secret word, such as
     `MYSQL_ALLOW_EMPTY_PASSWORD: "1"`
   - [x] KL1008 and KL1010 report placeholders of other template tools (`etcd-{{cell}}`,
