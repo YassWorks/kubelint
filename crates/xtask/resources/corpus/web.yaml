@@ -1,0 +1,85 @@
+# A web application: a Deployment, its Service and its ConfigMap, with no findings.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-{n}
+  namespace: team-{n}
+  labels:
+    app.kubernetes.io/name: web-{n}
+    app.kubernetes.io/part-of: shop
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: web-{n}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: web-{n}
+    spec:
+      serviceAccountName: web-{n}
+      securityContext:
+        runAsNonRoot: true
+      containers:
+      - name: web
+        image: registry.example.com/shop/web:1.4.{n}
+        ports:
+        - name: http
+          containerPort: 8080
+        env:
+        - name: LOG_LEVEL
+          value: info
+        - name: CONFIG_PATH
+          value: /etc/web/config.yaml
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            memory: 256Mi
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: [ALL]
+        volumeMounts:
+        - name: config
+          mountPath: /etc/web
+      volumes:
+      - name: config
+        configMap:
+          name: web-{n}-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-{n}
+  namespace: team-{n}
+spec:
+  selector:
+    app.kubernetes.io/name: web-{n}
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-{n}-config
+  namespace: team-{n}
+data:
+  config.yaml: |
+    server:
+      port: 8080
+      greeting: "Grüße aus Zürich"
+    features: [search, cart, checkout]

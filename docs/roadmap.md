@@ -38,7 +38,7 @@ GitHub Action integration.
 - [x] `xtask` crate with `cargo xtask gen-rule-docs` writing `docs/rules/<CODE>.md` from
   each rule, and a CI check that fails when the pages are stale
 - [x] User docs: getting started, suppressions, CI integration; the README links to them
-- [ ] Benchmark corpus generator (`cargo xtask gen-corpus`) and a measurement against
+- [x] Benchmark corpus generator (`cargo xtask gen-corpus`) and a measurement against
   the 10,000 objects in under a second budget; fix hotspots if over
 - [ ] Real-world validation: run kubelint over public manifest collections and fix each
   false positive in its own pull request
@@ -96,8 +96,6 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 - A file that is not valid UTF-8 stops the run with exit code 2. A per-file finding
   would be friendlier, but needs a new rule code.
 - KL0002 does not check the `items` wrapper of a `kind: List`.
-- `[files] exclude` filters files after walking excluded directories, and the CLI reads
-  files one by one. Measure both in the M3 benchmark.
 - The YAML 1.1 scalar tables in `kubelint_yaml::resolve` were written from memory of
   `gopkg.in/yaml.v2` `resolve.go` and are not yet compared with the upstream source.
 - An empty selector (`selector: {}`) on an `apps/v1` workload is rejected by the API

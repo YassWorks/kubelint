@@ -56,7 +56,7 @@ All crates live in `crates/` and are named `kubelint_*` (the CLI binary is just
 | `kubelint_linter` | `Rule` trait, `RuleMeta`, `Category`, the static rule registry, selector resolution, suppression comments and annotations, the lint engine, all built-in rules, and the rule test harness. | source, yaml, k8s, diagnostics, config |
 | `kubelint_output` | Renderers: `human` (`annotate-snippets`), `json`, `sarif`, `github`. | source, diagnostics |
 | `kubelint` | CLI: `clap` argument parsing, file discovery (`ignore` crate, Helm chart detection), stdin, orchestration, exit codes. Thin. | all of the above |
-| `xtask` | Developer automation run with `cargo xtask <task>`: `gen-rule-docs` writes `docs/rules/<CODE>.md`. Not part of the release binary. | linter |
+| `xtask` | Developer automation run with `cargo xtask <task>`: `gen-rule-docs` writes `docs/rules/<CODE>.md`, `gen-corpus` writes the [benchmark corpus](#measuring-it). Not part of the release binary. | linter |
 
 **Layering rule:** dependencies point downward in the table only. Lower crates never know
 about higher ones. If a lower crate seems to need something from a higher one, the type
@@ -321,7 +321,47 @@ How tests are written is in [`conventions.md`](conventions.md#tests).
 - No regex compilation per object (compile once, `std::sync::LazyLock`).
 - No per-object allocation of the whole document. Views borrow from the tree.
 
-A benchmark corpus and a check against this budget are part of the M3 roadmap.
+### Measuring it
+
+```bash
+cargo xtask gen-corpus
+cargo build --release
+time ./target/release/kubelint check target/bench-corpus --format json > /dev/null
+```
+
+`cargo xtask gen-corpus [--objects <N>] [<DIR>]` writes a deterministic corpus of
+exactly `N` objects (default 10,000) into `DIR` (default `target/bench-corpus`). Each
+group of five files is one application in its own namespace, built from the templates
+in `crates/xtask/resources/corpus/`: Deployments, a StatefulSet, a DaemonSet, a Job and
+a CronJob with Services, ConfigMaps, a Secret, RBAC, an Ingress, a network policy and
+an autoscaler. Some parts are clean and some have typical security and reliability
+findings. The corpus has no syntax or correctness findings, which
+`crates/xtask/tests/corpus.rs` checks along with the exact object count.
+
+Measured on 2026-11-12 (release build, 4 cores, Linux cloud container, 10,000 objects
+in 3,125 files, 19,375 findings):
+
+| Output | Wall time |
+| --- | --- |
+| `--format json` | 0.18 s |
+| `--format json`, one thread (`RAYON_NUM_THREADS=1`) | 0.38 s |
+| `--format human` | 0.30 to 0.37 s |
+| `--format json`, 20,000 objects with half excluded by `[files] exclude` | 0.19 s |
+
+The budget holds with room to spare, so no hotspot work is needed now. The human
+renderer is the largest single cost after linting. Reading files one by one and walking
+excluded directories are not measurable at this size.
+
+**Why a generated corpus:** it is reproducible on any machine with no download, scales
+to any size, and mixes the kinds and findings of a real repository.
+
+**Why no timing check in CI:** shared CI runners vary by more than the budget's margin,
+so a time limit would fail at random. The budget is measured by hand when the lint
+path changes (for example after M4 schema validation).
+
+**Rejected:** a public manifest collection as the corpus (needs the network and a
+license check, and its size is fixed); a `criterion` benchmark (a new dependency, and it
+measures library calls, not the binary users run); a CI time limit (flaky, see above).
 
 ## Dependencies
 

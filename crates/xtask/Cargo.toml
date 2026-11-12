@@ -13,5 +13,8 @@ publish = false
 [dependencies]
 kubelint_linter = { workspace = true }
 
+[dev-dependencies]
+kubelint_source = { workspace = true }
+
 [lints]
 workspace = true

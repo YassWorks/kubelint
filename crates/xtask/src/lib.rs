@@ -1,7 +1,7 @@
 //! Developer automation for kubelint, run with `cargo xtask <task>`.
 //!
-//! Tasks write files into the repository. A test checks that their committed output is
-//! up to date, so CI fails when someone forgets to run one.
+//! `gen-rule-docs` writes files into the repository, and a test fails when its committed
+//! output is stale. `gen-corpus` writes a benchmark corpus that is never committed.
 
 use std::path::{Path, PathBuf};
 
@@ -44,3 +44,33 @@ pub fn orphan_rule_pages() -> std::io::Result<Vec<PathBuf>> {
     }
     Ok(orphans)
 }
+
+/// The parts of one application, each a multi-document file where `{n}` is its number.
+const CORPUS_TEMPLATES: [&str; 5] = [
+    include_str!("../resources/corpus/web.yaml"),
+    include_str!("../resources/corpus/worker.yaml"),
+    include_str!("../resources/corpus/database.yaml"),
+    include_str!("../resources/corpus/jobs.yaml"),
+    include_str!("../resources/corpus/access.yaml"),
+];
+
+/// A deterministic benchmark corpus of exactly `objects` Kubernetes objects, as file
+/// names and contents. Each file holds one part of an application, the last one possibly
+/// cut short.
+pub fn corpus(objects: usize) -> Vec<(String, String)> {
+    let mut files = Vec::new();
+    let mut remaining = objects;
+    for (index, template) in CORPUS_TEMPLATES.iter().cycle().enumerate() {
+        if remaining == 0 {
+            break;
+        }
+        let app = (index / CORPUS_TEMPLATES.len()).to_string();
+        let documents: Vec<&str> = template.split(DOCUMENT_SEPARATOR).take(remaining).collect();
+        remaining -= documents.len();
+        let content = documents.join(DOCUMENT_SEPARATOR).replace("{n}", &app);
+        files.push((format!("corpus-{index:05}.yaml"), content));
+    }
+    files
+}
+
+const DOCUMENT_SEPARATOR: &str = "\n---\n";
