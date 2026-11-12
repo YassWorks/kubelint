@@ -100,4 +100,18 @@ warning[KL2008]: env var `SLACK_API_KEY` of container `report` has a literal val
     |                                                                         ^^^^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-14 finding(s) in 10 object(s)
+warning[KL2008]: env var `DB_PASSWORD` of container `app` has a literal value
+   --> security/KL2008.yaml:178:27
+    |
+178 |     - {name: DB_PASSWORD, value: "10"}
+    |                           ^^^^^^^^^^^
+  = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
+
+warning[KL2008]: env var `API_TOKEN` of container `app` has a literal value
+   --> security/KL2008.yaml:179:25
+    |
+179 |     - {name: API_TOKEN, value: "yes-really"}
+    |                         ^^^^^^^^^^^^^^^^^^^
+  = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
+
+16 finding(s) in 13 object(s)

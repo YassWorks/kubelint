@@ -50,7 +50,7 @@ GitHub Action integration.
   - [ ] KL0001 rejects `\'` in a double-quoted scalar, which the YAML parsers kubectl
     uses (libyaml and `go-yaml`) accept (`pods/inject/envars-file-container.yaml` in
     `kubernetes/website`)
-  - [ ] KL2008 reports a flag whose name contains a secret word, such as
+  - [x] KL2008 reports a flag whose name contains a secret word, such as
     `MYSQL_ALLOW_EMPTY_PASSWORD: "1"`
   - [ ] KL1008 and KL1010 report placeholders of other template tools (`etcd-{{cell}}`,
     `process-item-$ITEM`), which a rule that cannot decide should leave alone

@@ -7,8 +7,10 @@ are `PASSWORD`, `PASSWD`, `SECRET`, `TOKEN`, `API_KEY`, `SECRET_KEY`, `PRIVATE_K
 between the words (`apiKey` and `api-key` count).
 
 Only the end of the name counts: `TOKEN_URL`, `PASSWORD_FILE` and `AWS_ACCESS_KEY_ID`
-are not reported. Neither are empty or whitespace-only values, and values that are a
-single `$(VAR)` or `${VAR}` reference.
+are not reported. Neither are empty or whitespace-only values, values that are a
+single `$(VAR)` or `${VAR}` reference, and switches that turn a secret feature on or
+off (`MYSQL_ALLOW_EMPTY_PASSWORD: "1"`): `0`, `1`, `true`, `false`, `yes`, `no`, `on`
+and `off`, in any case.
 
 ## Why it matters
 
