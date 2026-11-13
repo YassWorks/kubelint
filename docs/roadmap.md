@@ -58,8 +58,31 @@ GitHub Action integration.
     `process-item-$ITEM`), which a rule that cannot decide should leave alone
   - [x] KL2002 and KL2003 noise: 415 and 426 findings in 956 objects. Both now ship off
     by default, like KL2009 (decision in [`rules/README.md`](rules/README.md#security))
-- [ ] Diagnostic polish: review every rule's message, help and explanation against the
-  "explains itself" bar in [`vision.md`](vision.md)
+- Diagnostic polish: review every rule against the "explains itself" bar in
+  [`vision.md`](vision.md). Every message and help line was read across the rule fixture
+  snapshots on 2026-11-13. The defects found, one item each:
+  - [x] KL2008 named the container after the env var, and read "env var `X` of container
+    has a literal value" when the container has no name
+  - [ ] KL1010 runs the upstream validation text straight on after "prefix part", so a
+    bad key prefix reads "label key `Example.com/tier` is invalid: prefix part a
+    lowercase RFC 1123 subdomain must consist of...". Join the two parts, and make the
+    label key help give an action with a corrected example, as the label value help
+    does, instead of restating the format
+  - [ ] KL1008 and KL1010 paste raw Kubernetes validation text ("must consist of lower
+    case alphanumeric characters, '-' or '.', and must start and end with an
+    alphanumeric character (e.g. 'example.com')") into the message. Say it in plain
+    words, since the help already gives the fix. The KL1008 subdomain help also omits
+    `.`, which those kinds allow, so for `settings.` only the trailing dot is wrong
+  - [ ] KL1008 on `metadata.namespace` says "`Team_A` is not a valid namespace name"
+    while every other KL1008 message names the kind. Name the field instead
+  - [ ] KL1009 and KL1011 name the env var but not the container, unlike KL2008. KL3005
+    says "the Deployment runs a single replica" with no object name and no `replicas`
+    field, and KL2004 says "the pod" without naming the workload. Name the object
+    through a shared helper
+  - [ ] KL0002 omits the path at the top level of an object ("duplicate key `data`")
+    while nested findings give one ("in `metadata.labels`")
+  - [ ] Explanations: read each `<rule_name>.md` for accuracy and plain wording. All of
+    them already have the "What it does", "Why it matters" and "Example" sections
 - [ ] `.pre-commit-hooks.yaml` and docs
 - [ ] GitHub Action (`action.yml`, composite: install the release binary, run with
   `--format github` or upload SARIF) and docs
