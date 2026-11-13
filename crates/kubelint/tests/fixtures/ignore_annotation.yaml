@@ -1,10 +1,10 @@
-# KL2002 and KL3003 are silenced here: KL2001 is still reported.
+# KL3001 and KL3003 are silenced here: KL2001 is still reported.
 apiVersion: v1
 kind: Pod
 metadata:
   name: web
   annotations:
-    kubelint/ignore: "KL2002, unpinned-image-tag"
+    kubelint/ignore: "KL3001, unpinned-image-tag"
 spec:
   containers:
   - name: web
@@ -12,7 +12,6 @@ spec:
     securityContext: {privileged: true, runAsNonRoot: true}
     resources:
       requests: {cpu: 100m, memory: 64Mi}
-      limits: {memory: 64Mi}
 ---
 # The duplicate is reported on this object, so its annotation silences KL1004.
 apiVersion: v1

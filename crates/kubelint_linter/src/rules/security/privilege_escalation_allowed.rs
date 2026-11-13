@@ -21,7 +21,7 @@ static META: RuleMeta = RuleMeta {
     name: "privilege-escalation-allowed",
     category: Category::Security,
     default_severity: Severity::Warning,
-    default_enabled: true,
+    default_enabled: false,
     summary: "A container does not set `allowPrivilegeEscalation: false`.",
     explanation: include_str!("privilege_escalation_allowed.md"),
 };

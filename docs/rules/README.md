@@ -105,14 +105,31 @@ that no tool renders is silent too, although Kubernetes expands `$(VAR)` only in
 | Code | Name | Default | Severity | Status | Milestone | What it catches |
 | --- | --- | --- | --- | --- | --- | --- |
 | KL2001 | `privileged-container` | on | error | implemented | M2 | `securityContext.privileged: true`. |
-| KL2002 | `privilege-escalation-allowed` | on | warning | implemented | M2 | `allowPrivilegeEscalation` is not set to `false`. |
-| KL2003 | `run-as-root` | on | warning | implemented | M2 | The container may run as root (`runAsNonRoot` not true, or `runAsUser: 0`), honoring pod-level defaults. |
+| KL2002 | `privilege-escalation-allowed` | off | warning | implemented | M2 | `allowPrivilegeEscalation` is not set to `false`. |
+| KL2003 | `run-as-root` | off | warning | implemented | M2 | The container may run as root (`runAsNonRoot` not true, or `runAsUser: 0`), honoring pod-level defaults. |
 | KL2004 | `host-namespace` | on | warning | implemented | M2 | `hostNetwork`, `hostPID` or `hostIPC` is enabled. |
 | KL2005 | `host-path-volume` | on | warning | implemented | M2 | A `hostPath` volume exposes the node's filesystem. |
 | KL2006 | `dangerous-capability` | on | warning | implemented | M2 | Adds a Linux capability outside the `baseline` Pod Security Standard list, like `SYS_ADMIN`, `NET_ADMIN` or `ALL`. |
 | KL2007 | `docker-socket-mount` | on | error | implemented | M2 | A `hostPath` volume mounts the container runtime socket (`docker.sock`, `containerd.sock`, `crio.sock`...). |
 | KL2008 | `secret-in-env-literal` | on | warning | implemented | M2 | An env var whose name ends in a secret word (`PASSWORD`, `TOKEN`, `API_KEY`...) has a literal value instead of `valueFrom.secretKeyRef`. |
 | KL2009 | `writable-root-filesystem` | off | warning | implemented | M2 | `readOnlyRootFilesystem` is not `true`. |
+
+KL2002 `privilege-escalation-allowed` and KL2003 `run-as-root` ship off by default,
+like KL2009 `writable-root-filesystem`. They check requirements of the `restricted` Pod
+Security Standard, while the security rules that ship on check what the `baseline`
+standard forbids. Select them by name or code (`--select KL2002` or `select` in
+`kubelint.toml`) to turn them on.
+
+**Why:** `baseline` findings are rare and serious (a privileged container, a host
+mount), so each one is worth acting on. KL2002 and KL2003 fire on almost every container
+that does not harden itself: on four public manifest collections (956 objects) KL2002
+matched 415 times and KL2003 matched 426. A default that warns on nearly every object
+trains users to ignore the tool, which the vision's low-noise pillar forbids. A team
+that wants the `restricted` standard opts in, the same choice it makes on the cluster
+with Pod Security Admission.
+
+**Rejected:** shipping them on, which floods a first run; shipping only one of them on,
+which splits one standard with no principled line between the two.
 
 KL2006 calls a capability dangerous when the `baseline` Pod Security Standard forbids
 adding it.

@@ -9,6 +9,9 @@ Some containers are skipped because Kubernetes rejects `false` for them: privile
 containers (KL2001 `privileged-container` reports those), containers that add the
 `SYS_ADMIN` capability, and containers of Windows pods (`spec.os.name: windows`).
 
+This rule is off by default: most manifests do not set this field, so it would warn on
+nearly every container. Enable it with `--select KL2002` or in `kubelint.toml`.
+
 ## Why it matters
 
 `allowPrivilegeEscalation` controls the Linux `no_new_privs` flag. When it is not
