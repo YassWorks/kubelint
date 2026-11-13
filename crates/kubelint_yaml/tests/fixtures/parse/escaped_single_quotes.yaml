@@ -1,0 +1,18 @@
+é: "it\'s" # c
+other: ["a\'b", 'c\']
+bell: "\a \x07 \' \u0007 \U00000007 \\'"
+folded: "one\'
+  two\'"
+plain: it\'s
+block: |
+  "a\'b"
+tagged: !!str "x\'"
+anchored: &a "y\'"
+alias: *a
+"k\'": v
+---
+later: "ünï\'s"
+---
+broken: "\q\'"
+---
+after: ok

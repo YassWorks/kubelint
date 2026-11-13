@@ -23,4 +23,11 @@ error[KL0001]: invalid YAML: while parsing a block mapping, did not find expecte
    |   ^
   = help: fix the YAML syntax; kubelint skips this document until it parses
 
-3 finding(s) in 3 object(s)
+error[KL0001]: invalid YAML: while parsing a quoted scalar, found unknown escape character
+  --> syntax/KL0001.yaml:40:13
+   |
+40 |   greeting: "\q"
+   |             ^
+  = help: fix the YAML syntax; kubelint skips this document until it parses
+
+4 finding(s) in 4 object(s)

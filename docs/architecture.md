@@ -148,6 +148,19 @@ Principles:
 - **Quoted scalar ranges end at the closing quote.** `saphyr-parser` reports a quoted
   scalar's span running on over trailing spaces and a trailing comment, so the builder
   finds the closing quote itself.
+- **`\'` in a double-quoted scalar reads as `'`,** as in libyaml and `go-yaml`, which
+  kubectl and the API server use. `saphyr-parser` rejects it as an unknown escape, so
+  when it reports an error at a double-quoted scalar, the builder rewrites each `\'` in
+  that scalar to `\a` and parses again. Both escapes are two bytes, so no range moves.
+  The builder then turns each BEL character that came from a rewritten escape back into
+  `'`.
+
+  **Why:** real manifests use it (the Kubernetes website has one), and kubectl accepts
+  it, so reporting KL0001 there is a false positive.
+
+  **Rejected:** forking or patching `saphyr-parser` (a maintenance burden for one
+  escape); rewriting every `\'` in the file before parsing (outside double quotes it is
+  two literal characters, so only the scalars the parser rejects are touched).
 - **Edits apply to the original text.** Autofix (M5) changes the file by byte range,
   never by re-serializing the tree, so formatting and comments survive.
 
