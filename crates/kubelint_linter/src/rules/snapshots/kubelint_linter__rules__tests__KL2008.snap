@@ -2,112 +2,112 @@
 source: crates/kubelint_linter/src/rules/tests.rs
 expression: check_fixture(rule)
 ---
-warning[KL2008]: env var `DB_PASSWORD` of container `web` has a literal value
+warning[KL2008]: container `web` sets env var `DB_PASSWORD` to a literal value
   --> security/KL2008.yaml:18:11
    |
 18 |           value: hunter2
    |           ^^^^^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `GITHUB_TOKEN` of container `web` has a literal value
+warning[KL2008]: container `web` sets env var `GITHUB_TOKEN` to a literal value
   --> security/KL2008.yaml:20:11
    |
 20 |           value: "ghp_example"
    |           ^^^^^^^^^^^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `AWS_SECRET_ACCESS_KEY` of container `web` has a literal value
+warning[KL2008]: container `web` sets env var `AWS_SECRET_ACCESS_KEY` to a literal value
   --> security/KL2008.yaml:22:11
    |
 22 |           value: 'abc/def'
    |           ^^^^^^^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `api-key` of container `setup` has a literal value
+warning[KL2008]: container `setup` sets env var `api-key` to a literal value
   --> security/KL2008.yaml:35:27
    |
 35 |     env: [{name: api-key, value: clé-secrète}]
    |                           ^^^^^^^^^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `smtp.password` of container has a literal value
+warning[KL2008]: container sets env var `smtp.password` to a literal value
   --> security/KL2008.yaml:40:7
    |
 40 |       value: mot-de-passe
    |       ^^^^^^^^^^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `clientSecret` of container has a literal value
+warning[KL2008]: container sets env var `clientSecret` to a literal value
   --> security/KL2008.yaml:42:7
    |
 42 |       value: |
    |       ^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `awsSecretKey` of container has a literal value
+warning[KL2008]: container sets env var `awsSecretKey` to a literal value
   --> security/KL2008.yaml:44:28
    |
 44 |     - {name: awsSecretKey, value: abc}
    |                            ^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `privateKey` of container has a literal value
+warning[KL2008]: container sets env var `privateKey` to a literal value
   --> security/KL2008.yaml:45:26
    |
 45 |     - {name: privateKey, value: "-----BEGIN KEY-----"}
    |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `API_TOKEN` of container has a literal value
+warning[KL2008]: container sets env var `API_TOKEN` to a literal value
   --> security/KL2008.yaml:46:25
    |
 46 |     - {name: API_TOKEN, value: "$(PREFIX)hunter2$(SUFFIX)"}
    |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `SERVICE_CREDENTIALS` of container `débogage` has a literal value
+warning[KL2008]: container `débogage` sets env var `SERVICE_CREDENTIALS` to a literal value
   --> security/KL2008.yaml:51:35
    |
 51 |     - {name: SERVICE_CREDENTIALS, value: "user:pass"}
    |                                   ^^^^^^^^^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `AGENT_TOKEN` of container `agent` has a literal value
+warning[KL2008]: container `agent` sets env var `AGENT_TOKEN` to a literal value
   --> security/KL2008.yaml:66:65
    |
 66 |       - {name: agent, image: agent:3, env: [{name: AGENT_TOKEN, value: t0k3n}]}
    |                                                                 ^^^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `POSTGRES_PASSWORD` of container `db` has a literal value
+warning[KL2008]: container `db` sets env var `POSTGRES_PASSWORD` to a literal value
   --> security/KL2008.yaml:82:72
    |
 82 |       - {name: db, image: postgres:17, env: [{name: POSTGRES_PASSWORD, value: placeholder}]}
    |                                                                        ^^^^^^^^^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `JWT_SECRET` of container `migrate` has a literal value
+warning[KL2008]: container `migrate` sets env var `JWT_SECRET` to a literal value
   --> security/KL2008.yaml:94:66
    |
 94 |       - {name: migrate, image: app:1.0, env: [{name: JWT_SECRET, value: changeme}]}
    |                                                                  ^^^^^^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `SLACK_API_KEY` of container `report` has a literal value
+warning[KL2008]: container `report` sets env var `SLACK_API_KEY` to a literal value
    --> security/KL2008.yaml:109:73
     |
 109 |           - {name: report, image: report:2, env: [{name: SLACK_API_KEY, value: xoxb-1}]}
     |                                                                         ^^^^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `DB_PASSWORD` of container `app` has a literal value
+warning[KL2008]: container `app` sets env var `DB_PASSWORD` to a literal value
    --> security/KL2008.yaml:178:27
     |
 178 |     - {name: DB_PASSWORD, value: "10"}
     |                           ^^^^^^^^^^^
   = help: store the value in a Secret and read it with `valueFrom.secretKeyRef`
 
-warning[KL2008]: env var `API_TOKEN` of container `app` has a literal value
+warning[KL2008]: container `app` sets env var `API_TOKEN` to a literal value
    --> security/KL2008.yaml:179:25
     |
 179 |     - {name: API_TOKEN, value: "yes-really"}

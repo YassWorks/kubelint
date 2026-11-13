@@ -92,7 +92,7 @@ impl Rule for SecretInEnvLiteral {
                     continue;
                 };
                 let message = format!(
-                    "env var `{name}` of {} has a literal value",
+                    "{} sets env var `{name}` to a literal value",
                     container_subject(container)
                 );
                 cx.report(
