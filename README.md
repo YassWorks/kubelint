@@ -125,8 +125,8 @@ implemented and what is planned.
 - **Broken manifests:** missing fields, selectors that match nothing, invalid resource
   quantities, env values YAML reads as numbers or booleans, and (planned) full schema
   validation against real Kubernetes API versions, including removed APIs.
-- **Security risks:** privileged containers, running as root, host namespaces and paths,
-  dangerous capabilities, secrets in plain env vars.
+- **Security risks:** privileged containers, host namespaces and paths, dangerous
+  capabilities, secrets in plain env vars, and (opt-in) running as root.
 - **Reliability problems:** missing resource limits and requests, unpinned image tags,
   and more.
 

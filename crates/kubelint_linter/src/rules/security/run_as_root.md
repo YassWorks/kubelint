@@ -11,6 +11,9 @@ A container's `securityContext` overrides the pod's field by field, so a pod-lev
 `runAsNonRoot: true` covers every container that does not set it to `false`. A non-zero
 `runAsUser` is enough on its own. Windows pods (`spec.os.name: windows`) are skipped.
 
+This rule is off by default: most manifests do not set this field, so it would warn on
+nearly every container. Enable it with `--select KL2003` or in `kubelint.toml`.
+
 ## Why it matters
 
 Root in a container is the same user as root on the node, held back only by the

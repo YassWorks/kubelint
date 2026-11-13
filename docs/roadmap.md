@@ -56,8 +56,8 @@ GitHub Action integration.
     `MYSQL_ALLOW_EMPTY_PASSWORD: "1"`
   - [x] KL1008 and KL1010 report placeholders of other template tools (`etcd-{{cell}}`,
     `process-item-$ITEM`), which a rule that cannot decide should leave alone
-  - [ ] KL2002 and KL2003 noise: 415 and 426 findings in 956 objects. Decide whether
-    either should be off by default (see the known gap)
+  - [x] KL2002 and KL2003 noise: 415 and 426 findings in 956 objects. Both now ship off
+    by default, like KL2009 (decision in [`rules/README.md`](rules/README.md#security))
 - [ ] Diagnostic polish: review every rule's message, help and explanation against the
   "explains itself" bar in [`vision.md`](vision.md)
 - [ ] `.pre-commit-hooks.yaml` and docs
@@ -119,11 +119,6 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   schema, so M4 schema rules will not catch it: it needs its own correctness rule.
 - A namespaced object without `namespace` and the same object with
   `namespace: default` are not reported as KL1004 duplicates.
-- KL2002 and KL2003 are on by default. A container that sets neither
-  `allowPrivilegeEscalation: false` nor `runAsNonRoot: true` (in the container or the
-  pod) gets both warnings, which is common in typical manifests. Measure their noise
-  during the M3 real-world validation and decide whether either should be off by
-  default.
 - KL2007 reports a socket file only. A `hostPath` on a directory that holds one
   (`/var/run`, `/run/containerd`) gets the KL2005 warning, not the KL2007 error.
 - KL1009, KL1011 and KL2008 each walk `env` and read `name` and `value` by hand. A

@@ -20,7 +20,7 @@ static META: RuleMeta = RuleMeta {
     name: "run-as-root",
     category: Category::Security,
     default_severity: Severity::Warning,
-    default_enabled: true,
+    default_enabled: false,
     summary: "A container may run as root.",
     explanation: include_str!("run_as_root.md"),
 };

@@ -13,32 +13,23 @@ error[KL2001]: container `web` runs in privileged mode
    = help: remove `privileged` and add only the capabilities the container needs to `securityContext.capabilities.add`
    = note: rule `privileged-container`
 
-warning[KL2002]: container `api` does not set `allowPrivilegeEscalation: false`
-  --> <stdin>:39:11
-   |
-39 |   - name: api
-   |           ^^^
-   |
-   = help: set `securityContext.allowPrivilegeEscalation: false`
-   = note: rule `privilege-escalation-allowed`
-
 warning[KL3003]: image `api` has no tag, so it pulls `latest`
-  --> <stdin>:40:12
+  --> <stdin>:39:12
    |
-40 |     image: api
+39 |     image: api
    |            ^^^
    |
    = help: pin a version tag, such as `api:1.2.3`, or a digest, such as `api@sha256:<digest>`
    = note: rule `unpinned-image-tag`
 
 warning[KL3003]: image `b:latest` uses the `latest` tag
-  --> <stdin>:51:89
+  --> <stdin>:50:89
    |
-51 | - {apiVersion: v1, kind: Pod, metadata: {name: b}, spec: {containers: [{name: b, image: "b:latest", securityContext: {allowPrivilege...
+50 | - {apiVersion: v1, kind: Pod, metadata: {name: b}, spec: {containers: [{name: b, image: "b:latest", securityContext: {allowPrivilege...
    |                                                                                         ^^^^^^^^^^
    |
    = help: pin a version tag, such as `b:1.2.3`, or a digest, such as `b@sha256:<digest>`
    = note: rule `unpinned-image-tag`
 
-Found 1 error and 3 warnings. Checked 1 file and 5 objects in [TIME].
+Found 1 error and 2 warnings. Checked 1 file and 5 objects in [TIME].
 --- stderr
