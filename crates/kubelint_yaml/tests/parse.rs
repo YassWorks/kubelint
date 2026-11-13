@@ -52,6 +52,14 @@ fn quoted_scalars_end_at_their_closing_quote() {
 }
 
 #[test]
+fn double_quoted_scalars_accept_escaped_single_quotes() {
+    // Like libyaml and `go-yaml`, `\'` reads as `'`. `\q` stays an unknown escape.
+    insta::assert_snapshot!(dump(include_str!(
+        "fixtures/parse/escaped_single_quotes.yaml"
+    )));
+}
+
+#[test]
 fn missing_values_are_null() {
     // `.editorconfig` would trim the trailing space after `-` in a fixture file.
     insta::assert_snapshot!(dump("é:\nb: ~\nc:\n- \n"));

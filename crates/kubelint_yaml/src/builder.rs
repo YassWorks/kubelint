@@ -1,9 +1,11 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 use kubelint_source::{TextRange, TextSize};
 use saphyr_parser::{Event, Parser, ScalarStyle as SaphyrStyle, Span};
 
-use crate::comments::{self, Comment};
+use crate::comments::{self, Comment, to_size};
+use crate::quoted;
 use crate::{Document, Entry, Node, NodeKind, Scalar, ScalarStyle};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -100,10 +102,34 @@ fn next_document_marker(text: &str, base: usize, offset: usize) -> Option<usize>
     }
 }
 
-/// Parses `text` until the end or its first syntax error.
+/// Parses `text` until the end or its first syntax error. When the error is at a
+/// double-quoted scalar with `\'` escapes, they are rewritten to `\a`, which has the
+/// same length, and the text is parsed again.
 fn parse_segment(text: &str) -> Parse {
     let offsets = ByteOffsets::new(text);
-    let mut builder = Builder::new(text, &offsets);
+    let mut patched = Cow::Borrowed(text);
+    let mut rewritten = Vec::new();
+    loop {
+        let out = parse_attempt(&patched, &offsets, &rewritten);
+        let found = out
+            .errors
+            .first()
+            .map(|error| usize::from(error.range.start()))
+            .filter(|&at| patched.as_bytes().get(at) == Some(&b'"'))
+            .and_then(|at| quoted::scan(&patched, at))
+            .map_or_else(Vec::new, |(_, found)| found);
+        if found.is_empty() {
+            return out;
+        }
+        for &at in &found {
+            patched.to_mut().replace_range(at + 1..at + 2, "a");
+        }
+        rewritten.extend(found);
+    }
+}
+
+fn parse_attempt(text: &str, offsets: &ByteOffsets, rewritten: &[usize]) -> Parse {
+    let mut builder = Builder::new(text, offsets, rewritten);
     let mut out = Parse::default();
     let mut limit = TextSize::new(u32::try_from(text.len()).unwrap_or(u32::MAX));
     for item in Parser::new_from_str(text) {
@@ -188,10 +214,12 @@ struct Builder<'a> {
     anchors: HashMap<usize, Node>,
     /// Ranges of every scalar seen so far, for comment extraction.
     scalars: Vec<TextRange>,
+    /// Sorted offsets of the `\'` escapes rewritten before parsing.
+    rewritten: &'a [usize],
 }
 
 impl<'a> Builder<'a> {
-    fn new(text: &'a str, offsets: &'a ByteOffsets) -> Self {
+    fn new(text: &'a str, offsets: &'a ByteOffsets, rewritten: &'a [usize]) -> Self {
         Self {
             text,
             offsets,
@@ -200,6 +228,7 @@ impl<'a> Builder<'a> {
             doc_range: TextRange::default(),
             anchors: HashMap::new(),
             scalars: Vec::new(),
+            rewritten,
         }
     }
 
@@ -229,11 +258,22 @@ impl<'a> Builder<'a> {
                 };
                 let end = match style {
                     SaphyrStyle::SingleQuoted | SaphyrStyle::DoubleQuoted => {
-                        self.closing_quote_end(start, style)
+                        quoted::scan(self.text, usize::from(start)).map(|(end, _)| to_size(end))
                     }
                     _ => None,
                 };
                 let range = TextRange::new(start, end.unwrap_or(range.end()).max(start));
+                let value = if style == SaphyrStyle::DoubleQuoted
+                    && self
+                        .rewritten
+                        .get(self.rewritten.partition_point(|&at| to_size(at) < start))
+                        .is_some_and(|&at| range.contains(to_size(at)))
+                {
+                    let raw = &self.text[range];
+                    quoted::restore(&value, raw, usize::from(start), self.rewritten).into()
+                } else {
+                    value
+                };
                 self.scalars.push(range);
                 let node = if style == SaphyrStyle::Plain && value.is_empty() {
                     Node {
@@ -312,38 +352,6 @@ impl<'a> Builder<'a> {
             }
         }
         TextSize::new(u32::try_from(pos).unwrap_or(u32::MAX))
-    }
-
-    /// Just past the closing quote of the quoted scalar starting at `start`, if any. The
-    /// parser's span runs on over trailing spaces and a trailing comment (`'x' # c` spans
-    /// to the end of the line). Inside single quotes `''` is an escaped quote; inside
-    /// double quotes `\` escapes the next character.
-    fn closing_quote_end(&self, start: TextSize, style: SaphyrStyle) -> Option<TextSize> {
-        let bytes = self.text.as_bytes();
-        let quote = if style == SaphyrStyle::SingleQuoted {
-            b'\''
-        } else {
-            b'"'
-        };
-        if bytes.get(usize::from(start)) != Some(&quote) {
-            return None;
-        }
-        let mut pos = usize::from(start) + 1;
-        loop {
-            match (style, bytes.get(pos)?) {
-                (SaphyrStyle::SingleQuoted, b'\'') => {
-                    if bytes.get(pos + 1) == Some(&b'\'') {
-                        pos += 2;
-                    } else {
-                        break;
-                    }
-                }
-                (SaphyrStyle::DoubleQuoted, b'\\') => pos += 2,
-                (SaphyrStyle::DoubleQuoted, b'"') => break,
-                _ => pos += 1,
-            }
-        }
-        u32::try_from(pos + 1).ok().map(TextSize::new)
     }
 
     /// Attaches a finished node to its parent (or makes it the document root).

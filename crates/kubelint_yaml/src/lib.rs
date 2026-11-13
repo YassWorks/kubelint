@@ -8,6 +8,7 @@
 mod builder;
 mod comments;
 mod nav;
+mod quoted;
 mod resolve;
 mod tree;
 

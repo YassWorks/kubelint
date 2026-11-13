@@ -68,6 +68,6 @@ fn inside_scalar(scalars: &[TextRange], at: usize) -> bool {
     idx > 0 && scalars[idx - 1].contains(at)
 }
 
-fn to_size(offset: usize) -> TextSize {
+pub(crate) fn to_size(offset: usize) -> TextSize {
     TextSize::new(u32::try_from(offset).unwrap_or(u32::MAX))
 }

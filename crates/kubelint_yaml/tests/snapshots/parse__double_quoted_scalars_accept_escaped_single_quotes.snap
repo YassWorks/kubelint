@@ -1,0 +1,49 @@
+---
+source: crates/kubelint_yaml/tests/parse.rs
+expression: "dump(include_str!(\"fixtures/parse/escaped_single_quotes.yaml\"))"
+---
+document 0..191
+  mapping 0..191
+    entry
+      scalar Plain "é" 0..2
+      scalar DoubleQuoted "it's" 4..11
+    entry
+      scalar Plain "other" 16..21
+      sequence 23..37
+        scalar DoubleQuoted "a'b" 24..30
+        scalar SingleQuoted "c\\" 32..36
+    entry
+      scalar Plain "bell" 38..42
+      scalar DoubleQuoted "\u{7} \u{7} ' \u{7} \u{7} \\'" 44..78
+    entry
+      scalar Plain "folded" 79..85
+      scalar DoubleQuoted "one' two'" 87..102
+    entry
+      scalar Plain "plain" 103..108
+      scalar Plain "it\\'s" 110..115
+    entry
+      scalar Plain "block" 116..121
+      scalar Literal "\"a\\'b\"\n" 127..134
+    entry
+      scalar Plain "tagged" 134..140
+      scalar DoubleQuoted "x'" 148..153
+    entry
+      scalar Plain "anchored" 154..162
+      scalar DoubleQuoted "y'" 167..172
+    entry
+      scalar Plain "alias" 173..178
+      scalar DoubleQuoted "y'" 167..172
+    entry
+      scalar DoubleQuoted "k'" 183..188
+      scalar Plain "v" 190..191
+document 192..213
+  mapping 196..213
+    entry
+      scalar Plain "later" 196..201
+      scalar DoubleQuoted "ünï's" 203..213
+document 233..246
+  mapping 237..246
+    entry
+      scalar Plain "after" 237..242
+      scalar Plain "ok" 244..246
+error "while parsing a quoted scalar, found unknown escape character" at 226

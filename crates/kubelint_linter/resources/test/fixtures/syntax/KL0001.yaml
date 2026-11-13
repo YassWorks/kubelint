@@ -26,6 +26,19 @@ apiVersion: v1
 kind: Secret
 - item
 ---
+# Not reported: `\'` in a double-quoted scalar is a quote, as in the YAML parsers
+# kubectl uses.
+apiVersion: v1
+kind: ConfigMap
+data:
+  greeting: "it\'s"
+---
+# Reported: an unknown escape in a double-quoted scalar.
+apiVersion: v1
+kind: ConfigMap
+data:
+  greeting: "\q"
+---
 # Not reported: the last document is valid.
 apiVersion: apps/v1
 kind: Deployment

@@ -47,7 +47,7 @@ GitHub Action integration.
   objects in 785 files. Its false positives, one item each:
   - [x] KL1004 compared objects across files, and reported variants of one application
     kept in separate files or directories (209 findings, all across files)
-  - [ ] KL0001 rejects `\'` in a double-quoted scalar, which the YAML parsers kubectl
+  - [x] KL0001 rejects `\'` in a double-quoted scalar, which the YAML parsers kubectl
     uses (libyaml and `go-yaml`) accept (`pods/inject/envars-file-container.yaml` in
     `kubernetes/website`). `saphyr-parser` rejects it, so the fix lives in
     `kubelint_yaml` and must not shift any `TextRange` (for example by rewriting `\'` to a
