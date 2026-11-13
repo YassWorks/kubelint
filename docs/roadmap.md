@@ -63,11 +63,10 @@ GitHub Action integration.
   snapshots on 2026-11-13. The defects found, one item each:
   - [x] KL2008 named the container after the env var, and read "env var `X` of container
     has a literal value" when the container has no name
-  - [ ] KL1010 runs the upstream validation text straight on after "prefix part", so a
-    bad key prefix reads "label key `Example.com/tier` is invalid: prefix part a
-    lowercase RFC 1123 subdomain must consist of...". Join the two parts, and make the
-    label key help give an action with a corrected example, as the label value help
-    does, instead of restating the format
+  - [x] KL1010 ran the upstream validation text straight on after "prefix part", so a
+    bad key prefix read "label key `Example.com/tier` is invalid: prefix part a
+    lowercase RFC 1123 subdomain must consist of...". A part of a label key now uses
+    `Format::subject`, and the label key help gives a corrected example
   - [ ] KL1008 and KL1010 paste raw Kubernetes validation text ("must consist of lower
     case alphanumeric characters, '-' or '.', and must start and end with an
     alphanumeric character (e.g. 'example.com')") into the message. Say it in plain

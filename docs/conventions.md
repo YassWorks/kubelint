@@ -86,6 +86,17 @@ overnight with no code change.
   silent. False positives are worse than false negatives.
 - Rules that look at containers use `pod_spec().containers()` from `kubelint_k8s` so every
   workload kind and every container type is covered consistently.
+- **Match Kubernetes' behavior, not its prose.** A message may quote Kubernetes' wording
+  when it reads well on its own, but kubelint rewrites it when the result would not. A
+  rule never pastes an upstream sentence into the middle of its own.
+
+**Why:** the API server prints "prefix part a lowercase RFC 1123 subdomain must consist
+of...", which is broken English. "Explains itself" in [`vision.md`](vision.md) is a
+product requirement, so a diagnostic has to read as one sentence.
+
+**Rejected:** quoting upstream text verbatim everywhere, so that a message matches what
+`kubectl apply` prints. It is easier to compare, but it makes the worst messages
+kubelint's own.
 
 ## Tests
 

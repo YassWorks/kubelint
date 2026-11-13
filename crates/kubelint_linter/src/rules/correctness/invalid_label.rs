@@ -2,10 +2,12 @@
 
 use kubelint_diagnostics::Severity;
 use kubelint_k8s::{
-    BuiltinKind, MAX_LABEL_LENGTH, Object, is_qualified_name, is_valid_label_value,
+    BuiltinKind, MAX_LABEL_LENGTH, Object, ValidationErrorKind, is_qualified_name,
+    is_valid_label_value,
 };
 use kubelint_yaml::{Entry, Node, NodeKind, ResolvedScalar};
 
+use super::invalid_object_name::subdomain_suggestion;
 use super::{has_placeholder, shown};
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
@@ -28,9 +30,6 @@ static META: RuleMeta = RuleMeta {
     summary: "A label key or value that breaks Kubernetes' label syntax.",
     explanation: include_str!("invalid_label.md"),
 };
-
-const KEY_HELP: &str = "a label key is an optional DNS prefix and `/`, then up to 63 letters, \
-     digits, `-`, `_` and `.`, for example `app.kubernetes.io/name`";
 
 impl Rule for InvalidLabel {
     fn meta(&self) -> &'static RuleMeta {
@@ -92,7 +91,18 @@ fn check_entry(cx: &mut ObjectContext<'_>, entry: &Entry, what: &str) {
         && let Err(error) = is_qualified_name(key)
     {
         let message = format!("{what} key `{}` is invalid: {error}", shown(key));
-        cx.report(cx.diagnostic(entry.key.range, message).with_help(KEY_HELP));
+        // Only a wrong character has one obvious fix. A key that is too long or has two
+        // slashes needs the author to choose what to drop.
+        let example = match error.kind {
+            ValidationErrorKind::Format(_) => key_suggestion(key),
+            _ => None,
+        };
+        let help = format!(
+            "write the key as an optional lowercase DNS prefix and `/`, then up to \
+             {MAX_LABEL_LENGTH} letters, digits, `-`, `_` and `.`, for example `{}`",
+            example.as_deref().unwrap_or("app.kubernetes.io/name")
+        );
+        cx.report(cx.diagnostic(entry.key.range, message).with_help(help));
     }
     let NodeKind::Scalar(scalar) = &entry.value.kind else {
         return;
@@ -139,6 +149,20 @@ fn check_entry(cx: &mut ObjectContext<'_>, entry: &Entry, what: &str) {
                 .to_owned(),
         };
         cx.report(cx.diagnostic(entry.value.range, message).with_help(help));
+    }
+}
+
+/// A valid label key close to `key`: the prefix fixed like a DNS subdomain object name
+/// (lowercased, at most 253 characters) and the name part like a label value (at most
+/// 63). `None` when either part has nothing usable left or is not ASCII.
+fn key_suggestion(key: &str) -> Option<String> {
+    match key.split_once('/') {
+        Some((prefix, name)) => Some(format!(
+            "{}/{}",
+            subdomain_suggestion(prefix)?,
+            suggestion(name)?
+        )),
+        None => suggestion(key),
     }
 }
 
