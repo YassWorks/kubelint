@@ -2,11 +2,14 @@
 //!
 //! These mirror `staging/src/k8s.io/apimachinery/pkg/util/validation/validation.go`
 //! (`IsDNS1123Label`, `IsDNS1123Subdomain`, `IsDNS1035Label`, `IsQualifiedName`,
-//! `IsValidLabelValue`), with the same limits, the same order of checks and the same
-//! wording, minus the regular expression Kubernetes appends to its messages.
+//! `IsValidLabelValue`), with the same limits and the same order of checks.
 //!
 //! Kubernetes can return several messages for one value (too long *and* badly formed).
 //! These functions return the first one, which is the one Kubernetes lists first.
+//!
+//! [`Format::message`] keeps Kubernetes' wording, minus the regular expression it
+//! appends. A message about one part of a label key words the syntax as "its prefix
+//! must be ..." instead (see `docs/conventions.md`).
 
 use std::fmt;
 
@@ -67,14 +70,17 @@ pub enum Format {
 impl fmt::Display for ValidationError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.part {
-            Some(KeyPart::Prefix) => f.write_str("prefix part ")?,
-            Some(KeyPart::Name) => f.write_str("name part ")?,
+            Some(KeyPart::Prefix) => f.write_str("its prefix ")?,
+            Some(KeyPart::Name) => f.write_str("its name part ")?,
             None => {}
         }
         match self.kind {
             ValidationErrorKind::Empty => f.write_str("must be non-empty"),
             ValidationErrorKind::TooLong { max } => {
                 write!(f, "must be no more than {max} characters")
+            }
+            ValidationErrorKind::Format(format) if self.part.is_some() => {
+                write!(f, "must be {}", format.subject())
             }
             ValidationErrorKind::Format(format) => f.write_str(format.message()),
             ValidationErrorKind::TooManySlashes => f.write_str(
@@ -88,6 +94,32 @@ impl fmt::Display for ValidationError {
 impl std::error::Error for ValidationError {}
 
 impl Format {
+    /// The syntax as what follows "must be", for a message about one part of a key.
+    fn subject(self) -> &'static str {
+        match self {
+            Self::Dns1123Label => {
+                "a lowercase RFC 1123 label (lowercase letters, digits and '-', starting \
+                 and ending with a letter or digit)"
+            }
+            Self::Dns1123Subdomain => {
+                "a lowercase RFC 1123 subdomain (lowercase letters, digits, '-' and '.', \
+                 starting and ending with a letter or digit)"
+            }
+            Self::Dns1035Label => {
+                "a DNS-1035 label (lowercase letters, digits and '-', starting with a \
+                 letter and ending with a letter or digit)"
+            }
+            Self::QualifiedName => {
+                "made of letters, digits, '-', '_' and '.', starting and ending with a \
+                 letter or digit"
+            }
+            Self::LabelValue => {
+                "empty, or made of letters, digits, '-', '_' and '.', starting and ending \
+                 with a letter or digit"
+            }
+        }
+    }
+
     /// Kubernetes' explanation of the syntax, with its examples.
     pub fn message(self) -> &'static str {
         match self {

@@ -158,6 +158,11 @@ fn check_path_segment(name: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// [`suggestion`] for a DNS subdomain, such as a label key prefix.
+pub(super) fn subdomain_suggestion(name: &str) -> Option<String> {
+    suggestion(name, NameFormat::Subdomain)
+}
+
 /// A valid name close to `name`: lowercased, with runs of other characters turned into
 /// one `-` (or kept as `.` for subdomains), trimmed and shortened. `None` when nothing
 /// usable is left, and for non-ASCII names, where dropping letters (`café` to `caf`)

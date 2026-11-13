@@ -356,13 +356,17 @@ fn messages() {
     );
     assert_eq!(
         message(is_qualified_name("/a")),
-        "prefix part must be non-empty"
+        "its prefix must be non-empty"
     );
     assert_eq!(
         message(is_qualified_name("a/-b")),
-        "name part must consist of alphanumeric characters, '-', '_' or '.', and must \
-         start and end with an alphanumeric character (e.g. 'MyName', 'my.name' or \
-         '123-abc')"
+        "its name part must be made of letters, digits, '-', '_' and '.', starting and \
+         ending with a letter or digit"
     );
     assert!(message(is_dns1123_subdomain("A")).starts_with("a lowercase RFC 1123 subdomain"));
+    assert_eq!(
+        message(is_qualified_name("Example.com/tier")),
+        "its prefix must be a lowercase RFC 1123 subdomain (lowercase letters, digits, \
+         '-' and '.', starting and ending with a letter or digit)"
+    );
 }
