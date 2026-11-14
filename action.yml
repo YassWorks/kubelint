@@ -1,4 +1,4 @@
-name: kubelint
+name: kubelint Kubernetes linter
 description: Lint Kubernetes manifests with kubelint, as pull request annotations or SARIF.
 author: YassWorks
 branding:
