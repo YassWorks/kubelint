@@ -89,20 +89,41 @@ tools. See [output formats](output-formats.md) for its fields.
 
 ## pre-commit
 
-A pre-commit hook is planned (see the [roadmap](../roadmap.md)). Until then, a local
-hook can run an installed `kubelint` on the YAML files of a commit:
+kubelint ships a [pre-commit](https://pre-commit.com) hook. It runs the `kubelint`
+binary on your `PATH` on the YAML files of each commit, so install kubelint first (see
+[getting started](getting-started.md#install)). Then add the hook, with `rev` set to
+the release you installed. The hook exists from v0.18.6 on.
 
 ```yaml
 # .pre-commit-config.yaml
 repos:
-  - repo: local
+  - repo: https://github.com/YassWorks/kubelint
+    rev: v0.18.6
     hooks:
       - id: kubelint
-        name: kubelint
-        entry: kubelint check
-        language: system
-        types: [yaml]
 ```
+
+The hook runs `kubelint check` on the staged `*.yaml` and `*.yml` files. YAML that is
+not a Kubernetes object, such as CI files, is only checked for valid syntax. To pass
+options, add them as `args`, for example `args: [--fail-on, error]`.
 
 kubelint honors `[files] exclude` even for files named on the command line, so
 pre-commit never lints excluded files.
+
+### Why the hook needs kubelint installed
+
+The hook uses `language: system`: it runs the `kubelint` already on your `PATH`, and
+`rev` only pins the hook definition. pre-commit 4.4 renamed this language to
+`unsupported` and still accepts `system` without a warning, so the hook keeps `system`
+and works with older pre-commit versions too.
+
+**Why:** it is the only kind of hook that works without a new package or a change to
+kubelint's Cargo workspace, and you install the same static binary as everywhere else.
+
+**Rejected:**
+
+- `language: rust`. pre-commit runs `cargo install --path .` at the repository root,
+  which fails on kubelint's virtual workspace manifest. It would also compile kubelint
+  on every developer machine.
+- A Python wheel on PyPI, so that pre-commit installs the binary itself. It needs a
+  PyPI account, which the project does not have yet.

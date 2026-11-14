@@ -83,7 +83,7 @@ GitHub Action integration.
     while nested findings give one ("in `metadata.labels`")
   - [ ] Explanations: read each `<rule_name>.md` for accuracy and plain wording. All of
     them already have the "What it does", "Why it matters" and "Example" sections
-- [ ] `.pre-commit-hooks.yaml` and docs
+- [x] `.pre-commit-hooks.yaml` and docs
 - [ ] GitHub Action (`action.yml`, composite: install the release binary, run with
   `--format github` or upload SARIF) and docs
 
@@ -178,4 +178,5 @@ never built. The others need an account or a token the routine does not have.
 - Browser playground with WebAssembly (*non-goal*).
 - User-defined rules or policies (*non-goal*).
 - Publishing to crates.io (needs a crates.io token).
+- A PyPI wheel, so the pre-commit hook installs kubelint itself (needs a PyPI account).
 - Distribution through Homebrew, Krew or the VS Code marketplace (needs accounts).
