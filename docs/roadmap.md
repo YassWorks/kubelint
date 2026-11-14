@@ -84,7 +84,7 @@ GitHub Action integration.
   - [ ] Explanations: read each `<rule_name>.md` for accuracy and plain wording. All of
     them already have the "What it does", "Why it matters" and "Example" sections
 - [x] `.pre-commit-hooks.yaml` and docs
-- [ ] GitHub Action (`action.yml`, composite: install the release binary, run with
+- [x] GitHub Action (`action.yml`, composite: install the release binary, run with
   `--format github` or upload SARIF) and docs
 
 ## M4: Schema validation (target: 2026-12-08)

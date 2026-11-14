@@ -1,0 +1,46 @@
+name: kubelint
+description: Lint Kubernetes manifests with kubelint, as pull request annotations or SARIF.
+author: YassWorks
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  version:
+    description: >
+      The kubelint release to install, such as `v0.19.0`, or `latest`. Defaults to the
+      tag the action is used at (`YassWorks/kubelint@v0.19.0` installs v0.19.0), or to
+      the latest release for any other ref.
+    required: false
+    default: ""
+  format:
+    description: >
+      `github` to annotate the changed lines, or `sarif` to write a SARIF file for
+      code scanning.
+    required: false
+    default: github
+  args:
+    description: Options and paths for `kubelint check`, separated by spaces or newlines.
+    required: false
+    default: "."
+  sarif-file:
+    description: Where to write the SARIF file when `format` is `sarif`.
+    required: false
+    default: kubelint.sarif
+
+runs:
+  using: composite
+  steps:
+    - name: Install kubelint
+      shell: bash
+      run: bash "$GITHUB_ACTION_PATH/.github/scripts/action-install.sh"
+      env:
+        VERSION: ${{ inputs.version }}
+        ACTION_REF: ${{ github.action_ref }}
+    - name: Run kubelint
+      shell: bash
+      run: bash "$GITHUB_ACTION_PATH/.github/scripts/action-run.sh"
+      env:
+        FORMAT: ${{ inputs.format }}
+        ARGS: ${{ inputs.args }}
+        SARIF_FILE: ${{ inputs.sarif-file }}
