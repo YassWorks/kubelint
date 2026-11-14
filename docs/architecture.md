@@ -392,7 +392,6 @@ Pre-approved crates are declared in the root `Cargo.toml` under
 | `globset` | include/exclude globs in config |
 | `rayon` | data parallelism over files |
 | `serde`, `serde_json`, `toml` | config parsing and JSON/SARIF output |
-| `thiserror` | error types in library crates |
 | `anyhow` | error handling in the CLI binary only |
 | `insta` | snapshot tests (dev-dependency) |
 | `assert_cmd` | CLI integration tests (dev-dependency) |
