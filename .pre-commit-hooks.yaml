@@ -1,0 +1,7 @@
+- id: kubelint
+  name: kubelint
+  description: Lint Kubernetes manifests with the kubelint binary on your PATH.
+  entry: kubelint check
+  language: system
+  types: [yaml]
+  require_serial: true
