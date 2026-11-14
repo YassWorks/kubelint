@@ -61,8 +61,8 @@ fn object_subject(object: Object<'_>) -> String {
 /// "container `web`", or "container" when it has no usable name.
 fn container_subject(container: Container<'_>) -> String {
     match container.name().and_then(Node::as_str) {
-        Some(name) => format!("container `{name}`"),
-        None => "container".to_owned(),
+        Some(name) if !name.trim().is_empty() => format!("container `{name}`"),
+        _ => "container".to_owned(),
     }
 }
 
