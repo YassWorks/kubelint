@@ -51,7 +51,7 @@ error[KL1008]: `team/reader` is not a valid `ClusterRole` name: may not contain 
    |         ^^^^^^^^^^^
   = help: remove `/` and `%` from the name; other characters are allowed
 
-error[KL1008]: `Team_A` is not a valid namespace name: must contain only lowercase letters, digits and `-`, and start and end with a letter or digit
+error[KL1008]: `Team_A` in `metadata.namespace` is not a valid namespace name: must contain only lowercase letters, digits and `-`, and start and end with a letter or digit
   --> correctness/KL1008.yaml:47:14
    |
 47 |   namespace: Team_A

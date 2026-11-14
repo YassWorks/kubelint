@@ -71,8 +71,9 @@ GitHub Action integration.
     case alphanumeric characters, '-' or '.', and must start and end with an
     alphanumeric character (e.g. 'example.com')") into the message. `Format::rule` now
     says it in plain words, and the KL1008 subdomain help includes `.`
-  - [ ] KL1008 on `metadata.namespace` says "`Team_A` is not a valid namespace name"
-    while every other KL1008 message names the kind. Name the field instead
+  - [x] KL1008 on `metadata.namespace` said "`Team_A` is not a valid namespace name"
+    while every other KL1008 message names the kind. It now names the field: "`Team_A`
+    in `metadata.namespace` is not a valid namespace name"
   - [ ] KL1009 and KL1011 name the env var but not the container, unlike KL2008. KL3005
     says "the Deployment runs a single replica" with no object name and no `replicas`
     field, and KL2004 says "the pod" without naming the workload. Name the object
