@@ -43,8 +43,8 @@ spec:
           limits:
             memory: null
 ---
-# Reported: an init container, a sidecar, and a container without a name (at its
-# first key).
+# Reported: an init container, a sidecar, a container without a name (at its first
+# key), and containers with an empty and a blank name (at the name).
 apiVersion: v1
 kind: Pod
 metadata:
@@ -58,6 +58,10 @@ spec:
     restartPolicy: Always
   containers:
   - image: app:1.0
+  - name: ""
+    image: app:1.0
+  - name: " "
+    image: app:1.0
 ---
 # Reported: a CronJob, and a pod-level CPU limit does not bound memory.
 apiVersion: batch/v1
