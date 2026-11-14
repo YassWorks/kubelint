@@ -1,5 +1,5 @@
 //! Suppression comments and the `kubelint/ignore` annotation
-//! (`docs/user/configuration.md`).
+//! (`docs/user/suppressions.md`).
 //!
 //! ```yaml
 //! securityContext:
