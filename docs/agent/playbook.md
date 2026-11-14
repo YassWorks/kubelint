@@ -319,6 +319,15 @@ Traps earlier runs fell into. Add new ones as you find them.
   and its `related` location (JSON output) are in the same file, the same directory or
   elsewhere. A rule whose findings are mostly across files is likely a false positive,
   as KL1004 was.
+- The container's clone can be far behind `origin/main`, and the health check's
+  `git fetch` can fail (a 503 from the credential service). Never start an item until a
+  fetch has succeeded. Then check that `git log -1 origin/main` matches the latest merged
+  PR on GitHub. On 2026-11-13 a failed fetch left `main` 30 commits behind, and three
+  rules were built again that `main` already had.
+- In a Python string literal (for example inside `python3 - <<'EOF'`), a `\` at the end
+  of a line joins the two lines. A `\`-wrapped Rust string written that way loses its
+  line break and keeps the next line's indentation as a run of spaces. Write Rust
+  source with the Write or Edit tool.
 
 ## Keeping this playbook healthy
 
