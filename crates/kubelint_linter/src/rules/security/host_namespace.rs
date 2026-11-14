@@ -2,6 +2,7 @@
 
 use kubelint_diagnostics::Severity;
 
+use crate::rules::object_subject;
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
 /// Reports a pod spec that sets `hostNetwork`, `hostPID` or `hostIPC` to true. These are
@@ -47,6 +48,7 @@ impl Rule for HostNamespace {
         let Some(pod) = cx.object().pod_spec() else {
             return;
         };
+        let subject = object_subject(cx.object());
         for (field, namespace, help) in FIELDS {
             let Some(entry) = pod
                 .node()
@@ -55,7 +57,7 @@ impl Rule for HostNamespace {
             else {
                 continue;
             };
-            let message = format!("the pod shares the node's {namespace} namespace (`{field}`)");
+            let message = format!("{subject} shares the node's {namespace} namespace (`{field}`)");
             cx.report(
                 cx.diagnostic(entry.key.range.cover(entry.value.range), message)
                     .with_help(help),

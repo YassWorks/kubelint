@@ -76,9 +76,9 @@ GitHub Action integration.
     in `metadata.namespace` is not a valid namespace name"
   - [x] KL1009 and KL1011 named the env var but not the container, unlike KL2008. Both
     now start with the container, through the shared `container_subject`
-  - [ ] KL3005 says "the Deployment runs a single replica" with no object name and no
-    `replicas` field, and KL2004 says "the pod" without naming the workload. Name the
-    object through a shared helper
+  - [x] KL3005 said "the Deployment runs a single replica" with no object name and no
+    `replicas` field, and KL2004 said "the pod" without naming the workload. Both now
+    name the object through the shared `object_subject` ("Deployment `web`")
   - [ ] KL0002 omits the path at the top level of an object ("duplicate key `data`")
     while nested findings give one ("in `metadata.labels`")
   - [ ] Explanations: read each `<rule_name>.md` for accuracy and plain wording. All of

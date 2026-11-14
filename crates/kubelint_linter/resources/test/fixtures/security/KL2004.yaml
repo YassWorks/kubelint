@@ -150,3 +150,20 @@ data:
   hostNetwork: "true"
 spec:
   hostNetwork: true
+---
+# Reported: a Deployment with an empty name, named by its kind only.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ""
+spec:
+  selector:
+    matchLabels: {app: blank}
+  template:
+    metadata:
+      labels: {app: blank}
+    spec:
+      hostNetwork: true
+      containers:
+      - name: app
+        image: app:1.0

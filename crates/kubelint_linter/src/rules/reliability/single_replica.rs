@@ -4,6 +4,7 @@ use kubelint_diagnostics::Severity;
 use kubelint_k8s::BuiltinKind;
 use kubelint_yaml::ResolvedScalar;
 
+use crate::rules::object_subject;
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
 /// Reports a Deployment or StatefulSet whose `spec.replicas` is the integer 1. An unset
@@ -26,8 +27,7 @@ impl Rule for SingleReplica {
     }
 
     fn check_object(&self, cx: &mut ObjectContext<'_>) {
-        let Some(kind @ (BuiltinKind::Deployment | BuiltinKind::StatefulSet)) =
-            cx.object().builtin_kind()
+        let Some(BuiltinKind::Deployment | BuiltinKind::StatefulSet) = cx.object().builtin_kind()
         else {
             return;
         };
@@ -48,7 +48,10 @@ impl Rule for SingleReplica {
         cx.report(
             cx.diagnostic(
                 entry.key.range.cover(entry.value.range),
-                format!("the {} runs a single replica", kind.as_str()),
+                format!(
+                    "{} runs a single replica (`replicas: 1`)",
+                    object_subject(cx.object())
+                ),
             )
             .with_help(
                 "set `replicas` to 2 or more so that one pod failure, node drain or \
