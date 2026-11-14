@@ -13,7 +13,7 @@ error[KL1001]: `Service` object has no `apiVersion`
   = help: add `apiVersion: v1`
   = note: rule `missing-api-version`
 
-error[KL1008]: `café` is not a valid `Service` name: a DNS-1035 label must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character (e.g. 'my-name' or 'abc-123')
+error[KL1008]: `café` is not a valid `Service` name: must contain only lowercase letters, digits and `-`, start with a letter and end with a letter or digit
  --> deploy/broken.yml:3:9
   |
 3 |   name: café

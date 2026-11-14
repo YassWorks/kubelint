@@ -33,7 +33,7 @@ exit: 1
       "code": "KL1008",
       "name": "invalid-object-name",
       "severity": "error",
-      "message": "`café` is not a valid `Service` name: a DNS-1035 label must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character (e.g. 'my-name' or 'abc-123')",
+      "message": "`café` is not a valid `Service` name: must contain only lowercase letters, digits and `-`, start with a letter and end with a letter or digit",
       "help": "use lowercase letters, digits and `-`, starting with a letter",
       "location": {
         "path": "deploy/broken.yml",

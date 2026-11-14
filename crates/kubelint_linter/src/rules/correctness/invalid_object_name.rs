@@ -99,15 +99,25 @@ fn report(
         (NameFormat::PathSegment, _) => {
             "remove `/` and `%` from the name; other characters are allowed".to_owned()
         }
-        (_, Some(name)) => format!("use lowercase letters, digits and `-`, for example `{name}`"),
         (NameFormat::Dns1035, None) => {
-            "use lowercase letters, digits and `-`, starting with a letter".to_owned()
+            format!("use {}, starting with a letter", allowed(format))
         }
-        (_, None) => "use lowercase letters, digits and `-`, starting and ending with a \
-                      letter or digit"
-            .to_owned(),
+        (_, Some(name)) => format!("use {}, for example `{name}`", allowed(format)),
+        (_, None) => format!(
+            "use {}, starting and ending with a letter or digit",
+            allowed(format)
+        ),
     };
     cx.report(cx.diagnostic(node.range, message).with_help(help));
+}
+
+/// The characters a name may contain.
+fn allowed(format: NameFormat) -> &'static str {
+    match format {
+        NameFormat::Subdomain => "lowercase letters, digits, `-` and `.`",
+        NameFormat::Label | NameFormat::Dns1035 => "lowercase letters, digits and `-`",
+        NameFormat::PathSegment => "any characters except `/` and `%`",
+    }
 }
 
 fn name_format(kind: BuiltinKind) -> NameFormat {

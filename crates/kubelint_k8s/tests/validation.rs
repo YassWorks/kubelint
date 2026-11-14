@@ -360,13 +360,21 @@ fn messages() {
     );
     assert_eq!(
         message(is_qualified_name("a/-b")),
-        "its name part must be made of letters, digits, '-', '_' and '.', starting and \
-         ending with a letter or digit"
+        "its name part must contain only letters, digits, `-`, `_` and `.`, and start \
+         and end with a letter or digit"
     );
-    assert!(message(is_dns1123_subdomain("A")).starts_with("a lowercase RFC 1123 subdomain"));
+    assert_eq!(
+        message(is_dns1123_subdomain("A")),
+        "must contain only lowercase letters, digits, `-` and `.`, and each part between \
+         dots must start and end with a letter or digit"
+    );
     assert_eq!(
         message(is_qualified_name("Example.com/tier")),
-        "its prefix must be a lowercase RFC 1123 subdomain (lowercase letters, digits, \
-         '-' and '.', starting and ending with a letter or digit)"
+        "its prefix must contain only lowercase letters, digits, `-` and `.`, and each \
+         part between dots must start and end with a letter or digit"
+    );
+    assert_eq!(
+        message(is_qualified_name("a/b/c")),
+        "may contain at most one `/`, between an optional DNS prefix and the name"
     );
 }

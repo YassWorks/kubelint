@@ -66,12 +66,11 @@ GitHub Action integration.
   - [x] KL1010 ran the upstream validation text straight on after "prefix part", so a
     bad key prefix read "label key `Example.com/tier` is invalid: prefix part a
     lowercase RFC 1123 subdomain must consist of...". A part of a label key now uses
-    `Format::subject`, and the label key help gives a corrected example
-  - [ ] KL1008 and KL1010 paste raw Kubernetes validation text ("must consist of lower
+    its own wording, and the label key help gives a corrected example
+  - [x] KL1008 and KL1010 pasted raw Kubernetes validation text ("must consist of lower
     case alphanumeric characters, '-' or '.', and must start and end with an
-    alphanumeric character (e.g. 'example.com')") into the message. Say it in plain
-    words, since the help already gives the fix. The KL1008 subdomain help also omits
-    `.`, which those kinds allow, so for `settings.` only the trailing dot is wrong
+    alphanumeric character (e.g. 'example.com')") into the message. `Format::rule` now
+    says it in plain words, and the KL1008 subdomain help includes `.`
   - [ ] KL1008 on `metadata.namespace` says "`Team_A` is not a valid namespace name"
     while every other KL1008 message names the kind. Name the field instead
   - [ ] KL1009 and KL1011 name the env var but not the container, unlike KL2008. KL3005
