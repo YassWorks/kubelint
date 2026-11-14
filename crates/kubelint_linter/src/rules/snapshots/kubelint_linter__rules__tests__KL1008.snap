@@ -2,19 +2,19 @@
 source: crates/kubelint_linter/src/rules/tests.rs
 expression: check_fixture(rule)
 ---
-error[KL1008]: `My_App` is not a valid `Deployment` name: a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com')
+error[KL1008]: `My_App` is not a valid `Deployment` name: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start and end with a letter or digit
  --> correctness/KL1008.yaml:5:9
   |
 5 |   name: My_App
   |         ^^^^^^
-  = help: use lowercase letters, digits and `-`, for example `my-app`
+  = help: use lowercase letters, digits, `-` and `.`, for example `my-app`
 
-error[KL1008]: `settings.` is not a valid `ConfigMap` name: a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com')
+error[KL1008]: `settings.` is not a valid `ConfigMap` name: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start and end with a letter or digit
   --> correctness/KL1008.yaml:11:9
    |
 11 |   name: settings.
    |         ^^^^^^^^^
-  = help: use lowercase letters, digits and `-`, for example `settings`
+  = help: use lowercase letters, digits, `-` and `.`, for example `settings`
 
 error[KL1008]: `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` is not a valid `Secret` name: must be no more than 253 characters
   --> correctness/KL1008.yaml:16:9
@@ -23,21 +23,21 @@ error[KL1008]: `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` is not a valid `Secret` nam
    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   = help: shorten the name to at most 253 characters
 
-error[KL1008]: `team.payments` is not a valid `Namespace` name: a lowercase RFC 1123 label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character (e.g. 'my-name' or '123-abc')
+error[KL1008]: `team.payments` is not a valid `Namespace` name: must contain only lowercase letters, digits and `-`, and start and end with a letter or digit
   --> correctness/KL1008.yaml:22:9
    |
 22 |   name: team.payments
    |         ^^^^^^^^^^^^^
   = help: use lowercase letters, digits and `-`, for example `team-payments`
 
-error[KL1008]: `1-api` is not a valid `Service` name: a DNS-1035 label must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character (e.g. 'my-name' or 'abc-123')
+error[KL1008]: `1-api` is not a valid `Service` name: must contain only lowercase letters, digits and `-`, start with a letter and end with a letter or digit
   --> correctness/KL1008.yaml:29:9
    |
 29 |   name: 1-api
    |         ^^^^^
   = help: use lowercase letters, digits and `-`, starting with a letter
 
-error[KL1008]: `web server` is not a valid `Service` name: a DNS-1035 label must consist of lower case alphanumeric characters or '-', start with an alphabetic character, and end with an alphanumeric character (e.g. 'my-name' or 'abc-123')
+error[KL1008]: `web server` is not a valid `Service` name: must contain only lowercase letters, digits and `-`, start with a letter and end with a letter or digit
   --> correctness/KL1008.yaml:34:9
    |
 34 |   name: "web server"
@@ -51,18 +51,18 @@ error[KL1008]: `team/reader` is not a valid `ClusterRole` name: may not contain 
    |         ^^^^^^^^^^^
   = help: remove `/` and `%` from the name; other characters are allowed
 
-error[KL1008]: `Team_A` is not a valid namespace name: a lowercase RFC 1123 label must consist of lower case alphanumeric characters or '-', and must start and end with an alphanumeric character (e.g. 'my-name' or '123-abc')
+error[KL1008]: `Team_A` is not a valid namespace name: must contain only lowercase letters, digits and `-`, and start and end with a letter or digit
   --> correctness/KL1008.yaml:47:14
    |
 47 |   namespace: Team_A
    |              ^^^^^^
   = help: use lowercase letters, digits and `-`, for example `team-a`
 
-error[KL1008]: `price-$5` is not a valid `ConfigMap` name: a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, '-' or '.', and must start and end with an alphanumeric character (e.g. 'example.com')
+error[KL1008]: `price-$5` is not a valid `ConfigMap` name: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start and end with a letter or digit
    --> correctness/KL1008.yaml:105:9
     |
 105 |   name: price-$5
     |         ^^^^^^^^
-  = help: use lowercase letters, digits and `-`, for example `price-5`
+  = help: use lowercase letters, digits, `-` and `.`, for example `price-5`
 
 9 finding(s) in 18 object(s)

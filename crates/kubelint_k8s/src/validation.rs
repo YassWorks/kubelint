@@ -7,9 +7,9 @@
 //! Kubernetes can return several messages for one value (too long *and* badly formed).
 //! These functions return the first one, which is the one Kubernetes lists first.
 //!
-//! [`Format::message`] keeps Kubernetes' wording, minus the regular expression it
-//! appends. A message about one part of a label key words the syntax as "its prefix
-//! must be ..." instead (see `docs/conventions.md`).
+//! The messages say the same thing as Kubernetes' in plain words, without its jargon
+//! and examples, because the rules give the fix in their help (see
+//! `docs/conventions.md`).
 
 use std::fmt;
 
@@ -79,13 +79,9 @@ impl fmt::Display for ValidationError {
             ValidationErrorKind::TooLong { max } => {
                 write!(f, "must be no more than {max} characters")
             }
-            ValidationErrorKind::Format(format) if self.part.is_some() => {
-                write!(f, "must be {}", format.subject())
-            }
-            ValidationErrorKind::Format(format) => f.write_str(format.message()),
+            ValidationErrorKind::Format(format) => f.write_str(format.rule()),
             ValidationErrorKind::TooManySlashes => f.write_str(
-                "a qualified name must consist of a name with an optional DNS subdomain \
-                 prefix and '/' (e.g. 'example.com/MyName')",
+                "may contain at most one `/`, between an optional DNS prefix and the name",
             ),
         }
     }
@@ -94,59 +90,28 @@ impl fmt::Display for ValidationError {
 impl std::error::Error for ValidationError {}
 
 impl Format {
-    /// The syntax as what follows "must be", for a message about one part of a key.
-    fn subject(self) -> &'static str {
+    /// The syntax in plain words, as what follows the value or key part.
+    pub fn rule(self) -> &'static str {
         match self {
             Self::Dns1123Label => {
-                "a lowercase RFC 1123 label (lowercase letters, digits and '-', starting \
-                 and ending with a letter or digit)"
-            }
-            Self::Dns1123Subdomain => {
-                "a lowercase RFC 1123 subdomain (lowercase letters, digits, '-' and '.', \
-                 starting and ending with a letter or digit)"
-            }
-            Self::Dns1035Label => {
-                "a DNS-1035 label (lowercase letters, digits and '-', starting with a \
-                 letter and ending with a letter or digit)"
-            }
-            Self::QualifiedName => {
-                "made of letters, digits, '-', '_' and '.', starting and ending with a \
-                 letter or digit"
-            }
-            Self::LabelValue => {
-                "empty, or made of letters, digits, '-', '_' and '.', starting and ending \
+                "must contain only lowercase letters, digits and `-`, and start and end \
                  with a letter or digit"
             }
-        }
-    }
-
-    /// Kubernetes' explanation of the syntax, with its examples.
-    pub fn message(self) -> &'static str {
-        match self {
-            Self::Dns1123Label => {
-                "a lowercase RFC 1123 label must consist of lower case alphanumeric \
-                 characters or '-', and must start and end with an alphanumeric character \
-                 (e.g. 'my-name' or '123-abc')"
-            }
             Self::Dns1123Subdomain => {
-                "a lowercase RFC 1123 subdomain must consist of lower case alphanumeric \
-                 characters, '-' or '.', and must start and end with an alphanumeric \
-                 character (e.g. 'example.com')"
+                "must contain only lowercase letters, digits, `-` and `.`, and each part \
+                 between dots must start and end with a letter or digit"
             }
             Self::Dns1035Label => {
-                "a DNS-1035 label must consist of lower case alphanumeric characters or \
-                 '-', start with an alphabetic character, and end with an alphanumeric \
-                 character (e.g. 'my-name' or 'abc-123')"
+                "must contain only lowercase letters, digits and `-`, start with a letter \
+                 and end with a letter or digit"
             }
             Self::QualifiedName => {
-                "must consist of alphanumeric characters, '-', '_' or '.', and must start \
-                 and end with an alphanumeric character (e.g. 'MyName', 'my.name' or \
-                 '123-abc')"
+                "must contain only letters, digits, `-`, `_` and `.`, and start and end \
+                 with a letter or digit"
             }
             Self::LabelValue => {
-                "a valid label must be an empty string or consist of alphanumeric \
-                 characters, '-', '_' or '.', and must start and end with an alphanumeric \
-                 character (e.g. 'MyValue', 'my_value' or '12345')"
+                "must be empty, or contain only letters, digits, `-`, `_` and `.`, and \
+                 start and end with a letter or digit"
             }
         }
     }
