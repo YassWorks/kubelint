@@ -15,8 +15,10 @@ surrounding code does, then add the convention here.
 - **Naming:** types `UpperCamelCase`, functions and modules `snake_case`, rule structs
   named after the rule (`PrivilegedContainer` for `privileged-container`), rule files
   `snake_case` of the rule name (`privileged_container.rs`).
-- **Errors:** library crates define error enums with `thiserror`. Only the `kubelint`
-  binary uses `anyhow`. Errors that reach the user say what happened and what to do.
+- **Errors:** library crates write their error types by hand: a `Display` impl and an
+  empty `std::error::Error` impl. That is a few lines per type, so no `thiserror` (see
+  [Dependencies](#dependencies)). Only the `kubelint` binary uses `anyhow`. Errors that
+  reach the user say what happened and what to do.
 - **No panics on user input.** No `unwrap()`/`expect()` on anything derived from files,
   config or arguments. `expect("reason")` is acceptable only for true invariants, and the
   message states the invariant.
