@@ -8,6 +8,7 @@ use kubelint_diagnostics::Severity;
 use kubelint_source::TextRange;
 use kubelint_yaml::{Node, NodeKind};
 
+use crate::rules::object_subject;
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
 /// Reports a key that appears more than once in the same mapping.
@@ -34,12 +35,16 @@ impl Rule for DuplicateKey {
         // An alias (`*name`) repeats its anchor's nodes with the anchor's ranges: report
         // each duplicate once.
         let mut reported = HashSet::new();
+        let subject = object_subject(cx.object());
         for duplicate in found {
             if !reported.insert(duplicate.repeat) {
                 continue;
             }
             let message = if duplicate.path.is_empty() {
-                format!("duplicate key `{}`", duplicate.key)
+                format!(
+                    "duplicate key `{}` at the top level of {subject}",
+                    duplicate.key
+                )
             } else {
                 format!("duplicate key `{}` in `{}`", duplicate.key, duplicate.path)
             };
