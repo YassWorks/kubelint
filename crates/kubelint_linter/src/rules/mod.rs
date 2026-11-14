@@ -10,7 +10,7 @@ pub mod syntax;
 #[cfg(test)]
 mod tests;
 
-use kubelint_k8s::Container;
+use kubelint_k8s::{Container, Object};
 use kubelint_source::TextRange;
 use kubelint_yaml::Node;
 
@@ -48,6 +48,15 @@ pub static ALL: &[&dyn Rule] = &[
     &reliability::MissingReadinessProbe,
     &reliability::SingleReplica,
 ];
+
+/// "Deployment `web`", or "the Deployment" when it has no usable name.
+fn object_subject(object: Object<'_>) -> String {
+    let kind = object.kind().and_then(Node::as_str).unwrap_or("object");
+    match object.name().and_then(Node::as_str) {
+        Some(name) if !name.trim().is_empty() => format!("{kind} `{name}`"),
+        _ => format!("the {kind}"),
+    }
+}
 
 /// "container `web`", or "container" when it has no usable name.
 fn container_subject(container: Container<'_>) -> String {

@@ -143,3 +143,11 @@ metadata:
   name: custom
 spec:
   replicas: 1
+---
+# Reported: a Deployment without a name, named by its kind only.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels: {app: unnamed}
+spec:
+  replicas: 1
