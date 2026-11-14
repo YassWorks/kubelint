@@ -61,7 +61,10 @@ impl Rule for InvalidObjectName {
             && let Some(text) = string_value(namespace)
             && let Err(error) = is_dns1123_label(text)
         {
-            let message = format!("`{}` is not a valid namespace name: {error}", shown(text));
+            let message = format!(
+                "`{}` in `metadata.namespace` is not a valid namespace name: {error}",
+                shown(text)
+            );
             report(cx, namespace, text, message, NameFormat::Label);
         }
         let Some(kind) = object.builtin_kind() else {
