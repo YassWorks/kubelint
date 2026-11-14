@@ -79,8 +79,9 @@ GitHub Action integration.
   - [x] KL3005 said "the Deployment runs a single replica" with no object name and no
     `replicas` field, and KL2004 said "the pod" without naming the workload. Both now
     name the object through the shared `object_subject` ("Deployment `web`")
-  - [ ] KL0002 omits the path at the top level of an object ("duplicate key `data`")
-    while nested findings give one ("in `metadata.labels`")
+  - [x] KL0002 omitted the path at the top level of an object ("duplicate key `data`")
+    while nested findings give one ("in `metadata.labels`"). It now says "at the top
+    level of ConfigMap `settings`"
   - [ ] Explanations: read each `<rule_name>.md` for accuracy and plain wording. All of
     them already have the "What it does", "Why it matters" and "Example" sections
 - [x] `.pre-commit-hooks.yaml` and docs

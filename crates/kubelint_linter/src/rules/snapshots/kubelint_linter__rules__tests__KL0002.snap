@@ -2,7 +2,7 @@
 source: crates/kubelint_linter/src/rules/tests.rs
 expression: check_fixture(rule)
 ---
-error[KL0002]: duplicate key `data`
+error[KL0002]: duplicate key `data` at the top level of ConfigMap `settings`
  --> syntax/KL0002.yaml:8:1
   |
 8 | data:
@@ -79,4 +79,26 @@ error[KL0002]: duplicate key `name` in `metadata`
    |            ---- first defined here
   = help: keep one `name`: Kubernetes either rejects the object or uses only the last value
 
-7 finding(s) in 6 object(s)
+error[KL0002]: duplicate key `metadata` at the top level of object `second`
+  --> syntax/KL0002.yaml:76:1
+   |
+76 | metadata:
+   | ^^^^^^^^
+  --> syntax/KL0002.yaml:74:1
+   |
+74 | metadata:
+   | -------- first defined here
+  = help: keep one `metadata`: Kubernetes either rejects the object or uses only the last value
+
+error[KL0002]: duplicate key `data` at the top level of the ConfigMap
+  --> syntax/KL0002.yaml:83:1
+   |
+83 | data: {b: "2"}
+   | ^^^^
+  --> syntax/KL0002.yaml:82:1
+   |
+82 | data: {a: "1"}
+   | ---- first defined here
+  = help: keep one `data`: Kubernetes either rejects the object or uses only the last value
+
+9 finding(s) in 8 object(s)

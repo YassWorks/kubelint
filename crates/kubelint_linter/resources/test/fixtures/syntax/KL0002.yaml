@@ -68,3 +68,16 @@ build:
   steps: [compile]
 build:
   steps: [test]
+---
+# Reported: a top-level duplicate in an object without a kind, named by the last `metadata`.
+apiVersion: v1
+metadata:
+  name: first
+metadata:
+  name: second
+---
+# Reported: a top-level duplicate in an object without a name.
+apiVersion: v1
+kind: ConfigMap
+data: {a: "1"}
+data: {b: "2"}
