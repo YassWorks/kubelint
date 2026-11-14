@@ -69,7 +69,7 @@ warning[KL3003]: image `nginx:latest` uses the `latest` tag
    = help: pin a version tag, such as `nginx:1.2.3`, or a digest, such as `nginx@sha256:<digest>`
    = note: rule `unpinned-image-tag`
 
-error[KL1009]: env var `PORT` has a value that YAML reads as a number, not a string
+error[KL1009]: container `web` sets env var `PORT` to a value that YAML reads as a number, not a string
   --> k8s/web.yaml:17:18
    |
 17 |           value: 8080

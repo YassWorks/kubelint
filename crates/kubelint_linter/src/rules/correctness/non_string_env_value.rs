@@ -3,6 +3,7 @@
 use kubelint_diagnostics::Severity;
 use kubelint_yaml::{Node, NodeKind, ResolvedScalar};
 
+use crate::rules::container_subject;
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
 /// Reports a container env var whose `value` YAML reads as a number or a boolean.
@@ -46,12 +47,14 @@ impl Rule for NonStringEnvValue {
                         "a number"
                     }
                 };
-                let subject = match var.get("name").and_then(Node::as_str) {
+                let var_name = match var.get("name").and_then(Node::as_str) {
                     Some(name) => format!("env var `{name}`"),
-                    None => "env var".to_owned(),
+                    None => "an env var".to_owned(),
                 };
-                let message =
-                    format!("{subject} has a value that YAML reads as {type_name}, not a string");
+                let message = format!(
+                    "{} sets {var_name} to a value that YAML reads as {type_name}, not a string",
+                    container_subject(container)
+                );
                 let help = format!("quote the value: `value: \"{}\"`", scalar.value);
                 cx.report(cx.diagnostic(value.range, message).with_help(help));
             }

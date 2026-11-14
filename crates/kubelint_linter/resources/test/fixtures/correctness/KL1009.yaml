@@ -84,3 +84,15 @@ metadata:
   name: settings
 data:
   env: "1"
+---
+# Reported: a container without a name, named by "container" only.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nameless
+spec:
+  containers:
+  - image: app:1.0
+    env:
+    - name: RETRIES
+      value: 3

@@ -132,3 +132,17 @@ spec:
     - configMapRef: {name: app}
     env:
     - {name: MODE, value: a}
+---
+# Reported: a container without a name, named by "container" only.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nameless
+spec:
+  containers:
+  - image: app:1.0
+    env:
+    - name: LEVEL
+      value: info
+    - name: LEVEL
+      value: debug
