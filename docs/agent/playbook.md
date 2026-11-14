@@ -328,6 +328,15 @@ Traps earlier runs fell into. Add new ones as you find them.
   of a line joins the two lines. A `\`-wrapped Rust string written that way loses its
   line break and keeps the next line's indentation as a run of spaces. Write Rust
   source with the Write or Edit tool.
+- A release tag is cut only by a merge that changes code (`CODE_PATHS` in
+  `release.yml`). A file users fetch by tag but that is not code, such as
+  `.pre-commit-hooks.yaml` or `action.yml`, first appears in the tag of the next code
+  merge after it. Merge in an order that makes the versions pinned in
+  `docs/user/ci-integration.md` true (`rev: v0.18.6`, `@v0.18.7`), then check the tag
+  (`gh api "repos/YassWorks/kubelint/contents/<file>?ref=<tag>"`).
+- PR checks are the ten `ci.yml` jobs (including three `action (<os>)` jobs) plus
+  GitGuardian, eleven check runs in all. A wait script that counts check runs must
+  expect all of them before it reports done.
 
 ## Keeping this playbook healthy
 
