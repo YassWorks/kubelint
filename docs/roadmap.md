@@ -74,10 +74,11 @@ GitHub Action integration.
   - [x] KL1008 on `metadata.namespace` said "`Team_A` is not a valid namespace name"
     while every other KL1008 message names the kind. It now names the field: "`Team_A`
     in `metadata.namespace` is not a valid namespace name"
-  - [ ] KL1009 and KL1011 name the env var but not the container, unlike KL2008. KL3005
-    says "the Deployment runs a single replica" with no object name and no `replicas`
-    field, and KL2004 says "the pod" without naming the workload. Name the object
-    through a shared helper
+  - [x] KL1009 and KL1011 named the env var but not the container, unlike KL2008. Both
+    now start with the container, through the shared `container_subject`
+  - [ ] KL3005 says "the Deployment runs a single replica" with no object name and no
+    `replicas` field, and KL2004 says "the pod" without naming the workload. Name the
+    object through a shared helper
   - [ ] KL0002 omits the path at the top level of an object ("duplicate key `data`")
     while nested findings give one ("in `metadata.labels`")
   - [ ] Explanations: read each `<rule_name>.md` for accuracy and plain wording. All of

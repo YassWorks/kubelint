@@ -2,7 +2,7 @@
 source: crates/kubelint_linter/src/rules/tests.rs
 expression: check_fixture(rule)
 ---
-warning[KL1011]: env var `LOG_LEVEL` is already set in this container
+warning[KL1011]: container `web` sets env var `LOG_LEVEL` again
   --> correctness/KL1011.yaml:21:17
    |
 21 |         - name: LOG_LEVEL
@@ -13,7 +13,7 @@ warning[KL1011]: env var `LOG_LEVEL` is already set in this container
    |                 --------- first set here
   = help: remove one of the entries; only the last one takes effect
 
-warning[KL1011]: env var `TOKEN` is already set in this container
+warning[KL1011]: container `setup` sets env var `TOKEN` again
   --> correctness/KL1011.yaml:36:13
    |
 36 |     - name: TOKEN
@@ -24,7 +24,7 @@ warning[KL1011]: env var `TOKEN` is already set in this container
    |              ----- first set here
   = help: remove one of the entries; only the last one takes effect
 
-warning[KL1011]: env var `MODE` is already set in this container
+warning[KL1011]: container `app` sets env var `MODE` again
   --> correctness/KL1011.yaml:44:14
    |
 44 |     - {name: "MODE", value: b}
@@ -35,7 +35,7 @@ warning[KL1011]: env var `MODE` is already set in this container
    |              ---- first set here
   = help: remove one of the entries; only the last one takes effect
 
-warning[KL1011]: env var `MODE` is already set in this container
+warning[KL1011]: container `app` sets env var `MODE` again
   --> correctness/KL1011.yaml:45:14
    |
 45 |     - {name: MODE, value: c}
@@ -46,7 +46,7 @@ warning[KL1011]: env var `MODE` is already set in this container
    |              ---- first set here
   = help: remove one of the entries; only the last one takes effect
 
-warning[KL1011]: env var `GREETING` is already set in this container
+warning[KL1011]: container `report` sets env var `GREETING` again
   --> correctness/KL1011.yaml:65:21
    |
 65 |             - name: GREETING
@@ -57,4 +57,15 @@ warning[KL1011]: env var `GREETING` is already set in this container
    |                     -------- first set here
   = help: remove one of the entries; only the last one takes effect
 
-5 finding(s) in 7 object(s)
+warning[KL1011]: container sets env var `LEVEL` again
+   --> correctness/KL1011.yaml:147:13
+    |
+147 |     - name: LEVEL
+    |             ^^^^^
+   --> correctness/KL1011.yaml:145:13
+    |
+145 |     - name: LEVEL
+    |             ----- first set here
+  = help: remove one of the entries; only the last one takes effect
+
+6 finding(s) in 8 object(s)

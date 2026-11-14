@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use kubelint_diagnostics::Severity;
 use kubelint_yaml::Node;
 
+use crate::rules::container_subject;
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
 /// Reports an env var whose `name` is already set earlier in the same container's `env`.
@@ -49,7 +50,10 @@ impl Rule for DuplicateEnvName {
                 cx.report(
                     cx.diagnostic(
                         node.range,
-                        format!("env var `{name}` is already set in this container"),
+                        format!(
+                            "{} sets env var `{name}` again",
+                            container_subject(container)
+                        ),
                     )
                     .with_secondary(cx.label(original.range).with_message("first set here"))
                     .with_help("remove one of the entries; only the last one takes effect"),
