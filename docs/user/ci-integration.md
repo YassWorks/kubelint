@@ -34,8 +34,9 @@ The archive names for other platforms are listed in
 
 ## GitHub Actions
 
-With `--format github`, each finding becomes an annotation on the changed line of the
-pull request, and in the job log. No extra permission is needed.
+The kubelint action installs a release and runs `kubelint check --format github`, so
+each finding becomes an annotation on the changed line of the pull request, and in the
+job log. No extra permission is needed.
 
 ```yaml
 # .github/workflows/kubelint.yml
@@ -46,22 +47,43 @@ permissions:
 jobs:
   kubelint:
     runs-on: ubuntu-latest
-    env:
-      VERSION: v0.17.0
-      TARGET: x86_64-unknown-linux-musl
     steps:
       - uses: actions/checkout@v4
-      - name: Install kubelint
-        run: |
-          curl -fsSL "https://github.com/YassWorks/kubelint/releases/download/$VERSION/kubelint-$VERSION-$TARGET.tar.gz" \
-            | tar -xz --strip-components=1 "kubelint-$VERSION-$TARGET/kubelint"
-      - name: Lint manifests
-        run: ./kubelint check --format github .
+      - uses: YassWorks/kubelint@v0.18.7
 ```
 
-To see findings in the repository's Security tab instead, upload SARIF to code
-scanning, as shown in [output formats](output-formats.md#uploading-to-github-code-scanning).
-A ready-made GitHub Action is planned.
+The tag pins the kubelint version: `@v0.18.7` installs kubelint v0.18.7. The action
+exists from v0.18.7 on and runs on Linux, macOS and Windows runners (x86-64, and ARM64
+on Linux and macOS). Its inputs:
+
+| Input | Default | Meaning |
+| --- | --- | --- |
+| `version` | the action's tag | The release to install, such as `v0.19.0`, or `latest`. With a ref that is not a release tag (a branch or a commit), the default is `latest`. |
+| `format` | `github` | `github` for annotations, or `sarif` to write a SARIF file. |
+| `args` | `.` | Options and paths for `kubelint check`, separated by spaces or newlines, for example `--fail-on error k8s`. |
+| `sarif-file` | `kubelint.sarif` | Where `format: sarif` writes its output. |
+
+The step fails when kubelint finds something at or above `fail-on`. To see findings in
+the repository's Security tab instead, upload SARIF to code scanning, as shown in
+[output formats](output-formats.md#uploading-to-github-code-scanning).
+
+Without the action, download the release yourself as shown in
+[installing in CI](#installing-in-ci) and run `./kubelint check --format github .`.
+
+### Why a composite action
+
+The action is a composite action: two shell scripts in `.github/scripts/` that download
+the release archive, check it against `SHA256SUMS`, and run it.
+
+**Why:** it installs the same static binary as every other setup, starts in seconds and
+works on every runner operating system.
+
+**Rejected:**
+
+- A Docker container action. It runs only on Linux runners and pulls an image on
+  every run.
+- A JavaScript action. It needs a Node build and a bundled `dist/` committed to the
+  repository, for what two short scripts do.
 
 ## GitLab CI
 

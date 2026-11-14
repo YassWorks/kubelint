@@ -163,12 +163,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install kubelint
-        run: cargo install --locked --git https://github.com/YassWorks/kubelint kubelint
-      - name: Lint manifests
-        # Findings make kubelint exit with 1; let the upload step run anyway.
-        run: kubelint check --format sarif . > kubelint.sarif || true
+      - uses: YassWorks/kubelint@v0.18.7
+        with:
+          format: sarif
       - name: Upload to code scanning
+        # Runs even when kubelint failed the previous step because of findings.
+        if: ${{ !cancelled() }}
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: kubelint.sarif
@@ -176,9 +176,8 @@ jobs:
 ```
 
 Code scanning is free for public repositories and needs GitHub Advanced Security for
-private ones. Downloading a binary from the
-[latest release](https://github.com/YassWorks/kubelint/releases/latest) is faster than
-`cargo install`; a ready-made GitHub Action is planned.
+private ones. The [GitHub Action](ci-integration.md#github-actions) writes
+`kubelint.sarif` and installs the release named by its tag.
 
 ## `github`
 
