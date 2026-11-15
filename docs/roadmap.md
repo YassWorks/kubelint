@@ -88,8 +88,10 @@ GitHub Action integration.
     - [x] Syntax and correctness: KL1008 did not say that RBAC names allow `:` or that
       custom resource names are not checked, and KL1008 and KL1010 used DNS jargon
       ("DNS-1123 subdomain") where plain words fit
-    - [ ] Security: the KL2003 and KL2009 examples cannot run (the `nginx` image needs
-      root and writes its PID file outside the volume the example mounts)
+    - [x] Security: the KL2003 and KL2009 examples could not run (the `nginx` image
+      needs root and writes its PID file outside the volume the example mounted), and
+      KL2003 did not say that a user namespace (`hostUsers: false`) changes what root
+      in a container means
     - [ ] Reliability: KL3004 says init containers cannot have a readiness probe, but a
       sidecar can
 - [x] `.pre-commit-hooks.yaml` and docs
