@@ -398,6 +398,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "kubelint_schema"
+version = "0.0.0"
+dependencies = [
+ "kubelint_k8s",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "kubelint_source"
 version = "0.0.0"
 dependencies = [

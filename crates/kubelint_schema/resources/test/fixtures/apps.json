@@ -1,0 +1,59 @@
+{
+  "format": 1,
+  "definitions": {
+    "io.k8s.api.apps.v1.Deployment": {
+      "type": "object",
+      "properties": {
+        "apiVersion": {"type": "string"},
+        "kind": {"type": "string"},
+        "metadata": {"$ref": "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"},
+        "spec": {"$ref": "io.k8s.api.apps.v1.DeploymentSpec"}
+      }
+    },
+    "io.k8s.api.apps.v1.DeploymentSpec": {
+      "type": "object",
+      "properties": {
+        "replicas": {"type": "integer"},
+        "paused": {"type": "boolean"},
+        "maxSurge": {"oneOf": [{"type": "integer"}, {"type": "string"}]},
+        "selector": {"$ref": "io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector"},
+        "containers": {"type": "array", "items": {"$ref": "io.k8s.api.core.v1.Container"}},
+        "extension": {"type": "object"},
+        "anything": {}
+      },
+      "required": ["selector"]
+    },
+    "io.k8s.api.core.v1.Container": {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string"},
+        "cpu": {"type": "number"}
+      },
+      "required": ["name"]
+    },
+    "io.k8s.apimachinery.pkg.apis.meta.v1.LabelSelector": {
+      "type": "object",
+      "properties": {
+        "matchLabels": {"type": "object", "additionalProperties": {"type": "string"}}
+      }
+    },
+    "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta": {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string"},
+        "labels": {"type": "object", "additionalProperties": {"type": "string"}}
+      }
+    },
+    "io.k8s.apimachinery.pkg.apis.meta.v1.DeleteOptions": {
+      "type": "object",
+      "properties": {
+        "dryRun": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  },
+  "kinds": [
+    {"group": "apps", "version": "v1", "kind": "Deployment", "definition": "io.k8s.api.apps.v1.Deployment"},
+    {"group": "apps", "version": "v1", "kind": "DeleteOptions", "definition": "io.k8s.apimachinery.pkg.apis.meta.v1.DeleteOptions"},
+    {"group": "", "version": "v1", "kind": "DeleteOptions", "definition": "io.k8s.apimachinery.pkg.apis.meta.v1.DeleteOptions"}
+  ]
+}

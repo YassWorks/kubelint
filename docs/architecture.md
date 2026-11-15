@@ -52,6 +52,7 @@ All crates live in `crates/` and are named `kubelint_*` (the CLI binary is just
 | `kubelint_yaml` | Span-preserving YAML tree built from `saphyr-parser` events. Comment extraction. Kubernetes-compatible scalar typing. | source |
 | `kubelint_diagnostics` | `Diagnostic`, `Severity`, `Label`, `Fix`, `Edit`, `Applicability`. Data only, no rendering. | source |
 | `kubelint_k8s` | `Object` view over a YAML document, `GroupVersionKind`, workload helpers (`pod_spec()`, `containers()`), Kubernetes value parsers (quantities, image references, DNS-1123 names, label syntax). | source, yaml |
+| `kubelint_schema` | The Kubernetes API schema of one version (`Schema`, `Shape`), read from the compact JSON form, and a lookup by group, version and kind ([schema validation](#schema-validation)). | source, yaml, k8s |
 | `kubelint_config` | Config file discovery and parsing (`kubelint.toml`, `.kubelint.toml`), CLI overrides, resolved `Settings`. Knows rule *selectors* as strings, not the rule registry. | source |
 | `kubelint_linter` | `Rule` trait, `RuleMeta`, `Category`, the static rule registry, selector resolution, suppression comments and annotations, the lint engine, all built-in rules, and the rule test harness. | source, yaml, k8s, diagnostics, config |
 | `kubelint_output` | Renderers: `human` (`annotate-snippets`), `json`, `sarif`, `github`. | source, diagnostics |
@@ -64,9 +65,6 @@ belongs lower, or the layering changes here first.
 
 Planned crates (create them when their milestone starts, not before):
 
-- `kubelint_schema` (M4): bundled Kubernetes API schemas and the span-aware validator
-  ([schema validation](#schema-validation)). It sits between `kubelint_k8s` and
-  `kubelint_linter`, and may depend on source, yaml and k8s.
 - `kubelint_lsp` (M5): language server.
 
 Publishing the CLI to crates.io means publishing every internal crate too. They are
@@ -362,8 +360,8 @@ directory (a sparse checkout of the release tag, see the `xtask` help). It merge
 into one table of definitions keyed by definition name, since every file repeats the
 shared ones (`ObjectMeta`), and builds a lookup from each group version kind to its
 definition (a definition such as `DeleteOptions` lists several). It keeps only what
-validation uses (types, formats, properties, required fields, `additionalProperties`,
-array items, `oneOf` and `$ref`), drops descriptions, defaults and the list, map and
+validation uses (types, properties, required fields, `additionalProperties`, array
+items, `oneOf` and `$ref`), drops descriptions, formats, defaults and the list, map and
 patch extensions, and writes `crates/kubelint_schema/schemas/<version>.json` with
 sorted keys, one definition per line. `schemas/sources.toml` records the tag and commit
 of each version. `kubelint_schema` embeds the files with `include_str!` and parses only
@@ -499,7 +497,7 @@ Pre-approved crates are declared in the root `Cargo.toml` under
 | `ignore` | fast, `.gitignore`-aware file discovery (from ripgrep) |
 | `globset` | include/exclude globs in config |
 | `rayon` | data parallelism over files |
-| `serde`, `serde_json`, `toml` | config parsing and JSON/SARIF output |
+| `serde`, `serde_json`, `toml` | config parsing, JSON/SARIF output and schema files |
 | `anyhow` | error handling in the CLI binary only |
 | `insta` | snapshot tests (dev-dependency) |
 | `assert_cmd` | CLI integration tests (dev-dependency) |

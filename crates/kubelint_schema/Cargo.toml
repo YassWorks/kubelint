@@ -1,0 +1,18 @@
+[package]
+name = "kubelint_schema"
+description = "Kubernetes API schemas for kubelint."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+kubelint_k8s = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[lints]
+workspace = true
