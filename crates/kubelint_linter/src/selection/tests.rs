@@ -191,14 +191,13 @@ fn invalid_yaml_cannot_be_ignored_or_overridden() {
 }
 
 #[test]
-fn severity_overrides_by_code_or_name_later_wins() {
+fn severity_overrides_by_code_or_name() {
     let selection = RuleSelection {
         select: Some(strings(&["KL2", "KL3", "no-probe"])),
         ignore: Vec::new(),
         severity: vec![
             ("KL3001".to_owned(), Severity::Error),
             ("privileged".to_owned(), Severity::Info),
-            ("no-probe".to_owned(), Severity::Error),
             ("KL3004".to_owned(), Severity::Info),
             // An override for a rule that does not run is accepted and changes nothing.
             ("KL3005".to_owned(), Severity::Error),
@@ -207,6 +206,32 @@ fn severity_overrides_by_code_or_name_later_wins() {
     assert_eq!(
         resolve(&selection).unwrap(),
         ["KL0001", "KL2001=info", "KL3001=error", "KL3004=info"]
+    );
+}
+
+#[test]
+fn severity_overrides_name_each_rule_once() {
+    let twice = |first: &str, second: &str| RuleSelection {
+        severity: vec![
+            (first.to_owned(), Severity::Error),
+            (second.to_owned(), Severity::Info),
+        ],
+        ..RuleSelection::default()
+    };
+    let repeated = (SelectorList::Severity, 1, SelectionErrorKind::Repeated);
+    assert_eq!(err(&twice("KL3001", "no-memory-limit")), repeated);
+    assert_eq!(err(&twice("no-memory-limit", "KL3001")), repeated);
+    assert_eq!(err(&twice("KL3001", "KL3001")), repeated);
+    assert_eq!(
+        resolve(&twice("KL3001", "KL2001")).unwrap(),
+        [
+            "KL0001",
+            "KL0002",
+            "KL1001",
+            "KL1002",
+            "KL2001=info",
+            "KL3001=error"
+        ]
     );
 }
 
@@ -261,6 +286,18 @@ fn error_messages() {
     assert_eq!(
         message(&overridden),
         "severity overrides take one rule code or name, not `security`"
+    );
+    let repeated = RuleSelection {
+        severity: vec![
+            ("KL2001".to_owned(), Severity::Info),
+            ("privileged".to_owned(), Severity::Warning),
+        ],
+        ..RuleSelection::default()
+    };
+    assert_eq!(
+        message(&repeated),
+        "`privileged` names a rule whose severity is already overridden: keep one entry per \
+         rule"
     );
 }
 

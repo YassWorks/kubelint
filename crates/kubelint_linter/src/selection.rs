@@ -28,7 +28,7 @@ pub struct RuleSelection {
     pub select: Option<Vec<String>>,
     /// Rules to remove from the selection. Wins over `select`.
     pub ignore: Vec<String>,
-    /// Severity overrides, by rule code or name. Later entries win.
+    /// Severity overrides, by rule code or name, at most one per rule.
     pub severity: Vec<(String, Severity)>,
 }
 
@@ -76,6 +76,9 @@ pub enum SelectionErrorKind {
     AlwaysOn,
     /// A severity override names a category or code prefix instead of one rule.
     NotOneRule,
+    /// A severity override names a rule that an earlier override already names, by its
+    /// code or its name.
+    Repeated,
 }
 
 impl fmt::Display for SelectionError {
@@ -104,6 +107,11 @@ impl fmt::Display for SelectionError {
             SelectionErrorKind::NotOneRule => write!(
                 f,
                 "severity overrides take one rule code or name, not `{selector}`"
+            ),
+            SelectionErrorKind::Repeated => write!(
+                f,
+                "`{selector}` names a rule whose severity is already overridden: keep one \
+                 entry per rule"
             ),
         }
     }
@@ -164,6 +172,7 @@ impl RuleSelection {
         }
         let mut severities: Vec<Severity> =
             registry.iter().map(|r| r.meta().default_severity).collect();
+        let mut overridden = vec![false; registry.len()];
         for (index, (selector, severity)) in self.severity.iter().enumerate() {
             let error = |kind| error(SelectorList::Severity, index, selector, kind);
             if is_exact(registry, selector, always_on) {
@@ -174,6 +183,9 @@ impl RuleSelection {
                 matches(registry, selector, SelectorList::Severity, index)?;
                 return Err(error(SelectionErrorKind::NotOneRule));
             };
+            if std::mem::replace(&mut overridden[i], true) {
+                return Err(error(SelectionErrorKind::Repeated));
+            }
             severities[i] = *severity;
         }
         Ok(registry
