@@ -5,7 +5,8 @@
 # VERSION is a minor (1.34), a release (v1.34.13 or 1.34.13), or empty for the binaries
 # on the PATH, else the latest release. Missing binaries are downloaded into
 # target/e2e/bin. Prints the export line for KUBECONFIG and PATH. One server runs per
-# checkout: a call for the same version reuses it, a call for another replaces it.
+# checkout, on ports free when it starts: a call for the same version reuses it, a call
+# for another replaces it, and other checkouts keep their own.
 set -euo pipefail
 
 etcd_version=v3.6.16
@@ -92,32 +93,30 @@ if [ "$(server_version)" = "$wanted" ]; then
   exit 0
 fi
 
-stop_ours() { pkill "$1" -f -- "--data-dir $state/etcd|--cert-dir $state/certs" || true; }
+ours="--data-dir $state/etcd|--cert-dir $state/certs"
 port_open() { (echo >"/dev/tcp/127.0.0.1/$1") 2>/dev/null; }
-stop_ours -TERM
-for port in 2379 2380 6443; do
-  for _ in $(seq 1 30); do port_open "$port" || break; sleep 0.5; done
-  if port_open "$port"; then
-    stop_ours -KILL
-    sleep 1
-  fi
-  if port_open "$port"; then
-    echo "port $port is in use by another process" >&2
-    exit 1
-  fi
-done
+free_port() {
+  local port=$1
+  while port_open "$port"; do port=$((port + 1)); done
+  echo "$port"
+}
+pkill -KILL -f -- "$ours" || true
+for _ in $(seq 1 20); do pgrep -f -- "$ours" >/dev/null || break; sleep 0.5; done
 rm -rf "$state"
 mkdir -p "$state"
+etcd_port="$(free_port 2379)"
+peer_port="$(free_port $((etcd_port + 1)))"
+api_port="$(free_port 6443)"
 
 openssl genrsa -out "$state/sa.key" 2048 2>/dev/null
 echo "e2e-token,admin,admin,system:masters" >"$state/tokens.csv"
-"$etcd_bin" --data-dir "$state/etcd" --listen-client-urls http://127.0.0.1:2379 \
-  --advertise-client-urls http://127.0.0.1:2379 --listen-peer-urls http://127.0.0.1:2380 \
-  >"$state/etcd.log" 2>&1 &
+"$etcd_bin" --data-dir "$state/etcd" --listen-client-urls "http://127.0.0.1:$etcd_port" \
+  --advertise-client-urls "http://127.0.0.1:$etcd_port" \
+  --listen-peer-urls "http://127.0.0.1:$peer_port" >"$state/etcd.log" 2>&1 &
 echo $! >"$state/etcd.pid"
 # Real clusters allow privileged pods, and no controller creates service accounts here.
-"$bin/kube-apiserver" --etcd-servers http://127.0.0.1:2379 --cert-dir "$state/certs" \
-  --secure-port 6443 --bind-address 127.0.0.1 --token-auth-file "$state/tokens.csv" \
+"$bin/kube-apiserver" --etcd-servers "http://127.0.0.1:$etcd_port" --cert-dir "$state/certs" \
+  --secure-port "$api_port" --bind-address 127.0.0.1 --token-auth-file "$state/tokens.csv" \
   --authorization-mode RBAC --service-account-issuer https://kubernetes.default.svc \
   --service-account-key-file "$state/sa.key" \
   --service-account-signing-key-file "$state/sa.key" \
@@ -130,7 +129,7 @@ apiVersion: v1
 kind: Config
 clusters:
 - name: e2e
-  cluster: {server: "https://127.0.0.1:6443", insecure-skip-tls-verify: true}
+  cluster: {server: "https://127.0.0.1:$api_port", insecure-skip-tls-verify: true}
 users: [{name: admin, user: {token: e2e-token}}]
 contexts: [{name: e2e, context: {cluster: e2e, user: admin}}]
 current-context: e2e
