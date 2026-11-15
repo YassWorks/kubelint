@@ -91,6 +91,7 @@ For each open PR whose head branch starts with `claude/` (earlier runs):
 | All checks green, no conflicts | Re-read the diff briefly. If it follows this playbook, squash-merge it as 4.7 says. |
 | Checks red | Read the failing job logs and fix it. If you cannot push to its branch, recreate the change on your session branch and close the old PR with a comment linking the new one. |
 | Merge conflicts | Rebase onto `main` or recreate it, as above. |
+| Description says "end to end evidence missing" | Run the missing checks (4.5). Merge only once they pass and the evidence is in the description. |
 | Obsolete (superseded, wrong direction) | Close it with a one-line comment explaining why. |
 
 PRs opened by anyone else: never merge them.
@@ -180,10 +181,38 @@ cargo test --workspace --all-features --locked
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features --locked
 ```
 
+Then prove the change end to end when it changes behavior or states a fact about
+Kubernetes, an image or another tool. Reading code or docs is not proof: run it.
+
+1. Build the release binary (`cargo build --release`) and run `target/release/kubelint`
+   on the fixture, on every example the diff adds or changes, and on inputs it does not
+   cover yet (other workload kinds, flow style, non-ASCII, templates, empty values).
+2. Start a real API server with `.github/scripts/e2e-apiserver.sh [VERSION]`
+   ([end to end checks](../architecture.md#end-to-end-checks)): the newest version of
+   the window, plus each version where the behavior the change relies on differs.
+   Create every namespace first, then run `kubectl apply --dry-run=server` on each
+   case, one object at a time. Agreement depends on the rule:
+   - A correctness finding: the server rejects the object, and the error names the
+     rule's field. Some correctness rules describe objects the server accepts (KL1011
+     gets a warning) or that the client rejects (KL1001, KL1002): show that instead.
+   - A security finding that maps to a Pod Security level: in a namespace labeled
+     `pod-security.kubernetes.io/enforce=<level>`, a Pod is rejected and a workload gets
+     a `Warning: would violate PodSecurity` line, naming the check the rule claims.
+   - A case the rule must not report: the server does not object to the rule's field.
+3. Start every container an example claims works or fails, with `docker run` and the
+   flags that match its `securityContext`, and check it does what the text says.
+
+Install whatever else a check needs. Each PR pastes the commands and output for its own
+cases under "How it was verified", even when one end to end pass covered several PRs.
+Kubelet behavior (probes, the `runAsNonRoot` check, evictions) cannot run here: cite the
+kubelet source at the release tag instead. Any other claim that cannot be run keeps its
+PR open, with "end to end evidence missing" and the reason in its description (4.7).
+
 Then run the `self-review` skill (`.claude/skills/self-review/`) on your diff and fix
 what it finds. It checks the diff against the conventions with fresh eyes: comments,
 text blocks, test placement, style, whether every change belongs to the item, and
-whether the facts the diff states about Kubernetes and other upstream projects hold.
+whether the facts the diff states about Kubernetes and other upstream projects hold. It
+also runs the end to end commands again and tries to break the change.
 
 ### 4.6 Open the PR
 
@@ -211,6 +240,8 @@ whether the facts the diff states about Kubernetes and other upstream projects h
   merge message: with the default message, GitHub appends `Co-authored-by: Claude
   <noreply@anthropic.com>` because Claude authored the branch commits. Then reset your
   session branch to the new `origin/main` (4.2) and go back to 4.1.
+- **Green, but end to end evidence missing (4.5):** do not merge. The PR counts as
+  opened, not merged (4.8).
 - **Red:** read the failing job's logs, reproduce locally, fix, push. A fix must address
   the cause. Windows-only failures are usually path separators or line endings.
 - **Still red after three honest attempts:** leave the PR open with a comment

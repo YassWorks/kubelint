@@ -28,7 +28,8 @@ has not seen your reasoning, then fix what it finds.
    Put `<dir>` in the brief.
 
 3. Start one subagent (Agent tool) with this brief, and nothing about why you wrote the
-   code the way you did:
+   code the way you did. Append the end to end commands you ran (playbook 4.5) and the
+   `KUBECONFIG` of the API server you left running:
 
    > Review `/tmp/self-review.diff` for the kubelint repository. Read
    > `docs/conventions.md` first, and `docs/roadmap.md` to find the item the diff
@@ -60,6 +61,15 @@ has not seen your reasoning, then fix what it finds.
    >   given). Read the checkout with the Read and Grep tools only, and run no
    >   interpreter or build tool inside it. Report a claim you cannot confirm as a
    >   problem, with your confidence in the problem text.
+   > - Run it. Run the end to end commands listed after this brief again, against the
+   >   API server whose `KUBECONFIG` is given. The script reuses a running server of
+   >   the same version and replaces one of another version, so ask it for another
+   >   version only after the author's checks are done. Then try to break the change
+   >   with inputs the author did not try, following the end to end steps of
+   >   `docs/agent/playbook.md` 4.5. Install what a check needs. A change in behavior
+   >   or a claim of fact with no end to end command listed is a problem: report it
+   >   against the changed line.
 
 4. Fix every finding that holds up, or note in the PR description why one does not.
-   If you changed code, run the CI commands from `CLAUDE.md` again.
+   If you changed code, run the CI commands from `CLAUDE.md` and the end to end
+   checks again.
