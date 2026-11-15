@@ -48,5 +48,6 @@ spec:
     image: nginxinc/nginx-unprivileged:1.27
 ```
 
-The `nginx` image needs root: as user 101 it cannot write its PID file under `/run`.
-Its unprivileged variant runs as user 101 and listens on port 8080 instead of 80.
+The `nginx` image needs root: as user 101 it can write neither its temporary files
+under `/var/cache/nginx` nor its PID file under `/run`. Its unprivileged variant runs as
+user 101 and listens on port 8080 instead of 80.
