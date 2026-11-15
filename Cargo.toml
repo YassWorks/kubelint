@@ -20,6 +20,7 @@ kubelint_k8s = { path = "crates/kubelint_k8s" }
 kubelint_config = { path = "crates/kubelint_config" }
 kubelint_linter = { path = "crates/kubelint_linter" }
 kubelint_output = { path = "crates/kubelint_output" }
+kubelint_schema = { path = "crates/kubelint_schema" }
 
 # Pre-approved external crates (see docs/conventions.md#dependencies).
 # Declared here so every crate uses the same version. Add `foo = { workspace = true }`
