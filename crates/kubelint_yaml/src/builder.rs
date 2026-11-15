@@ -104,17 +104,24 @@ fn next_document_marker(text: &str, base: usize, offset: usize) -> Option<usize>
 
 /// Parses `text` until the end or its first syntax error. When the error is at a
 /// double-quoted scalar with `\'` escapes, they are rewritten to `\a`, which has the
-/// same length, and the text is parsed again.
+/// same length, and the text is parsed again. So are tabs between a mapping's `:` and
+/// its value, rewritten to spaces.
 fn parse_segment(text: &str) -> Parse {
     let offsets = ByteOffsets::new(text);
     let mut patched = Cow::Borrowed(text);
     let mut rewritten = Vec::new();
     loop {
         let out = parse_attempt(&patched, &offsets, &rewritten);
-        let found = out
-            .errors
-            .first()
-            .map(|error| usize::from(error.range.start()))
+        let Some(error) = out.errors.first() else {
+            return out;
+        };
+        let at = usize::from(error.range.start());
+        if let Some(tabs) = tabs_after_colon(&patched, at, &error.message) {
+            let spaces = " ".repeat(tabs.len());
+            patched.to_mut().replace_range(tabs, &spaces);
+            continue;
+        }
+        let found = Some(at)
             .filter(|&at| patched.as_bytes().get(at) == Some(&b'"'))
             .and_then(|at| quoted::scan(&patched, at))
             .map_or_else(Vec::new, |(_, found)| found);
@@ -126,6 +133,19 @@ fn parse_segment(text: &str) -> Parse {
         }
         rewritten.extend(found);
     }
+}
+
+/// The tabs that end at `at`, when they follow a `:` and the parser rejected them.
+/// `saphyr-parser` refuses tabs alone between a mapping's `:` and a value starting with
+/// a letter, a digit or `-` (`name:\tweb`), which YAML 1.2 allows as separation and
+/// `kubectl` accepts.
+fn tabs_after_colon(text: &str, at: usize, message: &str) -> Option<std::ops::Range<usize>> {
+    if message != "':' must be followed by a valid YAML whitespace" {
+        return None;
+    }
+    let before = text.get(..at)?;
+    let start = before.trim_end_matches('\t').len();
+    (start < at && before[..start].ends_with(':')).then_some(start..at)
 }
 
 fn parse_attempt(text: &str, offsets: &ByteOffsets, rewritten: &[usize]) -> Parse {

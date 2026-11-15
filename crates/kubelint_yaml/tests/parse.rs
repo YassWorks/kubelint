@@ -52,6 +52,11 @@ fn quoted_scalars_end_at_their_closing_quote() {
 }
 
 #[test]
+fn tabs_after_a_colon_separate_the_value() {
+    insta::assert_snapshot!(dump(include_str!("fixtures/parse/tabs_after_a_colon.yaml")));
+}
+
+#[test]
 fn double_quoted_scalars_accept_escaped_single_quotes() {
     // Like libyaml and `go-yaml`, `\'` reads as `'`. `\q` stays an unknown escape.
     insta::assert_snapshot!(dump(include_str!(

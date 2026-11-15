@@ -1,0 +1,10 @@
+apiVersion:	v1
+kind: ConfigMap
+metadata:
+  name:	web
+  namespace:		default
+data:
+  quoted:	"x"
+  negative:	-1
+  flow: {a:	b}
+  inside: "a:	b"
