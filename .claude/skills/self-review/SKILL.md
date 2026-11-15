@@ -14,7 +14,20 @@ has not seen your reasoning, then fix what it finds.
    git fetch origin main && git diff origin/main > /tmp/self-review.diff
    ```
 
-2. Start one subagent (Agent tool) with this brief, and nothing about why you wrote the
+2. If the diff states facts about Kubernetes, upstream files, or third-party tools and
+   images (a rule explanation, a message, a design section, a fixture that claims real
+   behavior), give the subagent a source to check them against. Clone it into a new,
+   empty directory outside the repository, at the tag the facts are about (for
+   Kubernetes, the newest release tag unless the diff names another):
+
+   ```bash
+   git clone --depth 1 --branch <tag> --filter=blob:none --sparse <url> <dir>
+   git -C <dir> sparse-checkout set <paths>
+   ```
+
+   Put `<dir>` in the brief.
+
+3. Start one subagent (Agent tool) with this brief, and nothing about why you wrote the
    code the way you did:
 
    > Review `/tmp/self-review.diff` for the kubelint repository. Read
@@ -42,6 +55,11 @@ has not seen your reasoning, then fix what it finds.
    >   any behavior change; a new decision written into the doc it concerns with bold
    >   **Why:** and **Rejected:** lines.
    > - Prose in docs, comments and messages: no dashes as punctuation.
+   > - Facts: check each claim about Kubernetes behavior, upstream files or third-party
+   >   tools and images against the upstream source (the checkout at `<dir>`, if
+   >   given). Read the checkout with the Read and Grep tools only, and run no
+   >   interpreter or build tool inside it. Report a claim you cannot confirm as a
+   >   problem, with your confidence in the problem text.
 
-3. Fix every finding that holds up, or note in the PR description why one does not.
+4. Fix every finding that holds up, or note in the PR description why one does not.
    If you changed code, run the CI commands from `CLAUDE.md` again.

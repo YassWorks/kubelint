@@ -182,7 +182,8 @@ RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features --lock
 
 Then run the `self-review` skill (`.claude/skills/self-review/`) on your diff and fix
 what it finds. It checks the diff against the conventions with fresh eyes: comments,
-text blocks, test placement, style, and whether every change belongs to the item.
+text blocks, test placement, style, whether every change belongs to the item, and
+whether the facts the diff states about Kubernetes and other upstream projects hold.
 
 ### 4.6 Open the PR
 
@@ -339,11 +340,7 @@ Traps earlier runs fell into. Add new ones as you find them.
 - PR checks are the ten `ci.yml` jobs (including three `action (<os>)` jobs) plus
   GitGuardian, eleven check runs in all. A wait script that counts check runs must
   expect all of them before it reports done.
-- Self-review is also a fact check. When a diff states facts about Kubernetes or
-  upstream files (a rule explanation, a design section), add one line to the
-  self-review brief (4.5): "check each claim about Kubernetes or upstream files
-  against the upstream source". Give the subagent a read-only sparse
-  `git clone --depth 1` of `kubernetes/kubernetes` (see the cloning lesson above). On
+- Self-review is also a fact check (skill step 2 and the brief's Facts bullet). On
   2026-11-15 it found wrong claims in four of five PRs, for example that the published
   OpenAPI v3 documents mark enums (they do not) and that a fix example works as
   written (it does not: the `nginx` image needs root).
