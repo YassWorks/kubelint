@@ -11,9 +11,9 @@ needs the items above it. Work on the first unchecked item of the current milest
 
 ## Current focus
 
-**M3: Ready for real use.** Per-object suppression, generated rule docs, user docs,
-a performance budget, real-world validation, diagnostic polish, and pre-commit and
-GitHub Action integration.
+**M4: Schema validation.** Check every built-in object against the real Kubernetes API
+schema of a chosen version: unknown fields, wrong types, missing required fields, bad
+enum values, and removed or deprecated API versions.
 
 ## Done
 
@@ -28,75 +28,14 @@ GitHub Action integration.
   linting with deterministic output order; JSON, SARIF and GitHub output; "did you
   mean" suggestions; the quantity and image reference parsers and the name and label
   validators; KL0002, KL0003, KL1003 to KL1011, KL2001 to KL2009 and KL3001 to KL3005.
-
-## M3: Ready for real use (target: 2026-11-24)
-
-- [x] Release workflow: every merge to `main` that changes code builds binaries for
-  Linux, macOS and Windows and publishes a GitHub Release
-- [x] `kubelint/ignore` annotation to silence rules on one object (designed in
-  [`user/suppressions.md`](user/suppressions.md#annotations))
-- [x] `xtask` crate with `cargo xtask gen-rule-docs` writing `docs/rules/<CODE>.md` from
-  each rule, and a CI check that fails when the pages are stale
-- [x] User docs: getting started, suppressions, CI integration; the README links to them
-- [x] Benchmark corpus generator (`cargo xtask gen-corpus`) and a measurement against
-  the 10,000 objects in under a second budget; fix hotspots if over
-- Real-world validation: run kubelint over public manifest collections and fix each
-  false positive in its own pull request. The first run (2026-11-12) covered
-  `kubernetes/examples`, the examples of `kubernetes/website`,
-  `GoogleCloudPlatform/microservices-demo` and `argoproj/argocd-example-apps`: 956
-  objects in 785 files. Its false positives, one item each:
-  - [x] KL1004 compared objects across files, and reported variants of one application
-    kept in separate files or directories (209 findings, all across files)
-  - [x] KL0001 rejects `\'` in a double-quoted scalar, which the YAML parsers kubectl
-    uses (libyaml and `go-yaml`) accept (`pods/inject/envars-file-container.yaml` in
-    `kubernetes/website`). `saphyr-parser` rejects it, so the fix lives in
-    `kubelint_yaml` and must not shift any `TextRange` (for example by rewriting `\'` to a
-    same-length sequence before parsing)
-  - [x] KL2008 reports a flag whose name contains a secret word, such as
-    `MYSQL_ALLOW_EMPTY_PASSWORD: "1"`
-  - [x] KL1008 and KL1010 report placeholders of other template tools (`etcd-{{cell}}`,
-    `process-item-$ITEM`), which a rule that cannot decide should leave alone
-  - [x] KL2002 and KL2003 noise: 415 and 426 findings in 956 objects. Both now ship off
-    by default, like KL2009 (decision in [`rules/README.md`](rules/README.md#security))
-- Diagnostic polish: review every rule against the "explains itself" bar in
-  [`vision.md`](vision.md). Every message and help line was read across the rule fixture
-  snapshots on 2026-11-13. The defects found, one item each:
-  - [x] KL2008 named the container after the env var, and read "env var `X` of container
-    has a literal value" when the container has no name
-  - [x] KL1010 ran the upstream validation text straight on after "prefix part", so a
-    bad key prefix read "label key `Example.com/tier` is invalid: prefix part a
-    lowercase RFC 1123 subdomain must consist of...". A part of a label key now uses
-    its own wording, and the label key help gives a corrected example
-  - [x] KL1008 and KL1010 pasted raw Kubernetes validation text ("must consist of lower
-    case alphanumeric characters, '-' or '.', and must start and end with an
-    alphanumeric character (e.g. 'example.com')") into the message. `Format::rule` now
-    says it in plain words, and the KL1008 subdomain help includes `.`
-  - [x] KL1008 on `metadata.namespace` said "`Team_A` is not a valid namespace name"
-    while every other KL1008 message names the kind. It now names the field: "`Team_A`
-    in `metadata.namespace` is not a valid namespace name"
-  - [x] KL1009 and KL1011 named the env var but not the container, unlike KL2008. Both
-    now start with the container, through the shared `container_subject`
-  - [x] KL3005 said "the Deployment runs a single replica" with no object name and no
-    `replicas` field, and KL2004 said "the pod" without naming the workload. Both now
-    name the object through the shared `object_subject` ("Deployment `web`")
-  - [x] KL0002 omitted the path at the top level of an object ("duplicate key `data`")
-    while nested findings give one ("in `metadata.labels`"). It now says "at the top
-    level of ConfigMap `settings`"
-  - Explanations: read each `<rule_name>.md` for accuracy and plain wording. All of
-    them already have the "What it does", "Why it matters" and "Example" sections. Read
-    on 2026-11-15, one item per category:
-    - [x] Syntax and correctness: KL1008 did not say that RBAC names allow `:` or that
-      custom resource names are not checked, and KL1008 and KL1010 used DNS jargon
-      ("DNS-1123 subdomain") where plain words fit
-    - [x] Security: the KL2003 and KL2009 examples could not run (the `nginx` image
-      needs root and writes its PID file outside the volume the example mounted), and
-      KL2003 did not say that a user namespace (`hostUsers: false`) changes what root
-      in a container means
-    - [ ] Reliability: KL3004 says init containers cannot have a readiness probe, but a
-      sidecar can
-- [x] `.pre-commit-hooks.yaml` and docs
-- [x] GitHub Action (`action.yml`, composite: install the release binary, run with
-  `--format github` or upload SARIF) and docs
+- **M3: Ready for real use** (2026-11-15). The release workflow; the `kubelint/ignore`
+  annotation; `cargo xtask gen-rule-docs` with a staleness test; user docs (getting
+  started, suppressions, CI integration); the benchmark corpus and a measurement well
+  inside the budget; real-world validation over 956 public objects, with each false
+  positive fixed (KL1004 only within one file, `\'` in double-quoted scalars, secret
+  switches in KL2008, template placeholders in KL1008 and KL1010, KL2002 and KL2003 off
+  by default); a review of every message, help line and explanation; the
+  pre-commit hook and the GitHub Action.
 
 ## M4: Schema validation (target: 2026-12-08)
 
