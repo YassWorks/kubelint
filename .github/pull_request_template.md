@@ -25,6 +25,8 @@ One PR = one roadmap item = one concern. Keep every section short.
 - [ ] `cargo clippy --workspace --all-targets --all-features --locked -- -D warnings`
 - [ ] `cargo test --workspace --all-features --locked`
 - [ ] `cargo doc --workspace --no-deps --all-features --locked`
+- [ ] End to end: commands and output below (release binary, API server dry run,
+  containers), or why this PR changes no behavior and states no fact (playbook 4.5)
 
 ## Docs
 
