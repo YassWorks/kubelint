@@ -289,7 +289,9 @@ Traps earlier runs fell into. Add new ones as you find them.
   exist yet (deleted after a merge) or the local branch tracks `origin/main`. Push once
   with `git push -u origin <branch>`, then use `--force-with-lease=<branch>`.
 - While CI runs, build the next item on a local `wip-*` branch. After the merge,
-  `git stash`, reset the session branch onto the new `main` (4.2) and `git stash pop`.
+  `git stash -u`, reset the session branch onto the new `main` (4.2) and
+  `git stash pop`. Plain `git stash` leaves untracked files such as a new crate in the
+  working tree, where they slip into the wrong commit.
   Avoid `git merge --squash`, which conflicts after a squash merge.
 - After a follow-up push, CI may show a cancelled run for the older head. Look at the
   run for the current head SHA.
@@ -337,6 +339,16 @@ Traps earlier runs fell into. Add new ones as you find them.
 - PR checks are the ten `ci.yml` jobs (including three `action (<os>)` jobs) plus
   GitGuardian, eleven check runs in all. A wait script that counts check runs must
   expect all of them before it reports done.
+- Self-review is also a fact check. When a diff states facts about Kubernetes or
+  upstream files (a rule explanation, a design section), add one line to the
+  self-review brief (4.5): "check each claim about Kubernetes or upstream files
+  against the upstream source". Give the subagent a read-only sparse
+  `git clone --depth 1` of `kubernetes/kubernetes` (see the cloning lesson above). On
+  2026-11-15 it found wrong claims in four of five PRs, for example that the published
+  OpenAPI v3 documents mark enums (they do not) and that a fix example works as
+  written (it does not: the `nginx` image needs root).
+- `git push origin --delete` on a `claude/` branch is refused with a 403. Merged
+  branches are deleted by GitHub; leave any other stale branch as it is.
 
 ## Keeping this playbook healthy
 
