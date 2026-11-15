@@ -82,8 +82,16 @@ GitHub Action integration.
   - [x] KL0002 omitted the path at the top level of an object ("duplicate key `data`")
     while nested findings give one ("in `metadata.labels`"). It now says "at the top
     level of ConfigMap `settings`"
-  - [ ] Explanations: read each `<rule_name>.md` for accuracy and plain wording. All of
-    them already have the "What it does", "Why it matters" and "Example" sections
+  - Explanations: read each `<rule_name>.md` for accuracy and plain wording. All of
+    them already have the "What it does", "Why it matters" and "Example" sections. Read
+    on 2026-11-15, one item per category:
+    - [x] Syntax and correctness: KL1008 did not say that RBAC names allow `:` or that
+      custom resource names are not checked, and KL1008 and KL1010 used DNS jargon
+      ("DNS-1123 subdomain") where plain words fit
+    - [ ] Security: the KL2003 and KL2009 examples cannot run (the `nginx` image needs
+      root and writes its PID file outside the volume the example mounts)
+    - [ ] Reliability: KL3004 says init containers cannot have a readiness probe, but a
+      sidecar can
 - [x] `.pre-commit-hooks.yaml` and docs
 - [x] GitHub Action (`action.yml`, composite: install the release binary, run with
   `--format github` or upload SARIF) and docs
@@ -154,6 +162,10 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 - KL0003 points every bad rule in a `kubelint/ignore` annotation at the whole value,
   not at the rule's own text, and says nothing about a value that is not a string or an
   annotation on a `kind: List` itself.
+
+- KL1008 checks names only for the kinds in `BuiltinKind`. The API server also checks
+  the names of other built-in kinds (`Node`, `EndpointSlice`) and of every custom
+  resource as a DNS subdomain, so those could be checked with the "most kinds" format.
 
 - The release workflow treats every change under `crates/` as code, so a change that
   touches only `crates/xtask` publishes a release with an unchanged binary.

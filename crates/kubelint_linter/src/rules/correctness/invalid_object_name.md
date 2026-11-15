@@ -3,18 +3,26 @@
 Reports a `metadata.name` that is not valid for the object's kind, and a
 `metadata.namespace` that is not a valid namespace name.
 
+Names are checked for the common built-in kinds kubelint knows, such as Deployment,
+Service, ConfigMap, Namespace and the RBAC kinds. The names of other kinds, including
+custom resources, are not checked yet. Their namespace is.
+
 A name or namespace with a template placeholder (`{{ .Values.name }}`, `${NAME}`, `$(NAME)`,
 `$NAME`) is not reported, because its final text is only known once the template is
 rendered.
 
 ## Why it matters
 
-Kubernetes uses names in DNS records, URLs and file paths, so it restricts them. Most
-objects need a DNS-1123 subdomain: lowercase letters, digits, `-` and `.`, at most 253
-characters, starting and ending with a letter or digit. Namespaces need a DNS-1123
-label (no dots, at most 63 characters), and Services a DNS-1035 label, which must also
-start with a letter. The API server rejects any other name, so names like `My_App` or
-`web.` fail at apply time. Uppercase letters and underscores are the usual culprits.
+Kubernetes uses names in DNS records, URLs and file paths, so it restricts them. The API
+server rejects a name that breaks the rules below, so names like `My_App` or `web.` fail
+at apply time. Uppercase letters and underscores are the usual culprits.
+
+| Kind | Allowed names |
+| --- | --- |
+| Most kinds | Lowercase letters, digits, `-` and `.`, at most 253 characters. Each part between dots starts and ends with a letter or digit. |
+| Namespace | Lowercase letters, digits and `-`, at most 63 characters, starting and ending with a letter or digit. |
+| Service | The same as a Namespace, and it must start with a letter. |
+| Role, ClusterRole, RoleBinding, ClusterRoleBinding | Any name except `.` and `..`, without `/` or `%`, so `system:controller:foo` is fine. |
 
 ## Example
 
