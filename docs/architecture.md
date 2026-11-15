@@ -51,7 +51,7 @@ All crates live in `crates/` and are named `kubelint_*` (the CLI binary is just
 | `kubelint_source` | `SourceFile`, `FileId`, `TextRange`/`TextSize` (re-exported from `text-size`), `LineIndex` (byte offset ↔ line/column, UTF-8 and UTF-16 columns for the future LSP). | none |
 | `kubelint_yaml` | Span-preserving YAML tree built from `saphyr-parser` events. Comment extraction. Kubernetes-compatible scalar typing. | source |
 | `kubelint_diagnostics` | `Diagnostic`, `Severity`, `Label`, `Fix`, `Edit`, `Applicability`. Data only, no rendering. | source |
-| `kubelint_k8s` | `Object` view over a YAML document, `GroupVersionKind`, workload helpers (`pod_spec()`, `containers()`), Kubernetes value parsers (quantities, image references, DNS-1123 names, label syntax). Later: schema validation data. | source, yaml |
+| `kubelint_k8s` | `Object` view over a YAML document, `GroupVersionKind`, workload helpers (`pod_spec()`, `containers()`), Kubernetes value parsers (quantities, image references, DNS-1123 names, label syntax). | source, yaml |
 | `kubelint_config` | Config file discovery and parsing (`kubelint.toml`, `.kubelint.toml`), CLI overrides, resolved `Settings`. Knows rule *selectors* as strings, not the rule registry. | source |
 | `kubelint_linter` | `Rule` trait, `RuleMeta`, `Category`, the static rule registry, selector resolution, suppression comments and annotations, the lint engine, all built-in rules, and the rule test harness. | source, yaml, k8s, diagnostics, config |
 | `kubelint_output` | Renderers: `human` (`annotate-snippets`), `json`, `sarif`, `github`. | source, diagnostics |
@@ -64,7 +64,9 @@ belongs lower, or the layering changes here first.
 
 Planned crates (create them when their milestone starts, not before):
 
-- `kubelint_schema` (M4): bundled Kubernetes API schemas and the span-aware validator.
+- `kubelint_schema` (M4): bundled Kubernetes API schemas and the span-aware validator
+  ([schema validation](#schema-validation)). It sits between `kubelint_k8s` and
+  `kubelint_linter`, and may depend on source, yaml and k8s.
 - `kubelint_lsp` (M5): language server.
 
 Publishing the CLI to crates.io means publishing every internal crate too. They are
@@ -311,6 +313,112 @@ lives:
 The exact contracts are in [`user/output-formats.md`](user/output-formats.md).
 `kubelint_output` cannot see the rule registry, so the CLI passes rule metadata in (for
 example `SarifRule` for the SARIF rule list).
+
+### Schema validation
+
+M4 checks every built-in object against the real Kubernetes API schema of one chosen
+Kubernetes version. Four decisions shape it.
+
+**Source: the OpenAPI v3 documents of `kubernetes/kubernetes`.** They live in
+`api/openapi-spec/v3/` at each release tag: one JSON file per group version, plus
+discovery and non-resource documents (about 64 files and 12 MB in all). They are what
+the API server itself serves. A root definition names its kinds in
+`x-kubernetes-group-version-kind`, fields mark `required`, a referenced type is a
+single-element `allOf` around a `$ref` (with or without a `default`), and a field that
+takes a number or a string (`IntOrString`, `Quantity`) is a `oneOf`. The importer skips
+the files that define no kind. The published documents carry no `enum`: allowed values
+appear only in descriptions ("One of Always, Never, IfNotPresent"), so KL1106 reads a
+hand-written table, like the API version lifecycle table of KL1104.
+
+**Why:** the schema comes from the project that defines the API, at an exact tag, so a
+finding can always be traced to upstream.
+
+**Rejected:** the single OpenAPI v2 `swagger.json` (one 4.4 MB file, with no `default`
+and no `oneOf`, so `IntOrString` reads as a plain string); third-party JSON Schema
+collections such as `kubernetes-json-schema` (derived, sometimes late, and their
+conversion loses details); the `k8s-openapi` crate (typed structs, not schema data, see
+[Kubernetes object views](#kubernetes-object-views-not-typed-structs)); parsing the
+allowed values out of descriptions (prose, with no fixed shape).
+
+**Version window: the latest 4 minor releases.** On 2026-11-15 that is 1.34 to 1.37,
+and the default is the newest. Each version is imported from its latest patch tag at
+import time, because patch releases do not change the API: a new minor release is a
+PR that imports it, drops the oldest and moves the default. `--kubernetes-version` and
+the `kubernetes-version` config key take `1.37` or `v1.37`; a patch number (`1.37.2`)
+is accepted and ignored. A version outside the window is an error that lists the
+supported ones.
+
+**Why:** upstream supports the latest 3 minor releases, and managed clusters often run
+one more. Four versions cover nearly every cluster still getting updates while keeping
+the binary small.
+
+**Rejected:** only the latest version (a team one release behind would get findings
+for fields it cannot use yet); every version since 1.16 (a much larger binary for
+clusters that no longer get security fixes).
+
+**Storage: a compact form generated by `cargo xtask import-schemas`, committed and
+embedded in the binary.** The importer reads the files of one version from a local
+directory (a sparse checkout of the release tag, see the `xtask` help). It merges them
+into one table of definitions keyed by definition name, since every file repeats the
+shared ones (`ObjectMeta`), and builds a lookup from each group version kind to its
+definition (a definition such as `DeleteOptions` lists several). It keeps only what
+validation uses (types, formats, properties, required fields, `additionalProperties`,
+array items, `oneOf` and `$ref`), drops descriptions, defaults and the list, map and
+patch extensions, and writes `crates/kubelint_schema/schemas/<version>.json` with
+sorted keys, one definition per line. `schemas/sources.toml` records the tag and commit
+of each version. `kubelint_schema` embeds the files with `include_str!` and parses only
+the selected version, once, on first use. The format version is a constant in
+`kubelint_schema`, written into each file's header, and a test fails when a committed
+file has an older one. `xtask` depends on `kubelint_schema` for it.
+
+**Why:** about 12 MB per version is too much to vendor in Git for 4 versions and every
+future release, while the stripped form is a fraction of that and its diffs show what
+changed in the API between versions. JSON reuses `serde_json`, which the workspace
+already has. Parsing one version at startup should cost a few milliseconds against the
+[performance budget](#performance-budget), a guess until the embedding item measures
+it. Without the upstream files in Git, CI cannot regenerate the output, so the test
+checks the format version, which catches an importer change that was not followed by
+a new import.
+
+**Rejected:** vendoring the upstream files so CI can regenerate the output (repository
+size); generated Rust tables (slow builds and huge source files); a binary format such
+as `postcard` or compression such as `zstd` (new dependencies and unreadable diffs,
+worth revisiting only if the binary grows too much); a SHA-256 of each upstream file in
+`sources.toml` (a hash crate for a check that cannot run offline, while the tag and
+commit already pin the input); downloading schemas at run time (kubelint never uses
+the network).
+
+**Validator: our own, span-aware, in `kubelint_schema`.** It walks the `kubelint_yaml`
+tree of an object against the definition of its group version kind and reports each
+problem with the `TextRange` of the offending key or value. Its rules:
+
+- `$ref` and the single-element `allOf` around it are followed. A `oneOf` accepts a
+  value that matches any branch.
+- An object with `properties` and no `additionalProperties` is closed: another key is
+  an unknown field. An object with `additionalProperties` is a map of that schema. An
+  object with neither (`RawExtension`, the `JSON` of a CRD) accepts anything.
+- An explicit null (`key:`, `~`) is accepted for every field that is not required, as
+  the API server treats it as unset. A required field that is null or missing is a
+  missing required field.
+- Scalars are typed with `Node::resolve_kubernetes`, the YAML 1.1 rules `kubectl` uses,
+  so the validator agrees with what would be sent.
+- An object whose group version kind is not in the selected version is skipped without
+  a finding. That covers custom resources, removed versions (KL1104 reports those) and
+  group versions added after the selected version.
+
+**Why:** the findings need exact positions and plain words, which a generic validator
+cannot give.
+
+**Rejected:** a JSON Schema crate such as `jsonschema` (it validates a
+`serde_json::Value`, which has no positions, its messages are generic, and Kubernetes
+OpenAPI is not plain JSON Schema).
+
+The schema rules KL1101 to KL1103 are rules like any other: the validator returns typed
+problems (unknown field, wrong type, missing required field) and each rule turns its
+kind into a diagnostic. KL1102 never reports a value that KL1009 or KL1010 checks,
+whether or not those rules are enabled, so one rule's output never depends on another
+rule's configuration. User-provided CRD schemas come after M4, through the same
+validator.
 
 ## Testing
 

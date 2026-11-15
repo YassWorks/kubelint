@@ -39,17 +39,18 @@ enum values, and removed or deprecated API versions.
 
 ## M4: Schema validation (target: 2026-12-08)
 
-- [ ] Design: a schema section in [`architecture.md`](architecture.md) that decides the
-  schema source (Kubernetes OpenAPI v3 in `kubernetes/kubernetes` `api/openapi-spec/v3`),
-  the supported version window (latest 4 to 5 minor versions), the storage format
-  (generated, compact, embedded in the binary) and the validator design (span-aware, our
-  own, not a generic JSON Schema crate)
+- [x] Design: the [schema validation](architecture.md#schema-validation) section of
+  `architecture.md` decides the schema source (OpenAPI v3 of `kubernetes/kubernetes`),
+  the version window (the latest 4 minor releases), the storage format (a stripped JSON
+  form per version, committed and embedded) and the validator (span-aware, our own)
 - [ ] `kubelint_schema` crate: the in-memory schema model (object properties, required
-  fields, scalar types, enums, lists and maps) and a lookup by `apiVersion` and `kind`,
-  tested with small hand-written schemas
+  fields, scalar types, `oneOf`, lists and maps) and a lookup by `apiVersion` and
+  `kind`, tested with small hand-written schemas
 - [ ] `cargo xtask import-schemas`: turn the OpenAPI v3 files of one Kubernetes version,
-  vendored under `crates/kubelint_schema/openapi/<version>/`, into the storage format,
-  and a test that fails when the committed output is stale
+  read from a local sparse checkout of its release tag, into
+  `crates/kubelint_schema/schemas/<version>.json` and `schemas/sources.toml`, and a
+  test that fails when a committed file was written by an older importer. The upstream
+  files are not vendored (about 12 MB per version)
 - [ ] Import every version of the window and embed it in the binary; record the binary
   size
 - [ ] `--kubernetes-version` flag and `kubernetes-version` config key, defaulting to the
@@ -60,7 +61,9 @@ enum values, and removed or deprecated API versions.
 - [ ] KL1102 `invalid-field-type`, without reporting again the values KL1009 and KL1010
   already report
 - [ ] KL1103 `missing-required-field`
-- [ ] KL1106 `invalid-enum-value`
+- [ ] KL1106 `invalid-enum-value`, from a hand-written table of allowed values (the
+  OpenAPI documents have none), starting with the fields users get wrong most
+  (`imagePullPolicy`, `restartPolicy`, `protocol`, Service `type`)
 - [ ] API version lifecycle table (deprecated in, removed in, replacement) and KL1104
   `removed-api-version` and KL1105 `deprecated-api-version`. Removed versions are absent
   from the OpenAPI files, so the table is written by hand from the Kubernetes
@@ -121,6 +124,8 @@ before building it.
 - Non-string values in `ConfigMap.data` and in annotations.
 - Annotation key syntax.
 - `matchExpressions` key and value syntax.
+- An `apiVersion` that is newer than the selected Kubernetes version (it exists in a
+  later version of the window). The schema validator skips it like a custom resource.
 - CronJob names longer than 52 characters.
 
 ## Backlog
