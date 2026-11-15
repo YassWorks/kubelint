@@ -16,10 +16,11 @@ nearly every container. Enable it with `--select KL2003` or in `kubelint.toml`.
 
 ## Why it matters
 
-Root in a container is the same user as root on the node, held back only by the
-container's isolation. A bug in the application, or a kernel or runtime vulnerability,
-then gives an attacker root on the node instead of an unprivileged account. Root can
-also write anywhere in the image and in mounted volumes. The `restricted` Pod Security
+Unless the pod uses a user namespace (`hostUsers: false`), root in a container is the
+same user as root on the node, held back only by the container's isolation. A bug in
+the application, or a kernel or runtime vulnerability, then gives an attacker root on
+the node instead of an unprivileged account. Root can also write anywhere in the image
+and in mounted volumes. The `restricted` Pod Security
 Standard requires `runAsNonRoot: true`.
 
 With `runAsNonRoot: true`, the kubelet refuses to start a container whose user is root,
@@ -44,5 +45,8 @@ spec:
     runAsUser: 101
   containers:
   - name: web
-    image: nginx:1.27
+    image: nginxinc/nginx-unprivileged:1.27
 ```
+
+The `nginx` image needs root: as user 101 it cannot write its PID file under `/run`.
+Its unprivileged variant runs as user 101 and listens on port 8080 instead of 80.
