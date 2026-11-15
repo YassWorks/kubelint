@@ -434,6 +434,41 @@ How tests are written is in [`conventions.md`](conventions.md#tests).
 - Snapshots are reviewed like code. Update with `INSTA_UPDATE=always cargo test`, then
   read the diff.
 
+### End to end checks
+
+A rule is right only if Kubernetes agrees with it. `.github/scripts/e2e-apiserver.sh
+[VERSION]` starts a real API server (etcd and `kube-apiserver`, any version, downloaded
+when missing) and the Docker daemon, and prints the `KUBECONFIG` and `PATH` to use. One
+server runs per checkout: a second call for the same version reuses it, a call for
+another version replaces it. Then:
+
+- `kubectl apply --dry-run=server -f <file>` gives the API server's verdict on an
+  object: decoding, validation and admission, including Pod Security once the namespace
+  has a `pod-security.kubernetes.io/enforce` label. A dry run creates nothing, so create
+  the namespaces a file uses first with `kubectl create namespace`.
+- `docker run` with the flags that match a pod's `securityContext` shows whether an
+  example container starts: `--user`, `--read-only`, `--cap-add`, `--cap-drop`,
+  `--privileged`, `--security-opt no-new-privileges` for
+  `allowPrivilegeEscalation: false`, and `--tmpfs <path>:exec` for an `emptyDir`. Docker
+  applies its own seccomp profile, so add `--security-opt seccomp=unconfined` unless the
+  pod sets `seccompProfile: RuntimeDefault`.
+
+The server runs with `--allow-privileged=true`, as real clusters do, and without the
+`ServiceAccount` admission plugin, because no controller creates service accounts. It
+reports only the first decoding error of an object, so one bad value can hide another.
+
+**Why:** the routine's VM has Docker but withholds the permission a kubelet needs to
+start pods (lowering a process's OOM score), so a full cluster cannot run there. The
+claims rules make are about what the API server accepts, which the bare server answers
+exactly and starts in about 4 seconds for any version of the window, or about what a
+container does with a given `securityContext`, which `docker run` shows. Kubelet
+behavior (probes, the `runAsNonRoot` check, evictions) is not covered and is checked
+against the kubelet source instead.
+
+**Rejected:** `kind` or `k3s` in the VM (pod sandboxes fail with "failed to update
+/proc/self/oom_score_adj: Permission denied", tested on 2026-11-15); a managed cluster
+(an account and a secret, and network calls from CI to a shared cluster).
+
 ## Performance budget
 
 - Lint 10,000 objects in under 1 second on a laptop, release build.
