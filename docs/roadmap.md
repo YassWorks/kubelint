@@ -124,6 +124,11 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 - KL1008 checks names only for the kinds in `BuiltinKind`. The API server also checks
   the names of other built-in kinds (`Node`, `EndpointSlice`) and of every custom
   resource as a DNS subdomain, so those could be checked with the "most kinds" format.
+- KL1004 and KL1008 know the scope of the kinds in `BuiltinKind` only. A built-in
+  cluster-scoped kind outside it (`Node`, `RuntimeClass`, `CSINode`, `APIService` and
+  the rest) keeps its written `metadata.namespace`: KL1008 reports an invalid one and
+  KL1004 tells two such objects apart, although the API server ignores it. Adding the
+  kinds fixes it.
 
 - The release workflow treats every change under `crates/` as code, so a change that
   touches only `crates/xtask` publishes a release with an unchanged binary.
@@ -148,10 +153,9 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 ### Rules
 
 - KL1008 disagrees with the server on some kinds: PodDisruptionBudget names are only
-  path segments, the server ignores `metadata.namespace` on cluster-scoped kinds,
-  StatefulSet names are DNS labels, CronJob names have at most 52 characters and Job
-  names at most 63, and Service names may start with a digit from 1.36 (this one needs
-  the `--kubernetes-version` flag).
+  path segments, StatefulSet names are DNS labels, CronJob names have at most 52
+  characters and Job names at most 63, and Service names may start with a digit from
+  1.36 (this one needs the `--kubernetes-version` flag).
 - KL2003 reports only a container that may run as root, while its catalog row and the
   end to end CI item treat it as the `restricted` check `runAsNonRoot`. They differ on
   a non-zero `runAsUser` without `runAsNonRoot`, Windows pods, `hostUsers: false`

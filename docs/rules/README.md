@@ -85,6 +85,20 @@ alternative examples), and only one of them is applied. On four public repositor
 comparing the files of one directory (65 of those findings were variants side by side
 in one directory, such as `pod-nginx.yaml` and `pod-nginx-specific-node.yaml`).
 
+KL1004 and KL1008 know the scope of the kinds kubelint lists only. On a listed
+cluster-scoped kind (Namespace, ClusterRole, StorageClass and so on) the written
+`metadata.namespace` is not part of the identity and is not checked. On any other kind,
+custom resources and built-in kinds kubelint does not list (Node, RuntimeClass), both
+stay as written.
+
+**Why:** the API server ignores the namespace of a cluster-scoped object, so two
+ClusterRoles that differ only in `namespace` are one object. A custom resource's scope
+is in its CustomResourceDefinition, which kubelint does not read.
+
+**Rejected:** treating unknown kinds as cluster-scoped (it misses real duplicates and bad
+namespaces on custom resources, which are mostly namespaced); reading the scope from a
+CRD in the same file (a CRD is usually applied from another file).
+
 KL1008 and KL1010 skip a name, namespace, label key or label value with a template
 placeholder: `{{`, or `$` followed by `{`, `(`, a letter or `_`.
 
