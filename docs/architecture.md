@@ -188,8 +188,8 @@ for obj in kubelint_k8s::objects(&document) { ... }   // expands `kind: List`
 obj.kind()            // Option<&Node>: the value node, with its range
 obj.gvk()             // Option<GroupVersionKind>, `v1` is the core group
 obj.name()            // metadata.name
-obj.pod_spec()        // Some(PodSpec) for Pod, Deployment, StatefulSet, DaemonSet,
-                      // ReplicaSet, ReplicationController, Job, CronJob
+obj.pod_spec()        // Some(PodSpec) for Pod, PodTemplate, Deployment, StatefulSet,
+                      // DaemonSet, ReplicaSet, ReplicationController, Job, CronJob
 for c in pod_spec.containers() { c.kind(); c.name(); c.security_context(); }
                       // containers + initContainers + ephemeralContainers
 c.security_setting(SecurityField::RunAsUser)  // the container's, else the pod's

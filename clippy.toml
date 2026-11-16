@@ -17,6 +17,7 @@ doc-valid-idents = [
     "PersistentVolumeClaim",
     "PodDisruptionBudget",
     "PodSpec",
+    "PodTemplate",
     "ReplicaSet",
     "ReplicationController",
     "ServiceAccount",

@@ -1,0 +1,9 @@
+---
+source: crates/kubelint_k8s/tests/workload.rs
+expression: describe(text)
+---
+PodTemplate: pod spec 151..273
+  containers "web" 238..273
+    image 263..273
+  initContainers "init" 175..213
+    image 201..213

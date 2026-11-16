@@ -15,6 +15,7 @@ use crate::{BuiltinKind, Object};
 /// Source: the Kubernetes API reference, "Workload Resources".
 const WORKLOADS: &[(BuiltinKind, &[&str], &[&str])] = &[
     (BuiltinKind::Pod, &[""], &["spec"]),
+    (BuiltinKind::PodTemplate, &[""], &["template", "spec"]),
     (
         BuiltinKind::ReplicationController,
         &[""],
@@ -49,8 +50,8 @@ const WORKLOADS: &[(BuiltinKind, &[&str], &[&str])] = &[
 ];
 
 impl<'a> Object<'a> {
-    /// The pod spec of a workload: Pod, Deployment, StatefulSet, DaemonSet, ReplicaSet,
-    /// ReplicationController, Job or CronJob.
+    /// The pod spec of a workload: Pod, PodTemplate, Deployment, StatefulSet, DaemonSet,
+    /// ReplicaSet, ReplicationController, Job or CronJob.
     ///
     /// Returns `None` for other kinds, for a kind with the same name in another API
     /// group (a custom resource called `Deployment` is not a Deployment), and when the
