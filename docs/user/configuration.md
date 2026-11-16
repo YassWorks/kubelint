@@ -69,8 +69,8 @@ rule's code and its name both set a severity, neither can win by coming later.
 
 **Rejected:**
 
-- The later entry wins. The parser reads the table sorted by key, so the code always
-  won over the name, whatever the order in the file.
+- The later entry wins. The parser reads the table sorted by key, and codes sort before
+  names, so the name always won over the code, whatever the order in the file.
 - Categories that include every rule (Ruff). Selecting `security` would switch on the
   rules that ship disabled because they are noisy.
 - "Most specific selector wins" (Ruff). It needs ordering rules users have to learn.

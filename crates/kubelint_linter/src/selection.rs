@@ -76,8 +76,7 @@ pub enum SelectionErrorKind {
     AlwaysOn,
     /// A severity override names a category or code prefix instead of one rule.
     NotOneRule,
-    /// A severity override names a rule that an earlier override already names, by its
-    /// code or its name.
+    /// Two severity overrides name the same rule, by its code and its name.
     Repeated,
 }
 
@@ -110,8 +109,8 @@ impl fmt::Display for SelectionError {
             ),
             SelectionErrorKind::Repeated => write!(
                 f,
-                "`{selector}` names a rule whose severity is already overridden: keep one \
-                 entry per rule"
+                "`{selector}` names the same rule as another key in `[lint.severity]`: keep \
+                 one entry per rule"
             ),
         }
     }

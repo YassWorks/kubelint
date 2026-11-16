@@ -296,8 +296,8 @@ fn error_messages() {
     };
     assert_eq!(
         message(&repeated),
-        "`privileged` names a rule whose severity is already overridden: keep one entry per \
-         rule"
+        "`privileged` names the same rule as another key in `[lint.severity]`: keep one entry \
+         per rule"
     );
 }
 
