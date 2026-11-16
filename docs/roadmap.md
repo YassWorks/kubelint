@@ -128,100 +128,86 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 - The release workflow treats every change under `crates/` as code, so a change that
   touches only `crates/xtask` publishes a release with an unchanged binary.
 
-### From the end to end audit of 2026-11-15
+### YAML layer
 
-Each one was reproduced with the release binary of `78b2116`, and each Kubernetes fact
-with `kubectl apply --dry-run=server` on v1.34.13 and v1.37.2. Most severe first.
+- Aliases are copied at every use with no budget, so a few hundred bytes of nested
+  aliases exhaust memory and abort the run. kubectl stops them with "excessive
+  aliasing".
+- KL0002 recurses on nesting depth, so a deeply nested block sequence overflows the
+  stack and aborts the run.
+- Merge keys (`<<: *anchor`) are not expanded: rules miss merged fields and report
+  errors on objects the server accepts.
+- Explicit tags (`!!str`, `!!int`) are ignored, and a float out of range (`1e400`) is
+  read as a number where kubectl keeps a string.
+- An alias to an anchor in another document is read as null, with no finding.
+- A block scalar's range ends at the next token, so a finding on it highlights the
+  lines after it.
+- CR-only line endings put every position on line 1, and a UTF-8 byte order mark counts
+  as a column.
 
-- A YAML alias bomb exhausts memory and aborts the whole run: the builder copies the
-  anchored node for every alias, so a 551 byte file of nested aliases needs gigabytes.
-  kubectl stops it with "excessive aliasing". Keep an expansion budget and report
-  KL0001.
-- KL0002 recurses without a limit: a block sequence nested 30,000 deep (60 KB)
-  overflows the stack and aborts the run, and 8,000 is enough in a worker thread when
-  other files are linted.
-- Merge keys (`<<: *anchor`) are not expanded. KL1005, KL1010 and KL1003 report errors
-  on objects the server accepts (`labels: {<<: *sel, tier: x}`), and KL2001 misses a
-  `privileged: true` that comes in through a merge.
+### Rules
+
+- KL1008 disagrees with the server on some kinds: PodDisruptionBudget names are only
+  path segments, the server ignores `metadata.namespace` on cluster-scoped kinds,
+  StatefulSet names are DNS labels, CronJob names have at most 52 characters and Job
+  names at most 63, and Service names may start with a digit from 1.36 (this one needs
+  the `--kubernetes-version` flag).
+- KL2003 reports only a container that may run as root, while its catalog row and the
+  end to end CI item treat it as the `restricted` check `runAsNonRoot`. They differ on
+  a non-zero `runAsUser` without `runAsNonRoot`, Windows pods, `hostUsers: false`
+  (restricted accepts it from 1.35) and a pod-level `runAsUser: 0` that every container
+  overrides. Decide which one the rule is.
+- No rule covers several `baseline` checks (see Rule ideas), so the default security
+  rules check only part of `baseline`.
+- KL1005 skips a pod template without `spec`. KL1007 misses PersistentVolume capacity,
+  generic ephemeral volume claim templates and autoscaler targets. KL3005 misses `1.0`,
+  `1.` and `!!int "1"`. KL3003 reports malformed image references as unpinned. KL2008
+  reports values that are file paths (`GOOGLE_APPLICATION_CREDENTIALS`) and misses the
+  suffixes `PASS`, `PWD` and `PASSPHRASE`. KL2005 never reports a runtime socket, even
+  when KL2007 is off.
+- Several explanations state facts that do not hold: what kubectl applies from a file
+  with a broken document (KL0001 to KL1003), what it does with a duplicate key (KL0002),
+  the KL1009 error text, the alternatives KL2001 and KL2007 suggest, how the scheduler
+  uses limits (KL3001), the eviction order (KL3002) and a rollout with one replica
+  (KL3005). Some examples are not complete objects. An explanation is right only once
+  its examples ran against the API server or in a container.
+
+### CLI and output
+
 - Directory search applies `.gitignore` patterns such as `gen/*` inside a directory
-  named on the command line, so `kubelint check gen` checks 0 files and exits 0. A
-  named directory that yields no file should at least be reported.
-- KL1008 judges some names unlike the server. PodDisruptionBudget names are only path
-  segments (`My_X` is accepted). The server ignores `metadata.namespace` on
-  cluster-scoped kinds. StatefulSet names are DNS labels (no dots, at most 63
-  characters), CronJob names have at most 52 characters and Job names at most 63.
-  Service names may start with a digit from 1.36 (`RelaxedServiceNameValidation`) but
-  not on 1.34 and 1.35, which needs the `--kubernetes-version` flag.
-- Explicit YAML tags are dropped: `value: !!str 8080` is reported by KL1009 and KL1010
-  although kubectl sends a string, and `!!int "8080"` is not reported although the
-  server rejects it. `1e400` is read as a number, while kubectl keeps a float out of
-  range as a string.
-- KL2003 reports only a container that may run as root, but its catalog row and the end
-  to end CI item say it checks the `restricted` requirement `runAsNonRoot`:
-  `runAsUser: 1000` without `runAsNonRoot: true` passes while restricted rejects it. It
-  also skips Windows pods (restricted requires `runAsNonRoot` there), reports pods with
-  `hostUsers: false` (restricted accepts them from 1.35) and accepts a pod-level
-  `runAsUser: 0` that every container overrides (restricted rejects it).
-- The default security rules do not cover all of `baseline`, as the catalog implies:
-  `hostPort`, an `Unconfined` seccomp or AppArmor profile, unsafe sysctls, SELinux types
-  and `hostProcess` are rejected by baseline and reported by no rule (see Rule ideas).
-- Block scalar (`|`, `>`) ranges end at the next token, so every format highlights the
-  lines after the value.
-- KL1005 returns early when `spec.template.spec` is missing, so its own explanation
-  example is not reported, although the server rejects the selector.
-- KL1007 misses PersistentVolume `spec.capacity`, generic ephemeral volume claim
-  templates and HorizontalPodAutoscaler metric targets.
-- An alias to an anchor in another document is read as null with no finding. kubectl
-  fails with "unknown anchor".
-- KL3005 misses `replicas: 1.0`, `1.` and `!!int "1"`, which the server stores as 1.
-  KL3003 reports malformed references (`:latest`, `/app`, `app//x`) as unpinned.
-- KL2008 reports env vars that hold a path
-  (`GOOGLE_APPLICATION_CREDENTIALS: /var/secrets/key.json`) and misses the suffixes
-  `PASS`, `PWD` and `PASSPHRASE`. KL2005 never reports a runtime socket, even when
-  KL2007 is off.
-- Rule explanations state facts the audit disproved. KL0001, KL1001, KL1002 and KL1003
-  say nothing in the file is applied, but kubectl applies the documents before the
-  broken one. KL0002 says kubectl rejects a duplicate key; it keeps the last value.
-  KL1009 misquotes the server error. KL2001's "Use instead" adds `NET_ADMIN`, which
-  KL2006 and baseline reject. KL2007 recommends Kaniko (archived) and a rootless BuildKit
-  that does not start under the runtime default seccomp profile. KL3001 says the
-  scheduler uses limits; it uses requests. KL3002 says BestEffort pods are evicted
-  before all others; eviction orders by usage over requests, then priority. KL3005 says a
-  Deployment rollout with one replica leaves no spare pod; `maxSurge` rounds up to 1.
-  Several examples are not complete objects the server accepts (no `selector`,
-  `containers` or `ports`).
-- Output formats: the Actions runner shows at most 10 annotations per type in a step,
-  which `output-formats.md` does not say. Standard input becomes a file named
-  `<stdin>` in SARIF and GitHub output. A UTF-8 byte order mark counts as a column. A
-  syntax error at the end of a file is at `4:12` in human output and `5:1` in the
-  others. On Linux, `\` in a path is rewritten to `/` and a directory named `c:` is read
-  as a drive. A closed pipe exits with code 2, or panics with 101 when stderr is closed
-  too. `NO_COLOR=` (empty) disables color. The GitHub format passes control characters
-  from YAML escapes into the log. SARIF output has no cap at GitHub's 25,000 results and
-  no `partialFingerprints`.
-- CLI: the same file under two spellings (`a.yaml ./a.yaml`) is linted twice. `exclude`
-  patterns written `./vendor`, `vendor/` or `/vendor` match nothing. Flag selectors are
-  not trimmed (`--select 'KL2001, KL3003'` is an error). `[lint.severity]` errors
-  suggest categories, which it rejects. `kubelint-disable-next-line` before a blank line
-  silences nothing, and a misspelled directive is silently a comment. A Go template
-  outside a chart gets a bare KL0001 with no hint about Helm. CR-only line endings put
-  every position on line 1.
-- UTF-16 columns are counted from the line start for every finding, so 8,000 findings
-  on one 255 KB line take 2.5 s.
-- Releases and CI integration: the Windows binary needs `VCRUNTIME140.dll`, so it is not
-  self-contained. `cargo install --git` uses the user's default toolchain, not the
-  pinned one, and installs version `0.0.0`. The Action's `format: sarif` fails the step
-  with nothing in the log, fails when `sarif-file` is in a missing directory and leaves
-  an empty file on exit code 2. Action `args` take quotes and globs literally, and a
-  `version` without `v` gives a bare 404. CI never runs the `@vX.Y.Z` pin path. The
-  hook's `types: [yaml]` also lints `.clang-format` and similar files. The SARIF upload
-  snippet lacks `actions: read`, which GitHub's docs ask for in private repositories
-  (not run). `CLAUDE.md` says CI runs `cargo fmt --all`; CI runs it with `--check`, and
-  its tests with `RUSTFLAGS=-D warnings`. `e2e-apiserver.sh 1.37` without network says
-  the version is unknown.
-- `CONTRIBUTING.md` step 5 runs only the `kubelint_linter` tests, which misses the CLI
-  and corpus tests, and nothing ties the catalog in `docs/rules/README.md` to the
-  registry.
+  named on the command line, so a run can check 0 files and exit 0.
+- The same file under two spellings is linted twice. `exclude` patterns with a leading
+  `./` or `/` or a trailing `/` match nothing. Flag selectors are not trimmed.
+  `[lint.severity]` errors suggest categories, which it rejects.
+- `kubelint-disable-next-line` before a blank line silences nothing, a misspelled
+  directive is a plain comment, and a Go template outside a chart gets a bare KL0001.
+- The Actions runner shows at most 10 annotations per type in a step, which the docs do
+  not say. Standard input appears as a file named `<stdin>` in SARIF and GitHub output.
+  SARIF output has no cap at GitHub's 25,000 results and no `partialFingerprints`.
+- Human output puts a position at the end of a file elsewhere than the other formats.
+  On Linux, `\` in a path becomes `/` and a directory named `c:` reads as a drive. A
+  closed pipe exits with code 2, or panics when stderr is closed too. An empty
+  `NO_COLOR` disables color. YAML escapes put control characters into GitHub output.
+- UTF-16 columns are counted from the line start for every finding, which is slow when
+  thousands of findings share one long line.
+
+### Releases and CI integration
+
+- The Windows binary needs `VCRUNTIME140.dll`, so it is not self-contained.
+- `cargo install --git` builds with the user's default toolchain, not the pinned one,
+  and installs version `0.0.0`.
+- The Action's SARIF mode prints nothing and fails the step when there are findings,
+  fails on an output path in a missing directory, and leaves an empty file on exit code
+  2. Its `args` take quotes and globs literally, a `version` without `v` gives a bare
+  404, and CI never runs the path where a tag pins the version.
+- The hook's `types: [yaml]` also matches `.clang-format` and similar files.
+- The SARIF upload snippet may need `actions: read` in private repositories, as
+  GitHub's docs say (not run).
+- `CLAUDE.md` lists `cargo fmt --all` where CI runs it with `--check`, and CI runs the
+  tests with `RUSTFLAGS=-D warnings`.
+- `CONTRIBUTING.md` step 5 runs only the linter tests, and nothing ties the catalog in
+  `docs/rules/README.md` to the registry.
+- `e2e-apiserver.sh` reports a network failure as an unknown version.
 
 ## Rule ideas
 
