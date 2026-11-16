@@ -61,6 +61,7 @@ macro_rules! fixture_tests {
 
 fixture_tests!(
     pod,
+    podtemplate,
     deployment,
     replicaset,
     daemonset,
