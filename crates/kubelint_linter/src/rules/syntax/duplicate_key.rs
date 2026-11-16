@@ -30,8 +30,7 @@ impl Rule for DuplicateKey {
     }
 
     fn check_object(&self, cx: &mut ObjectContext<'_>) {
-        let mut found = Vec::new();
-        find_duplicates(cx.object().node(), &mut String::new(), &mut found);
+        let found = find_duplicates(cx.object().node());
         // An alias (`*name`) repeats its anchor's nodes with the anchor's ranges: report
         // each duplicate once.
         let mut reported = HashSet::new();
@@ -70,44 +69,72 @@ struct Duplicate {
     repeat: TextRange,
 }
 
-/// Collects the duplicate keys of `node` and every node below it, in source order.
-/// `path` is the location of `node`; it is restored before returning.
-fn find_duplicates(node: &Node, path: &mut String, found: &mut Vec<Duplicate>) {
-    match &node.kind {
-        NodeKind::Mapping(entries) => {
-            let mut first_seen: HashMap<&str, TextRange> = HashMap::new();
-            for entry in entries {
-                let Some(key) = comparable_key(entry) else {
-                    continue;
-                };
-                match first_seen.entry(key) {
-                    Entry::Vacant(vacant) => {
-                        vacant.insert(entry.key.range);
+/// A pending step of the walk in `find_duplicates`.
+enum Step<'a> {
+    Visit(&'a Node),
+    Key(&'a str),
+    Index(usize),
+    /// Cuts the path back to this length once a child is done.
+    Restore(usize),
+}
+
+/// Collects the duplicate keys of `root` and every node below it, in source order.
+/// The walk keeps its own stack so that nesting depth does not use the call stack.
+fn find_duplicates(root: &Node) -> Vec<Duplicate> {
+    let mut found = Vec::new();
+    let mut path = String::new();
+    let mut stack = vec![Step::Visit(root)];
+    while let Some(step) = stack.pop() {
+        match step {
+            Step::Key(key) => push_key(&mut path, key),
+            Step::Index(i) => {
+                let _ = write!(path, "[{i}]");
+            }
+            Step::Restore(len) => path.truncate(len),
+            Step::Visit(node) => {
+                let len = path.len();
+                match &node.kind {
+                    NodeKind::Mapping(entries) => {
+                        collect_repeats(entries, &path, &mut found);
+                        for entry in entries.iter().rev() {
+                            stack.push(Step::Restore(len));
+                            stack.push(Step::Visit(&entry.value));
+                            stack.push(Step::Key(entry.key_str().unwrap_or("?")));
+                        }
                     }
-                    Entry::Occupied(first) => found.push(Duplicate {
-                        key: key.to_owned(),
-                        path: path.clone(),
-                        first: *first.get(),
-                        repeat: entry.key.range,
-                    }),
+                    NodeKind::Sequence(items) => {
+                        for (i, item) in items.iter().enumerate().rev() {
+                            stack.push(Step::Restore(len));
+                            stack.push(Step::Visit(item));
+                            stack.push(Step::Index(i));
+                        }
+                    }
+                    NodeKind::Scalar(_) | NodeKind::Null => {}
                 }
             }
-            for entry in entries {
-                let len = path.len();
-                push_key(path, entry.key_str().unwrap_or("?"));
-                find_duplicates(&entry.value, path, found);
-                path.truncate(len);
-            }
         }
-        NodeKind::Sequence(items) => {
-            for (i, item) in items.iter().enumerate() {
-                let len = path.len();
-                let _ = write!(path, "[{i}]");
-                find_duplicates(item, path, found);
-                path.truncate(len);
+    }
+    found
+}
+
+/// Collects the keys of one mapping that repeat an earlier key, in source order.
+fn collect_repeats(entries: &[kubelint_yaml::Entry], path: &str, found: &mut Vec<Duplicate>) {
+    let mut first_seen: HashMap<&str, TextRange> = HashMap::new();
+    for entry in entries {
+        let Some(key) = comparable_key(entry) else {
+            continue;
+        };
+        match first_seen.entry(key) {
+            Entry::Vacant(vacant) => {
+                vacant.insert(entry.key.range);
             }
+            Entry::Occupied(first) => found.push(Duplicate {
+                key: key.to_owned(),
+                path: path.to_owned(),
+                first: *first.get(),
+                repeat: entry.key.range,
+            }),
         }
-        NodeKind::Scalar(_) | NodeKind::Null => {}
     }
 }
 

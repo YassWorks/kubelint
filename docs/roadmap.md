@@ -133,8 +133,6 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 - Aliases are copied at every use with no budget, so a few hundred bytes of nested
   aliases exhaust memory and abort the run. kubectl stops them with "excessive
   aliasing".
-- KL0002 recurses on nesting depth, so a deeply nested block sequence overflows the
-  stack and aborts the run.
 - Merge keys (`<<: *anchor`) are not expanded: rules miss merged fields and report
   errors on objects the server accepts.
 - Explicit tags (`!!str`, `!!int`) are ignored, and a float out of range (`1e400`) is
