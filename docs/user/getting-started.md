@@ -23,7 +23,7 @@ the checksum of every archive.
 On Linux or macOS, set the version and platform, then download and unpack:
 
 ```bash
-VERSION=v0.17.0
+VERSION=v0.18.15
 TARGET=x86_64-unknown-linux-musl
 curl -fsSL "https://github.com/YassWorks/kubelint/releases/download/$VERSION/kubelint-$VERSION-$TARGET.tar.gz" \
   | tar -xz --strip-components=1 "kubelint-$VERSION-$TARGET/kubelint"
@@ -53,7 +53,8 @@ kubelint check .
 ```
 
 kubelint searches the directories you name for `*.yaml` and `*.yml` files, honoring
-`.gitignore`. The rules run on Kubernetes objects only. Other YAML (CI files, Helm
+`.gitignore`, `.ignore` and your global Git excludes. It skips hidden files and
+directories and does not follow symbolic links: name such a file to lint it. The rules run on Kubernetes objects only. Other YAML (CI files, Helm
 values) is only checked for valid syntax. You can also name files, or pass `-` to read standard input.
 
 ## Read a finding

@@ -21,7 +21,7 @@ will know the finding was a decision, not an oversight.
 securityContext:
   # kubelint-disable-next-line KL2001 -- the CNI plugin needs this
   privileged: true
-  allowPrivilegeEscalation: true  # kubelint-disable-line privilege-escalation-allowed
+  readOnlyRootFilesystem: false  # kubelint-disable-line writable-root-filesystem
 ```
 
 | Comment | Silences |
@@ -56,7 +56,8 @@ The `kubelint/ignore` annotation silences the listed rules for that one object.
   `KL1004` `duplicate-object`, which points at the later of two duplicates.
 - `KL0001` `invalid-yaml` cannot be silenced. An annotation that names an unknown rule,
   names `KL0001` or names no rule silences nothing, and `KL0003` `invalid-suppression`
-  reports it. A value that is not a string is ignored.
+  reports it. kubectl rejects an annotation value that is not a string: KL0003 reports a
+  number or a boolean, and a list or a mapping is ignored.
 - In a `kind: List`, each item is an object of its own: put the annotation on the item.
   An annotation on the List itself silences nothing.
 

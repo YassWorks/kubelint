@@ -92,7 +92,8 @@ rule's code and its name both set a severity, neither can win by coming later.
 
 - A flag replaces the file's value. It never adds to it: `--select KL1001` runs KL1001
   (and KL0001) whatever the file selects, and `--ignore KL0002` replaces the file's
-  whole `ignore` list.
+  whole `ignore` list. The file's `ignore` still applies to `--select`, so a rule the
+  file ignores runs only with `--ignore` naming something else, or with `--isolated`.
 - `[lint.severity]` has no flag. Severity overrides are project policy and belong in the
   file.
 - A bad selector in a flag is a one-line error, exit code 2. A `--config` path that
