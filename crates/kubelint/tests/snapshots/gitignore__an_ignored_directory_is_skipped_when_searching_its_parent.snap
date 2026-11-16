@@ -1,0 +1,116 @@
+---
+source: crates/kubelint/tests/gitignore.rs
+expression: "project.run(\".\", &[\"check\", \".\"])"
+---
+exit: 1
+--- stdout
+warning[KL3001]: container `web` has no memory limit
+ --> deploy/b.yaml:7:13
+  |
+7 |     - name: web
+  |             ^^^
+  |
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+  = note: rule `missing-memory-limit`
+
+warning[KL3002]: container `web` has no CPU or memory requests
+ --> deploy/b.yaml:7:13
+  |
+7 |     - name: web
+  |             ^^^
+  |
+  = help: set `resources.requests.cpu` and `resources.requests.memory`, for example `cpu: 100m` and `memory: 256Mi`
+  = note: rule `missing-resource-requests`
+
+warning[KL3003]: image `nginx:latest` uses the `latest` tag
+ --> deploy/b.yaml:8:14
+  |
+8 |       image: nginx:latest
+  |              ^^^^^^^^^^^^
+  |
+  = help: pin a version tag, such as `nginx:1.2.3`, or a digest, such as `nginx@sha256:<digest>`
+  = note: rule `unpinned-image-tag`
+
+warning[KL3001]: container `web` has no memory limit
+ --> deploy/c.tmp.yaml:7:13
+  |
+7 |     - name: web
+  |             ^^^
+  |
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+  = note: rule `missing-memory-limit`
+
+warning[KL3002]: container `web` has no CPU or memory requests
+ --> deploy/c.tmp.yaml:7:13
+  |
+7 |     - name: web
+  |             ^^^
+  |
+  = help: set `resources.requests.cpu` and `resources.requests.memory`, for example `cpu: 100m` and `memory: 256Mi`
+  = note: rule `missing-resource-requests`
+
+warning[KL3003]: image `nginx:latest` uses the `latest` tag
+ --> deploy/c.tmp.yaml:8:14
+  |
+8 |       image: nginx:latest
+  |              ^^^^^^^^^^^^
+  |
+  = help: pin a version tag, such as `nginx:1.2.3`, or a digest, such as `nginx@sha256:<digest>`
+  = note: rule `unpinned-image-tag`
+
+warning[KL3001]: container `web` has no memory limit
+ --> sub/node_modules/x.yaml:7:13
+  |
+7 |     - name: web
+  |             ^^^
+  |
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+  = note: rule `missing-memory-limit`
+
+warning[KL3002]: container `web` has no CPU or memory requests
+ --> sub/node_modules/x.yaml:7:13
+  |
+7 |     - name: web
+  |             ^^^
+  |
+  = help: set `resources.requests.cpu` and `resources.requests.memory`, for example `cpu: 100m` and `memory: 256Mi`
+  = note: rule `missing-resource-requests`
+
+warning[KL3003]: image `nginx:latest` uses the `latest` tag
+ --> sub/node_modules/x.yaml:8:14
+  |
+8 |       image: nginx:latest
+  |              ^^^^^^^^^^^^
+  |
+  = help: pin a version tag, such as `nginx:1.2.3`, or a digest, such as `nginx@sha256:<digest>`
+  = note: rule `unpinned-image-tag`
+
+warning[KL3001]: container `web` has no memory limit
+ --> sub/y.yaml:7:13
+  |
+7 |     - name: web
+  |             ^^^
+  |
+  = help: set `resources.limits.memory`, for example `memory: 512Mi`
+  = note: rule `missing-memory-limit`
+
+warning[KL3002]: container `web` has no CPU or memory requests
+ --> sub/y.yaml:7:13
+  |
+7 |     - name: web
+  |             ^^^
+  |
+  = help: set `resources.requests.cpu` and `resources.requests.memory`, for example `cpu: 100m` and `memory: 256Mi`
+  = note: rule `missing-resource-requests`
+
+warning[KL3003]: image `nginx:latest` uses the `latest` tag
+ --> sub/y.yaml:8:14
+  |
+8 |       image: nginx:latest
+  |              ^^^^^^^^^^^^
+  |
+  = help: pin a version tag, such as `nginx:1.2.3`, or a digest, such as `nginx@sha256:<digest>`
+  = note: rule `unpinned-image-tag`
+
+Found 12 warnings. Checked 4 files and 4 objects in [TIME].
+--- stderr

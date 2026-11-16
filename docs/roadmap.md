@@ -174,8 +174,6 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 
 ### CLI and output
 
-- Directory search applies `.gitignore` patterns such as `gen/*` inside a directory
-  named on the command line, so a run can check 0 files and exit 0.
 - The same file under two spellings is linted twice. `exclude` patterns with a leading
   `./` or `/` or a trailing `/` match nothing. Flag selectors are not trimmed.
   `[lint.severity]` errors suggest categories, which it rejects.
