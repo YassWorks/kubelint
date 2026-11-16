@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::ops::Range;
 
 use kubelint_source::{TextRange, TextSize};
 use saphyr_parser::{Event, Parser, ScalarStyle as SaphyrStyle, Span};
@@ -117,8 +118,10 @@ fn parse_segment(text: &str) -> Parse {
         };
         let at = usize::from(error.range.start());
         if let Some(tabs) = tabs_after_colon(&patched, at, &error.message) {
-            let spaces = " ".repeat(tabs.len());
-            patched.to_mut().replace_range(tabs, &spaces);
+            for tabs in rejected_tabs(&patched, tabs.start - 1) {
+                let spaces = " ".repeat(tabs.len());
+                patched.to_mut().replace_range(tabs, &spaces);
+            }
             continue;
         }
         let found = Some(at)
@@ -137,15 +140,34 @@ fn parse_segment(text: &str) -> Parse {
 
 /// The tabs that end at `at`, when they follow a `:` and the parser rejected them.
 /// `saphyr-parser` refuses tabs alone between a mapping's `:` and a value starting with
-/// a letter, a digit or `-` (`name:\tweb`), which YAML 1.2 allows as separation and
-/// `kubectl` accepts.
-fn tabs_after_colon(text: &str, at: usize, message: &str) -> Option<std::ops::Range<usize>> {
+/// an ASCII letter, a digit, `-` or `_` (`name:\tweb`), which YAML 1.2 allows as
+/// separation and `kubectl` accepts.
+fn tabs_after_colon(text: &str, at: usize, message: &str) -> Option<Range<usize>> {
     if message != "':' must be followed by a valid YAML whitespace" {
         return None;
     }
     let before = text.get(..at)?;
     let start = before.trim_end_matches('\t').len();
     (start < at && before[..start].ends_with(':')).then_some(start..at)
+}
+
+/// Every run of tabs after a `:` from `from` on that the parser would reject, so one
+/// parse fixes them all instead of one parse per run.
+fn rejected_tabs(text: &str, from: usize) -> Vec<Range<usize>> {
+    let bytes = text.as_bytes();
+    let colons = text
+        .get(from..)
+        .into_iter()
+        .flat_map(|rest| rest.match_indices(':'));
+    colons
+        .filter_map(|(i, _)| {
+            let start = from + i + 1;
+            let end = start + bytes[start..].iter().take_while(|&&b| b == b'\t').count();
+            let next = bytes.get(end)?;
+            (end > start && (next.is_ascii_alphanumeric() || matches!(next, b'-' | b'_')))
+                .then_some(start..end)
+        })
+        .collect()
 }
 
 fn parse_attempt(text: &str, offsets: &ByteOffsets, rewritten: &[usize]) -> Parse {

@@ -106,6 +106,13 @@ fn error_position_is_a_byte_offset() {
 }
 
 #[test]
+fn tabs_before_a_block_sequence_stay_an_error() {
+    // kubectl rejects this too: "block sequence entries are not allowed in this context".
+    assert_eq!(parse("a:\t- x\n").errors.len(), 1);
+    assert_eq!(parse("a: x:\ty\n").errors.len(), 1);
+}
+
+#[test]
 fn error_resumes_at_the_next_document_marker() {
     // The second and fourth documents are broken; `----` and `---x` are not markers, so
     // the fourth document runs until `--- # é` and recovery resumes there.

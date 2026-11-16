@@ -36,4 +36,4 @@ document 0..141
               scalar Plain "b" 122..123
         entry
           scalar Plain "inside" 127..133
-          scalar DoubleQuoted "a:\tb" 135..141
+          scalar DoubleQuoted "a: b" 135..141
