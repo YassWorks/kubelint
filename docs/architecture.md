@@ -38,8 +38,9 @@ code and this document disagree, fix one of them in the same PR.
 ```
 
 Files are independent until the cross-object rules run, so parsing and per-object rules
-run in parallel per file (`rayon`). Output is always sorted (file path, then byte offset,
-then rule code) so results are deterministic regardless of thread scheduling.
+run in parallel per file (`rayon`). Output is always sorted (files in argument order, the
+files found in a directory by path, then byte offset, then rule code) so results are
+deterministic regardless of thread scheduling.
 
 ## Crates
 

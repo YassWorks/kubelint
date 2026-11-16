@@ -30,7 +30,8 @@ Lint every Kubernetes YAML file under the current directory:
 kubelint check .
 ```
 
-kubelint searches directories for `*.yaml` and `*.yml` files, honoring `.gitignore`, and
+kubelint searches directories for `*.yaml` and `*.yml` files, honoring `.gitignore` and
+skipping hidden files and symbolic links, and
 ignores YAML that is not a Kubernetes object (CI files, Helm values). For a directory
 `k8s/` with two broken files, the output looks like this:
 
@@ -68,8 +69,9 @@ Found 3 errors. Checked 2 files and 2 objects in 2ms.
 
 A few more things worth knowing:
 
-- **Exit codes:** `0` when nothing was found, `1` when there are findings, `2` when
-  kubelint could not run (a missing file, bad arguments). Use it as a CI gate as is.
+- **Exit codes:** `0` when no finding reaches `fail-on` (`warning` by default, so
+  `info` findings alone exit `0`), `1` when one does, `2` when kubelint could not run (a
+  missing file, bad arguments). Use it as a CI gate as is.
 - **Standard input:** `-` reads a manifest from stdin, for generated YAML:
   `kustomize build overlays/prod | kubelint check -`.
 - **Helm charts:** a chart's `templates/` are not valid YAML before rendering, so

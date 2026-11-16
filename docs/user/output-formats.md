@@ -69,7 +69,7 @@ $ kubelint check --format json deploy/
 | Field | Type | Meaning |
 | --- | --- | --- |
 | `version` | integer | Schema version, currently `1`. |
-| `diagnostics` | array | The findings, sorted by file, then position, then rule code. |
+| `diagnostics` | array | The findings, by file in the order of the arguments (the files found in a directory sorted by path), then position, then rule code. |
 | `diagnostics[].code` | string | Rule code, such as `KL1001`. |
 | `diagnostics[].name` | string or null | Rule name, such as `missing-api-version`. |
 | `diagnostics[].severity` | string | `error`, `warning` or `info`, after configuration. |
@@ -127,7 +127,8 @@ finding on the pull request and in the repository's "Security" tab.
 - Each finding is a result with `ruleId`, `ruleIndex`, `level` (`error`, `warning`, or
   `note` for `info`), a message with the help as a second line (`help: ...`), its
   location, and its related locations when it has any.
-- Columns count UTF-16 code units (`columnKind: "utf16CodeUnits"`), the SARIF default.
+- Columns count UTF-16 code units, and the run says so with
+  `columnKind: "utf16CodeUnits"`.
 - Relative paths stay relative, with `/` separators and `uriBaseId: "%SRCROOT%"`, so run
   kubelint from the repository root. Absolute paths become `file:` URIs.
   `originalUriBaseIds` is not written, because it would put the machine's working
@@ -146,8 +147,9 @@ only the message next to the code.
   used here.
 - Listing only the rules that ran or fired. Rule indexes would change with
   configuration.
-- Columns in Unicode code points. UTF-16 is the default, so tools that ignore
-  `columnKind` still read the columns correctly.
+- Columns in Unicode code points. The `github` format and editors speaking LSP count
+  UTF-16 code units, so every machine-readable format agrees on a column. SARIF has no
+  default unit.
 
 ### Uploading to GitHub code scanning
 
