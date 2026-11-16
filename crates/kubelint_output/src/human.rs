@@ -190,8 +190,8 @@ fn annotation(label: &Label, kind: AnnotationKind, span: Range<usize>) -> Annota
 fn excerpt<'a>(file: &'a SourceFile, spans: &[Range<usize>]) -> (&'a str, usize, usize) {
     let text = file.text();
     let index = file.line_index();
-    // The end of a file that ends with a newline belongs to its last line, as it does
-    // when the whole file is rendered.
+    // annotate-snippets shows an offset at the end of a text that ends with a newline
+    // on its last line, so the excerpt must hold that line.
     let line = |offset: usize| {
         let offset = offset - usize::from(offset == text.len() && text.ends_with('\n'));
         let offset = TextSize::new(u32::try_from(offset).unwrap_or(u32::MAX));
