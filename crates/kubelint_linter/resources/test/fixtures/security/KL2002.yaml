@@ -158,11 +158,23 @@ spec:
     securityContext:
       privileged: true
 ---
-# Not reported: containers that add SYS_ADMIN, with or without the `CAP_` prefix.
+# Not reported: a container that adds `CAP_SYS_ADMIN`, where Kubernetes rejects `false`.
 apiVersion: v1
 kind: Pod
 metadata:
   name: sys-admin
+spec:
+  containers:
+  - name: b
+    image: app:1.0
+    securityContext:
+      capabilities: {add: [NET_ADMIN, CAP_SYS_ADMIN]}
+---
+# Reported: `SYS_ADMIN` without the prefix accepts `false`.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sys-admin-no-prefix
 spec:
   containers:
   - name: a
@@ -170,10 +182,6 @@ spec:
     securityContext:
       capabilities:
         add: ["SYS_ADMIN"]
-  - name: b
-    image: app:1.0
-    securityContext:
-      capabilities: {add: [NET_ADMIN, CAP_SYS_ADMIN]}
 ---
 # Not reported: quoted strings and a number (schema problems).
 apiVersion: v1

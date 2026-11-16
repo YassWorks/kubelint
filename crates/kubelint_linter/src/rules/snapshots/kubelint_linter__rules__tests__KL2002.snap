@@ -107,4 +107,11 @@ warning[KL2002]: container `app` does not set `allowPrivilegeEscalation: false`
     |           ^^^
   = help: set `securityContext.allowPrivilegeEscalation: false`
 
-15 finding(s) in 14 object(s)
+warning[KL2002]: container `a` does not set `allowPrivilegeEscalation: false`
+   --> security/KL2002.yaml:180:11
+    |
+180 |   - name: a
+    |           ^
+  = help: set `securityContext.allowPrivilegeEscalation: false`
+
+16 finding(s) in 15 object(s)

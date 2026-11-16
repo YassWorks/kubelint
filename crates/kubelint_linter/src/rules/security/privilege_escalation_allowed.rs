@@ -43,7 +43,7 @@ impl Rule for PrivilegeEscalationAllowed {
                     .into_iter()
                     .flat_map(Node::items)
                     .filter_map(Node::as_str)
-                    .any(|capability| matches!(capability, "SYS_ADMIN" | "CAP_SYS_ADMIN"))
+                    .any(|capability| capability == "CAP_SYS_ADMIN")
             {
                 continue;
             }

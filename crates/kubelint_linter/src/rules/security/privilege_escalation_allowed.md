@@ -6,8 +6,9 @@ or because it is not set. Kubernetes has no pod-level default for this field, so
 container must set it.
 
 Some containers are skipped because Kubernetes rejects `false` for them: privileged
-containers (KL2001 `privileged-container` reports those), containers that add the
-`SYS_ADMIN` capability, and containers of Windows pods (`spec.os.name: windows`).
+containers (KL2001 `privileged-container` reports those), containers that add
+`CAP_SYS_ADMIN` (written with the prefix: Kubernetes accepts `false` next to
+`SYS_ADMIN`), and containers of Windows pods (`spec.os.name: windows`).
 
 This rule is off by default: most manifests do not set this field, so it would warn on
 nearly every container. Enable it with `--select KL2002` or in `kubelint.toml`.
