@@ -98,7 +98,9 @@ enum values, and removed or deprecated API versions.
 Small problems found along the way. Fix one when it fits a milestone, or schedule it.
 
 - A file that is not valid UTF-8 stops the run with exit code 2. A per-file finding
-  would be friendlier, but needs a new rule code.
+  would be friendlier, but needs a new rule code. This includes UTF-16 with a byte order
+  mark, which Windows PowerShell 5.1 writes with `>` and kubectl accepts, and it
+  contradicts "invalid YAML is a finding" in `architecture.md`.
 - KL0002 does not check the `items` wrapper of a `kind: List`.
 - The YAML 1.1 scalar tables in `kubelint_yaml::resolve` were written from memory of
   `gopkg.in/yaml.v2` `resolve.go` and are not yet compared with the upstream source.
@@ -126,6 +128,101 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 - The release workflow treats every change under `crates/` as code, so a change that
   touches only `crates/xtask` publishes a release with an unchanged binary.
 
+### From the end to end audit of 2026-11-15
+
+Each one was reproduced with the release binary of `78b2116`, and each Kubernetes fact
+with `kubectl apply --dry-run=server` on v1.34.13 and v1.37.2. Most severe first.
+
+- A YAML alias bomb exhausts memory and aborts the whole run: the builder copies the
+  anchored node for every alias, so a 551 byte file of nested aliases needs gigabytes.
+  kubectl stops it with "excessive aliasing". Keep an expansion budget and report
+  KL0001.
+- KL0002 recurses without a limit: a block sequence nested 30,000 deep (60 KB)
+  overflows the stack and aborts the run, and 8,000 is enough in a worker thread when
+  other files are linted.
+- Merge keys (`<<: *anchor`) are not expanded. KL1005, KL1010 and KL1003 report errors
+  on objects the server accepts (`labels: {<<: *sel, tier: x}`), and KL2001 misses a
+  `privileged: true` that comes in through a merge.
+- Directory search applies `.gitignore` patterns such as `gen/*` inside a directory
+  named on the command line, so `kubelint check gen` checks 0 files and exits 0. A
+  named directory that yields no file should at least be reported.
+- KL1008 judges some names unlike the server. PodDisruptionBudget names are only path
+  segments (`My_X` is accepted). The server ignores `metadata.namespace` on
+  cluster-scoped kinds. StatefulSet names are DNS labels (no dots, at most 63
+  characters), CronJob names have at most 52 characters and Job names at most 63.
+  Service names may start with a digit from 1.36 (`RelaxedServiceNameValidation`) but
+  not on 1.34 and 1.35, which needs the `--kubernetes-version` flag.
+- Explicit YAML tags are dropped: `value: !!str 8080` is reported by KL1009 and KL1010
+  although kubectl sends a string, and `!!int "8080"` is not reported although the
+  server rejects it. `1e400` is read as a number, while kubectl keeps a float out of
+  range as a string.
+- KL2003 reports only a container that may run as root, but its catalog row and the end
+  to end CI item say it checks the `restricted` requirement `runAsNonRoot`:
+  `runAsUser: 1000` without `runAsNonRoot: true` passes while restricted rejects it. It
+  also skips Windows pods (restricted requires `runAsNonRoot` there), reports pods with
+  `hostUsers: false` (restricted accepts them from 1.35) and accepts a pod-level
+  `runAsUser: 0` that every container overrides (restricted rejects it).
+- The default security rules do not cover all of `baseline`, as the catalog implies:
+  `hostPort`, an `Unconfined` seccomp or AppArmor profile, unsafe sysctls, SELinux types
+  and `hostProcess` are rejected by baseline and reported by no rule (see Rule ideas).
+- Block scalar (`|`, `>`) ranges end at the next token, so every format highlights the
+  lines after the value.
+- KL1005 returns early when `spec.template.spec` is missing, so its own explanation
+  example is not reported, although the server rejects the selector.
+- KL1007 misses PersistentVolume `spec.capacity`, generic ephemeral volume claim
+  templates and HorizontalPodAutoscaler metric targets.
+- An alias to an anchor in another document is read as null with no finding. kubectl
+  fails with "unknown anchor".
+- KL3005 misses `replicas: 1.0`, `1.` and `!!int "1"`, which the server stores as 1.
+  KL3003 reports malformed references (`:latest`, `/app`, `app//x`) as unpinned.
+- KL2008 reports env vars that hold a path
+  (`GOOGLE_APPLICATION_CREDENTIALS: /var/secrets/key.json`) and misses the suffixes
+  `PASS`, `PWD` and `PASSPHRASE`. KL2005 never reports a runtime socket, even when
+  KL2007 is off.
+- Rule explanations state facts the audit disproved. KL0001, KL1001, KL1002 and KL1003
+  say nothing in the file is applied, but kubectl applies the documents before the
+  broken one. KL0002 says kubectl rejects a duplicate key; it keeps the last value.
+  KL1009 misquotes the server error. KL2001's "Use instead" adds `NET_ADMIN`, which
+  KL2006 and baseline reject. KL2007 recommends Kaniko (archived) and a rootless BuildKit
+  that does not start under the runtime default seccomp profile. KL3001 says the
+  scheduler uses limits; it uses requests. KL3002 says BestEffort pods are evicted
+  before all others; eviction orders by usage over requests, then priority. KL3005 says a
+  Deployment rollout with one replica leaves no spare pod; `maxSurge` rounds up to 1.
+  Several examples are not complete objects the server accepts (no `selector`,
+  `containers` or `ports`).
+- Output formats: the Actions runner shows at most 10 annotations per type in a step,
+  which `output-formats.md` does not say. Standard input becomes a file named
+  `<stdin>` in SARIF and GitHub output. A UTF-8 byte order mark counts as a column. A
+  syntax error at the end of a file is at `4:12` in human output and `5:1` in the
+  others. On Linux, `\` in a path is rewritten to `/` and a directory named `c:` is read
+  as a drive. A closed pipe exits with code 2, or panics with 101 when stderr is closed
+  too. `NO_COLOR=` (empty) disables color. The GitHub format passes control characters
+  from YAML escapes into the log. SARIF output has no cap at GitHub's 25,000 results and
+  no `partialFingerprints`.
+- CLI: the same file under two spellings (`a.yaml ./a.yaml`) is linted twice. `exclude`
+  patterns written `./vendor`, `vendor/` or `/vendor` match nothing. Flag selectors are
+  not trimmed (`--select 'KL2001, KL3003'` is an error). `[lint.severity]` errors
+  suggest categories, which it rejects. `kubelint-disable-next-line` before a blank line
+  silences nothing, and a misspelled directive is silently a comment. A Go template
+  outside a chart gets a bare KL0001 with no hint about Helm. CR-only line endings put
+  every position on line 1.
+- UTF-16 columns are counted from the line start for every finding, so 8,000 findings
+  on one 255 KB line take 2.5 s.
+- Releases and CI integration: the Windows binary needs `VCRUNTIME140.dll`, so it is not
+  self-contained. `cargo install --git` uses the user's default toolchain, not the
+  pinned one, and installs version `0.0.0`. The Action's `format: sarif` fails the step
+  with nothing in the log, fails when `sarif-file` is in a missing directory and leaves
+  an empty file on exit code 2. Action `args` take quotes and globs literally, and a
+  `version` without `v` gives a bare 404. CI never runs the `@vX.Y.Z` pin path. The
+  hook's `types: [yaml]` also lints `.clang-format` and similar files. The SARIF upload
+  snippet lacks `actions: read`, which GitHub's docs ask for in private repositories
+  (not run). `CLAUDE.md` says CI runs `cargo fmt --all`; CI runs it with `--check`, and
+  its tests with `RUSTFLAGS=-D warnings`. `e2e-apiserver.sh 1.37` without network says
+  the version is unknown.
+- `CONTRIBUTING.md` step 5 runs only the `kubelint_linter` tests, which misses the CLI
+  and corpus tests, and nothing ties the catalog in `docs/rules/README.md` to the
+  registry.
+
 ## Rule ideas
 
 Not in the catalog yet. Add one to [`rules/README.md`](rules/README.md) with a reason
@@ -139,6 +236,9 @@ before building it.
 - An `apiVersion` that is newer than the selected Kubernetes version (it exists in a
   later version of the window). The schema validator skips it like a custom resource.
 - CronJob names longer than 52 characters.
+- The `baseline` Pod Security checks that no rule covers: `hostPort`, an `Unconfined`
+  seccomp or AppArmor profile, unsafe sysctls, SELinux type and user options,
+  `hostProcess`, and `procMount` (rejected by baseline on 1.34 only).
 
 ## Backlog
 
