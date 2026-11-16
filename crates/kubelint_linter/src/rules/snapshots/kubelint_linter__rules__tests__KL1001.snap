@@ -58,4 +58,25 @@ error[KL1001]: object has no `apiVersion`
    |   ^^^^^^^^
   = help: add `apiVersion` and `kind`, such as `apiVersion: apps/v1` and `kind: Deployment`
 
-8 finding(s) in 12 object(s)
+error[KL1001]: `Deployment` object has no `apiVersion`
+  --> correctness/KL1001.yaml:36:1
+   |
+36 | kind: Deployment
+   | ^^^^^^^^^^^^^^^^
+  = help: add `apiVersion: apps/v1`
+
+error[KL1001]: `Service` object has no `apiVersion`
+  --> correctness/KL1001.yaml:44:3
+   |
+44 | - kind: Service
+   |   ^^^^^^^^^^^^^
+  = help: add `apiVersion: v1`
+
+error[KL1001]: `Kustomization` object has an empty `apiVersion`
+  --> correctness/KL1001.yaml:69:1
+   |
+69 | apiVersion:
+   | ^^^^^^^^^^
+  = help: add the `apiVersion` of this kind; `kubectl api-resources` lists them
+
+11 finding(s) in 19 object(s)

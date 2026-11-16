@@ -12,6 +12,7 @@ use crate::{BuiltinKind, GroupVersion, GroupVersionKind};
 #[derive(Debug, Clone, Copy)]
 pub struct Object<'a> {
     node: &'a Node,
+    in_list: bool,
 }
 
 /// The Kubernetes objects of a document, in source order.
@@ -47,7 +48,10 @@ pub fn objects(document: &Document) -> Vec<Object<'_>> {
         .into_iter()
         .flat_map(Node::items)
         .filter(|item| item.as_mapping().is_some())
-        .map(|node| Object { node })
+        .map(|node| Object {
+            node,
+            in_list: true,
+        })
         .collect()
 }
 
@@ -66,7 +70,16 @@ impl<'a> Object<'a> {
     pub fn from_node(node: &'a Node) -> Option<Self> {
         let is_object = node.as_mapping().is_some()
             && (node.get_entry("apiVersion").is_some() || node.get_entry("kind").is_some());
-        is_object.then_some(Self { node })
+        is_object.then_some(Self {
+            node,
+            in_list: false,
+        })
+    }
+
+    /// Whether the object is an item of a `kind: List` document, where a mapping can only
+    /// be meant as an object.
+    pub fn is_list_item(self) -> bool {
+        self.in_list
     }
 
     pub fn node(self) -> &'a Node {
