@@ -100,8 +100,15 @@ free_port() {
   while port_open "$port"; do port=$((port + 1)); done
   echo "$port"
 }
+fail() {
+  echo "$1" >&2
+  pkill -KILL -f -- "$ours" || true
+  exit 1
+}
+# One start at a time on the machine, so two checkouts never pick the same free ports.
+exec 9>"${TMPDIR:-/tmp}/kubelint-e2e.lock"
+flock 9
 pkill -KILL -f -- "$ours" || true
-for _ in $(seq 1 20); do pgrep -f -- "$ours" >/dev/null || break; sleep 0.5; done
 rm -rf "$state"
 mkdir -p "$state"
 etcd_port="$(free_port 2379)"
@@ -109,10 +116,11 @@ peer_port="$(free_port $((etcd_port + 1)))"
 api_port="$(free_port 6443)"
 
 openssl genrsa -out "$state/sa.key" 2048 2>/dev/null
-echo "e2e-token,admin,admin,system:masters" >"$state/tokens.csv"
+token="$(openssl rand -hex 16)"
+echo "$token,admin,admin,system:masters" >"$state/tokens.csv"
 "$etcd_bin" --data-dir "$state/etcd" --listen-client-urls "http://127.0.0.1:$etcd_port" \
   --advertise-client-urls "http://127.0.0.1:$etcd_port" \
-  --listen-peer-urls "http://127.0.0.1:$peer_port" >"$state/etcd.log" 2>&1 &
+  --listen-peer-urls "http://127.0.0.1:$peer_port" >"$state/etcd.log" 2>&1 9>&- &
 echo $! >"$state/etcd.pid"
 # Real clusters allow privileged pods, and no controller creates service accounts here.
 "$bin/kube-apiserver" --etcd-servers "http://127.0.0.1:$etcd_port" --cert-dir "$state/certs" \
@@ -121,7 +129,7 @@ echo $! >"$state/etcd.pid"
   --service-account-key-file "$state/sa.key" \
   --service-account-signing-key-file "$state/sa.key" \
   --service-cluster-ip-range 10.96.0.0/16 --allow-privileged=true \
-  --disable-admission-plugins ServiceAccount >"$state/apiserver.log" 2>&1 &
+  --disable-admission-plugins ServiceAccount >"$state/apiserver.log" 2>&1 9>&- &
 echo $! >"$state/apiserver.pid"
 
 cat >"$state/kubeconfig" <<EOF
@@ -130,17 +138,14 @@ kind: Config
 clusters:
 - name: e2e
   cluster: {server: "https://127.0.0.1:$api_port", insecure-skip-tls-verify: true}
-users: [{name: admin, user: {token: e2e-token}}]
+users: [{name: admin, user: {token: $token}}]
 contexts: [{name: e2e, context: {cluster: e2e, user: admin}}]
 current-context: e2e
 EOF
 
 for _ in $(seq 1 60); do
   for name in etcd apiserver; do
-    if ! kill -0 "$(cat "$state/$name.pid")" 2>/dev/null; then
-      echo "$name exited, see $state/$name.log" >&2
-      exit 1
-    fi
+    kill -0 "$(cat "$state/$name.pid")" 2>/dev/null || fail "$name exited, see $state/$name.log"
   done
   if [ "$(server_version)" = "$wanted" ] \
     && KUBECONFIG="$state/kubeconfig" "$kubectl_bin" get namespace default >/dev/null 2>&1; then
@@ -150,5 +155,4 @@ for _ in $(seq 1 60); do
   fi
   sleep 1
 done
-echo "API server did not become ready, see $state/apiserver.log" >&2
-exit 1
+fail "API server did not become ready, see $state/apiserver.log"
