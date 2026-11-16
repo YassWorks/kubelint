@@ -161,6 +161,19 @@ Principles:
   **Rejected:** forking or patching `saphyr-parser` (a maintenance burden for one
   escape); rewriting every `\'` in the file before parsing (outside double quotes it is
   two literal characters, so only the scalars the parser rejects are touched).
+- **Tabs after a mapping's `:` separate the value,** as YAML 1.2 says and kubectl
+  accepts (`name:<tab>web`). `saphyr-parser` rejects tabs alone before a value that
+  starts with an ASCII letter, a digit, `-` or `_`, so when it reports that error, the
+  builder rewrites every such run of tabs from there on to spaces, one byte each, and
+  parses again. A run inside a quoted or block scalar after the first one becomes spaces
+  too; no rule reads such text.
+
+  **Why:** kubectl accepts these files, so KL0001 there is a false positive that also
+  drops the document from every other rule.
+
+  **Rejected:** rewriting every such run before parsing (it would change the text of
+  scalars in files that parse fine); rewriting one run per parse (one reparse of the
+  file per run, quadratic in a file that uses tabs throughout).
 - **Edits apply to the original text.** Autofix (M5) changes the file by byte range,
   never by re-serializing the tree, so formatting and comments survive.
 

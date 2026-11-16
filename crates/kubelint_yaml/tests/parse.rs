@@ -52,6 +52,11 @@ fn quoted_scalars_end_at_their_closing_quote() {
 }
 
 #[test]
+fn tabs_after_a_colon_separate_the_value() {
+    insta::assert_snapshot!(dump(include_str!("fixtures/parse/tabs_after_a_colon.yaml")));
+}
+
+#[test]
 fn double_quoted_scalars_accept_escaped_single_quotes() {
     // Like libyaml and `go-yaml`, `\'` reads as `'`. `\q` stays an unknown escape.
     insta::assert_snapshot!(dump(include_str!(
@@ -98,6 +103,13 @@ fn error_position_is_a_byte_offset() {
     let at = u32::from(parse.errors[0].range.start());
     // The error is after the 2-byte `é`, so a character index would be smaller.
     assert!(at >= 7, "error at {at}");
+}
+
+#[test]
+fn tabs_before_a_block_sequence_stay_an_error() {
+    // kubectl rejects this too: "block sequence entries are not allowed in this context".
+    assert_eq!(parse("a:\t- x\n").errors.len(), 1);
+    assert_eq!(parse("a: x:\ty\n").errors.len(), 1);
 }
 
 #[test]

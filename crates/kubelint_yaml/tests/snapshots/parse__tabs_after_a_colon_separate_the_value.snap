@@ -1,0 +1,39 @@
+---
+source: crates/kubelint_yaml/tests/parse.rs
+expression: "dump(include_str!(\"fixtures/parse/tabs_after_a_colon.yaml\"))"
+---
+document 0..141
+  mapping 0..141
+    entry
+      scalar Plain "apiVersion" 0..10
+      scalar Plain "v1" 12..14
+    entry
+      scalar Plain "kind" 15..19
+      scalar Plain "ConfigMap" 21..30
+    entry
+      scalar Plain "metadata" 31..39
+      mapping 43..74
+        entry
+          scalar Plain "name" 43..47
+          scalar Plain "web" 49..52
+        entry
+          scalar Plain "namespace" 55..64
+          scalar Plain "default" 67..74
+    entry
+      scalar Plain "data" 75..79
+      mapping 83..141
+        entry
+          scalar Plain "quoted" 83..89
+          scalar DoubleQuoted "x" 91..94
+        entry
+          scalar Plain "negative" 97..105
+          scalar Plain "-1" 107..109
+        entry
+          scalar Plain "flow" 112..116
+          mapping 118..124
+            entry
+              scalar Plain "a" 119..120
+              scalar Plain "b" 122..123
+        entry
+          scalar Plain "inside" 127..133
+          scalar DoubleQuoted "a: b" 135..141
