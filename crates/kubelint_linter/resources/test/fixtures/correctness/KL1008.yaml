@@ -136,3 +136,312 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: price-$5
+---
+# Reported: a PodDisruptionBudget name is a path segment, so `/`, `%` and `..` are not allowed.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: a/b
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: a%b
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ".."
+---
+# Not reported: a PodDisruptionBudget name may have uppercase letters, `_`, spaces and 64 or more characters.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: Bad_Name
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: "team a: b"
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+# Reported: a StatefulSet name is a label: no dot, at most 63 characters.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: web.v2
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: Web
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+# Not reported: a StatefulSet name of 63 characters, one that starts with a digit.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: 1web
+---
+# Reported: a CronJob name of 53 characters (the controller adds a suffix to Job names).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+# Not reported: a CronJob name of 52 characters, one with a dot.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nightly.backup
+---
+# Reported: a Job name of 64 characters, or 64 with `manualSelector: false`.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+spec:
+  manualSelector: false
+---
+# Not reported: a Job name of 63 characters; 64 with `manualSelector: true`, where the
+# server does not copy the name into a label; a dot.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+spec:
+  manualSelector: true
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: a.b
+---
+# Reported: a `generateName` is checked like a name, with a trailing `-` allowed.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  generateName: Bad_Name-
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  generateName: web_
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  generateName: a.b-
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  generateName: "-"
+---
+# A dash after a dot starts a label with `-` once the random characters are added.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  generateName: a.-
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  generateName: "café-"
+---
+# Reported: a `generateName` over the length limit. The trailing `-` does not count.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+# Not reported: valid prefixes, with and without a trailing `-`, at the length limit.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  generateName: settings-
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  generateName: a.b-
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  generateName: web--
+---
+# Reported: a CronJob `generateName` of 48 characters, as the generated name is over 52.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+# Not reported: a CronJob prefix of 47 characters, a Job prefix of any valid length (the
+# server shortens it), and the RBAC and PodDisruptionBudget formats.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  generateName: team:reader-
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  generateName: Bad_Name-
+---
+# Reported: a PodDisruptionBudget prefix with a `/`.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  generateName: a/b-
+---
+# Not reported: a Service prefix that starts with a digit is accepted from 1.36 only.
+# Reported: a Service prefix with an uppercase letter.
+apiVersion: v1
+kind: Service
+metadata:
+  generateName: 1abc-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  generateName: Web-
+---
+# Not reported: a placeholder in a generateName.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  generateName: "{{ .Release.Name }}-"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  generateName: $PREFIX-
+---
+# Not reported: with a `name`, the server checks only the prefix characters, not the name it
+# would generate (`a.-aaaaa`), and the CronJob prefix limit does not apply.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: settings
+  generateName: a.-
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nightly
+  generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: nightly
+  generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-
+---
+# Not reported: a ReplicationController with a `name` and a bad prefix is accepted from 1.35
+# and rejected by 1.34.
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: etcd
+  generateName: Bad_Gen-
+---
+# Reported: the same prefix without a `name`, and on a ConfigMap with a `name`.
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  generateName: Bad_Gen-
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: settings
+  generateName: Bad_Gen-
+---
+# Reported: a bad name and a bad generateName on one object give two findings.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: Bad_Name
+  generateName: Bad_Prefix-
+---
+# Reported: flow style.
+{apiVersion: v1, kind: ConfigMap, metadata: {generateName: "Bad_Flow-"}}

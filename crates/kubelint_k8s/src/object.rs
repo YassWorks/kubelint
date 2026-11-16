@@ -161,6 +161,11 @@ impl<'a> Object<'a> {
         self.metadata()?.get("name")
     }
 
+    /// The `metadata.generateName` value.
+    pub fn generate_name(self) -> Option<&'a Node> {
+        self.metadata()?.get("generateName")
+    }
+
     /// The `metadata.namespace` value.
     pub fn namespace(self) -> Option<&'a Node> {
         self.metadata()?.get("namespace")
