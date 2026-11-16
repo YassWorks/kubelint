@@ -166,15 +166,18 @@ Principles:
 - **Tabs after a mapping's `:` separate the value,** as YAML 1.2 says and kubectl
   accepts (`name:<tab>web`). `saphyr-parser` rejects tabs alone before a value that
   starts with an ASCII letter, a digit, `-` or `_`, so when it reports that error, the
-  builder rewrites every such run of tabs from there on to spaces, one byte each, and
-  parses again. A run inside a quoted or block scalar after the first one becomes spaces
-  too; no rule reads such text.
+  builder rewrites the rejected run to spaces, one byte each, and parses again. To avoid
+  one parse per run, it also parses a probe copy with every later candidate run rewritten
+  and rewrites, in the real text, the candidates that lie before the probe's first error
+  and outside every scalar and comment of the probe. A tab after a `:` inside a quoted or
+  block scalar, a quoted key, a comment or a later document keeps its tab.
 
   **Why:** kubectl accepts these files, so KL0001 there is a false positive that also
-  drops the document from every other rule.
+  drops the document from every other rule. The text of a scalar is read by rules and
+  echoed in messages, so it must stay as written.
 
-  **Rejected:** rewriting every such run before parsing (it would change the text of
-  scalars in files that parse fine); rewriting one run per parse (one reparse of the
+  **Rejected:** rewriting every such run from the error on (it changes the text of
+  scalars, keys and later documents); rewriting one run per parse (one reparse of the
   file per run, quadratic in a file that uses tabs throughout).
 - **A document stops at the alias and nesting limits kubectl enforces.** The builder
   counts, per document, the nodes the decoder of `go-yaml` v2 (what Kubernetes 1.34 to

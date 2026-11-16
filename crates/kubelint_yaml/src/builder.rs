@@ -5,7 +5,7 @@ use std::ops::Range;
 use kubelint_source::{TextRange, TextSize};
 use saphyr_parser::{Event, Parser, ScalarStyle as SaphyrStyle, Span, Tag};
 
-use crate::comments::{self, Comment, to_size};
+use crate::comments::{self, Comment, inside_range, to_size};
 use crate::limits::{AliasBudget, MAX_DEPTH};
 use crate::quoted;
 use crate::{Document, Entry, Node, NodeKind, Scalar, ScalarStyle};
@@ -110,22 +110,23 @@ fn next_document_marker(text: &str, base: usize, offset: usize) -> Option<usize>
 
 /// Parses `text` until the end or its first syntax error. When the error is at a
 /// double-quoted scalar with `\'` escapes, they are rewritten to `\a`, which has the
-/// same length, and the text is parsed again. So are tabs between a mapping's `:` and
-/// its value, rewritten to spaces.
+/// same length, and the text is parsed again. So are the tabs between a mapping's `:` and
+/// its value that the parser rejects, rewritten to spaces.
 fn parse_segment(text: &str) -> Parse {
     let offsets = ByteOffsets::new(text);
     let mut patched = Cow::Borrowed(text);
     let mut rewritten = Vec::new();
     loop {
-        let out = parse_attempt(&patched, &offsets, &rewritten);
+        let out = parse_attempt(&patched, &offsets, &rewritten).parse;
         let Some(error) = out.errors.first() else {
             return out;
         };
         let at = usize::from(error.range.start());
         if let Some(tabs) = tabs_after_colon(&patched, at, &error.message) {
-            for tabs in rejected_tabs(&patched, tabs.start - 1) {
-                let spaces = " ".repeat(tabs.len());
-                patched.to_mut().replace_range(tabs, &spaces);
+            for run in rejected_tabs(&patched, &offsets, &rewritten, tabs) {
+                patched
+                    .to_mut()
+                    .replace_range(run.clone(), &" ".repeat(run.len()));
             }
             continue;
         }
@@ -156,26 +157,49 @@ fn tabs_after_colon(text: &str, at: usize, message: &str) -> Option<Range<usize>
     (start < at && before[..start].ends_with(':')).then_some(start..at)
 }
 
-/// Every run of tabs after a `:` from `from` on that the parser would reject, so one
-/// parse fixes them all instead of one parse per run.
-fn rejected_tabs(text: &str, from: usize) -> Vec<Range<usize>> {
+/// The rejected run `first`, plus every later run after a `:` that a probe parse, with all
+/// of them rewritten, shows outside scalars and comments before its first error.
+fn rejected_tabs(
+    text: &str,
+    offsets: &ByteOffsets,
+    rewritten: &[usize],
+    first: Range<usize>,
+) -> Vec<Range<usize>> {
     let bytes = text.as_bytes();
-    let colons = text
-        .get(from..)
-        .into_iter()
-        .flat_map(|rest| rest.match_indices(':'));
-    colons
-        .filter_map(|(i, _)| {
-            let start = from + i + 1;
-            let end = start + bytes[start..].iter().take_while(|&&b| b == b'\t').count();
-            let next = bytes.get(end)?;
-            (end > start && (next.is_ascii_alphanumeric() || matches!(next, b'-' | b'_')))
-                .then_some(start..end)
-        })
-        .collect()
+    let mut candidates = vec![first.clone()];
+    let rest = text.get(first.end..).unwrap_or_default();
+    for (i, _) in rest.match_indices(':') {
+        let start = first.end + i + 1;
+        let end = start + bytes[start..].iter().take_while(|&&b| b == b'\t').count();
+        let next = bytes.get(end);
+        if end > start
+            && next.is_some_and(|b| b.is_ascii_alphanumeric() || matches!(b, b'-' | b'_'))
+        {
+            candidates.push(start..end);
+        }
+    }
+    let mut probe = text.to_owned();
+    for run in &candidates {
+        probe.replace_range(run.clone(), &" ".repeat(run.len()));
+    }
+    let attempt = parse_attempt(&probe, offsets, rewritten);
+    let mut covered = attempt.scalars;
+    covered.extend(attempt.parse.comments.iter().map(|c| c.range));
+    covered.sort_unstable_by_key(|r| r.start());
+    let limit = usize::from(attempt.limit);
+    candidates.retain(|run| {
+        run.start == first.start || (run.end <= limit && !inside_range(&covered, run.start - 1))
+    });
+    candidates
 }
 
-fn parse_attempt(text: &str, offsets: &ByteOffsets, rewritten: &[usize]) -> Parse {
+struct Attempt {
+    parse: Parse,
+    scalars: Vec<TextRange>,
+    limit: TextSize,
+}
+
+fn parse_attempt(text: &str, offsets: &ByteOffsets, rewritten: &[usize]) -> Attempt {
     let mut builder = Builder::new(text, offsets, rewritten);
     let mut out = Parse::default();
     let mut limit = TextSize::new(u32::try_from(text.len()).unwrap_or(u32::MAX));
@@ -206,7 +230,11 @@ fn parse_attempt(text: &str, offsets: &ByteOffsets, rewritten: &[usize]) -> Pars
         }
     }
     out.comments = comments::extract(text, &mut builder.scalars, limit);
-    out
+    Attempt {
+        parse: out,
+        scalars: builder.scalars,
+        limit,
+    }
 }
 
 /// Maps character indices (what `saphyr-parser` reports) to byte offsets.
