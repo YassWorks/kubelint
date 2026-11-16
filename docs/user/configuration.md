@@ -53,8 +53,8 @@ format if users ask for it.
   `[lint.severity]` is an error. A category or prefix that covers it (`syntax`, `KL0`)
   leaves it on.
 - `[lint.severity]` overrides the severity of one rule, named by code or name. A
-  category or prefix there is an error. Later entries win. An override for a rule that
-  does not run is accepted.
+  category or prefix there is an error, and so is a second entry for the same rule (its
+  code and its name). An override for a rule that does not run is accepted.
 - `fail-on` is the lowest severity that makes the run fail with exit code 1. The default
   is `warning`, so `info` findings never fail a run unless `fail-on = "info"`.
 
@@ -64,8 +64,13 @@ low-noise, and turning on an opinionated rule is always a visible act.
 **Why an unknown selector is an error:** a typo in `ignore` would otherwise keep a rule
 running without anyone noticing.
 
+**Why one entry per rule in `[lint.severity]`:** a TOML table has no order, so when a
+rule's code and its name both set a severity, neither can win by coming later.
+
 **Rejected:**
 
+- The later entry wins. The parser reads the table sorted by key, and codes sort before
+  names, so the name always won over the code, whatever the order in the file.
 - Categories that include every rule (Ruff). Selecting `security` would switch on the
   rules that ship disabled because they are noisy.
 - "Most specific selector wins" (Ruff). It needs ordering rules users have to learn.
