@@ -13,6 +13,10 @@ could never see its own pods, so the API server rejects it with
 The selector of a Deployment, ReplicaSet, DaemonSet or StatefulSet cannot be changed
 after it is created, so it is worth getting right before the first apply.
 
+A null label value (`k:`, `k: ~`, `k: null`) is not the text `null`. `kubectl apply` drops
+a null label and `kubectl create` stores it as an empty value, so the rule reports a
+requirement only when the template fails it both ways. A quoted `"null"` is text.
+
 ## Example
 
 ```yaml

@@ -85,6 +85,28 @@ alternative examples), and only one of them is applied. On four public repositor
 comparing the files of one directory (65 of those findings were variants side by side
 in one directory, such as `pod-nginx.yaml` and `pod-nginx-specific-node.yaml`).
 
+KL1005 reports a requirement only when the template fails it as `kubectl create` stores
+a null label (an empty value) and as `kubectl apply` stores it (the key is dropped). A
+null selector value in `matchLabels` is never reported.
+
+**Why:** the two commands disagree about a null, and the rule stays silent where they
+disagree. A null selector value matches under `apply` and is empty under `create`; a
+null template label is an empty value under `create` and absent under `apply`. Both
+agree that a quoted `"null"` is text and that `null` in `values` is an empty value.
+
+**Rejected:** comparing the text of a null (reports `null` against `""`, which both
+commands accept, and misses `"null"` against `null`, which both reject); treating a null
+as an empty string only (reports a null selector against a non-empty label, which
+`apply` accepts); reporting when either command rejects (reports manifests that one of
+them accepts).
+
+Known costs: the cases where the commands split are silent: `values: [null]` or `[""]`
+in an `In` expression against a null template label, a selector `k: ""` against `k:`,
+`NotIn [null]` or `DoesNotExist` against `k: null`, a selector `k: null` against no
+label, `"null"` or `x`. On 1242 generated cases, 140 that `apply` rejects and `create`
+accepts and 106 that `create` rejects and `apply` accepts were reported before and are
+silent now.
+
 KL1008 and KL1010 skip a name, namespace, label key or label value with a template
 placeholder: `{{`, or `$` followed by `{`, `(`, a letter or `_`.
 

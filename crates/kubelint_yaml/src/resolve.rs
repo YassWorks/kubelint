@@ -46,6 +46,19 @@ impl Scalar {
             _ => ResolvedScalar::String,
         }
     }
+
+    /// Whether this is a quoted or block scalar whose text a plain scalar would read as
+    /// null: `""`, `"~"` or `"null"`.
+    ///
+    /// ```
+    /// let doc = &kubelint_yaml::parse("a: \"null\"\nb: null\nc: x\nd: \"\"").documents[0];
+    /// let root = doc.root.as_ref().unwrap();
+    /// let quoted = |k| root.get(k).unwrap().as_scalar().unwrap().is_null_text_in_quotes();
+    /// assert_eq!((quoted("a"), quoted("b"), quoted("c"), quoted("d")), (true, false, false, true));
+    /// ```
+    pub fn is_null_text_in_quotes(&self) -> bool {
+        self.style != ScalarStyle::Plain && resolve_plain(&self.value) == ResolvedScalar::Null
+    }
 }
 
 fn resolve_plain(s: &str) -> ResolvedScalar {
