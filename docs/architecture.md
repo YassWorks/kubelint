@@ -440,7 +440,9 @@ A rule is right only if Kubernetes agrees with it. `.github/scripts/e2e-apiserve
 [VERSION]` starts a real API server (etcd and `kube-apiserver`, any version, downloaded
 when missing) and the Docker daemon, and prints the `KUBECONFIG` and `PATH` to use. One
 server runs per checkout: a second call for the same version reuses it, a call for
-another version replaces it. Then:
+another version replaces it. Each server takes the first free ports from 2379 (etcd)
+and 6443 (API) and its own token, so the servers of several checkouts run side by side.
+Starts on one machine run one at a time, so two never pick the same ports. Then:
 
 - `kubectl apply --dry-run=server -f <file>` gives the API server's verdict on an
   object: decoding, validation and admission, including Pod Security once the namespace

@@ -5,7 +5,8 @@
 # VERSION is a minor (1.34), a release (v1.34.13 or 1.34.13), or empty for the binaries
 # on the PATH, else the latest release. Missing binaries are downloaded into
 # target/e2e/bin. Prints the export line for KUBECONFIG and PATH. One server runs per
-# checkout: a call for the same version reuses it, a call for another replaces it.
+# checkout, on ports free when it starts: a call for the same version reuses it, a call
+# for another replaces it, and other checkouts keep their own.
 set -euo pipefail
 
 etcd_version=v3.6.16
@@ -92,37 +93,43 @@ if [ "$(server_version)" = "$wanted" ]; then
   exit 0
 fi
 
-stop_ours() { pkill "$1" -f -- "--data-dir $state/etcd|--cert-dir $state/certs" || true; }
+ours="--data-dir $state/etcd|--cert-dir $state/certs"
 port_open() { (echo >"/dev/tcp/127.0.0.1/$1") 2>/dev/null; }
-stop_ours -TERM
-for port in 2379 2380 6443; do
-  for _ in $(seq 1 30); do port_open "$port" || break; sleep 0.5; done
-  if port_open "$port"; then
-    stop_ours -KILL
-    sleep 1
-  fi
-  if port_open "$port"; then
-    echo "port $port is in use by another process" >&2
-    exit 1
-  fi
-done
+free_port() {
+  local port=$1
+  while port_open "$port"; do port=$((port + 1)); done
+  echo "$port"
+}
+fail() {
+  echo "$1" >&2
+  pkill -KILL -f -- "$ours" || true
+  exit 1
+}
+# One start at a time on the machine, so two checkouts never pick the same free ports.
+exec 9>"${TMPDIR:-/tmp}/kubelint-e2e.lock"
+flock 9
+pkill -KILL -f -- "$ours" || true
 rm -rf "$state"
 mkdir -p "$state"
+etcd_port="$(free_port 2379)"
+peer_port="$(free_port $((etcd_port + 1)))"
+api_port="$(free_port 6443)"
 
 openssl genrsa -out "$state/sa.key" 2048 2>/dev/null
-echo "e2e-token,admin,admin,system:masters" >"$state/tokens.csv"
-"$etcd_bin" --data-dir "$state/etcd" --listen-client-urls http://127.0.0.1:2379 \
-  --advertise-client-urls http://127.0.0.1:2379 --listen-peer-urls http://127.0.0.1:2380 \
-  >"$state/etcd.log" 2>&1 &
+token="$(openssl rand -hex 16)"
+echo "$token,admin,admin,system:masters" >"$state/tokens.csv"
+"$etcd_bin" --data-dir "$state/etcd" --listen-client-urls "http://127.0.0.1:$etcd_port" \
+  --advertise-client-urls "http://127.0.0.1:$etcd_port" \
+  --listen-peer-urls "http://127.0.0.1:$peer_port" >"$state/etcd.log" 2>&1 9>&- &
 echo $! >"$state/etcd.pid"
 # Real clusters allow privileged pods, and no controller creates service accounts here.
-"$bin/kube-apiserver" --etcd-servers http://127.0.0.1:2379 --cert-dir "$state/certs" \
-  --secure-port 6443 --bind-address 127.0.0.1 --token-auth-file "$state/tokens.csv" \
+"$bin/kube-apiserver" --etcd-servers "http://127.0.0.1:$etcd_port" --cert-dir "$state/certs" \
+  --secure-port "$api_port" --bind-address 127.0.0.1 --token-auth-file "$state/tokens.csv" \
   --authorization-mode RBAC --service-account-issuer https://kubernetes.default.svc \
   --service-account-key-file "$state/sa.key" \
   --service-account-signing-key-file "$state/sa.key" \
   --service-cluster-ip-range 10.96.0.0/16 --allow-privileged=true \
-  --disable-admission-plugins ServiceAccount >"$state/apiserver.log" 2>&1 &
+  --disable-admission-plugins ServiceAccount >"$state/apiserver.log" 2>&1 9>&- &
 echo $! >"$state/apiserver.pid"
 
 cat >"$state/kubeconfig" <<EOF
@@ -130,18 +137,15 @@ apiVersion: v1
 kind: Config
 clusters:
 - name: e2e
-  cluster: {server: "https://127.0.0.1:6443", insecure-skip-tls-verify: true}
-users: [{name: admin, user: {token: e2e-token}}]
+  cluster: {server: "https://127.0.0.1:$api_port", insecure-skip-tls-verify: true}
+users: [{name: admin, user: {token: $token}}]
 contexts: [{name: e2e, context: {cluster: e2e, user: admin}}]
 current-context: e2e
 EOF
 
 for _ in $(seq 1 60); do
   for name in etcd apiserver; do
-    if ! kill -0 "$(cat "$state/$name.pid")" 2>/dev/null; then
-      echo "$name exited, see $state/$name.log" >&2
-      exit 1
-    fi
+    kill -0 "$(cat "$state/$name.pid")" 2>/dev/null || fail "$name exited, see $state/$name.log"
   done
   if [ "$(server_version)" = "$wanted" ] \
     && KUBECONFIG="$state/kubeconfig" "$kubectl_bin" get namespace default >/dev/null 2>&1; then
@@ -151,5 +155,4 @@ for _ in $(seq 1 60); do
   fi
   sleep 1
 done
-echo "API server did not become ready, see $state/apiserver.log" >&2
-exit 1
+fail "API server did not become ready, see $state/apiserver.log"
