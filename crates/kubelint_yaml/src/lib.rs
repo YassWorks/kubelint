@@ -7,6 +7,7 @@
 
 mod builder;
 mod comments;
+mod limits;
 mod nav;
 mod quoted;
 mod resolve;

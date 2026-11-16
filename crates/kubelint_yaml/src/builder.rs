@@ -3,9 +3,10 @@ use std::collections::HashMap;
 use std::ops::Range;
 
 use kubelint_source::{TextRange, TextSize};
-use saphyr_parser::{Event, Parser, ScalarStyle as SaphyrStyle, Span};
+use saphyr_parser::{Event, Parser, ScalarStyle as SaphyrStyle, Span, Tag};
 
 use crate::comments::{self, Comment, to_size};
+use crate::limits::{AliasBudget, MAX_DEPTH};
 use crate::quoted;
 use crate::{Document, Entry, Node, NodeKind, Scalar, ScalarStyle};
 
@@ -15,6 +16,9 @@ pub struct ParseError {
     pub message: String,
     /// Always empty: it marks a position, not a span.
     pub range: TextRange,
+    /// The document is over a limit `kubectl` enforces (aliases, nesting) and not
+    /// malformed.
+    pub limit: bool,
 }
 
 /// The result of [`parse`].
@@ -65,6 +69,7 @@ pub fn parse(text: &str) -> Parse {
             .extend(part.errors.into_iter().map(|e| ParseError {
                 message: e.message,
                 range: e.range + delta,
+                limit: e.limit,
             }));
         out.comments
             .extend(part.comments.into_iter().map(|c| Comment {
@@ -176,16 +181,24 @@ fn parse_attempt(text: &str, offsets: &ByteOffsets, rewritten: &[usize]) -> Pars
     let mut limit = TextSize::new(u32::try_from(text.len()).unwrap_or(u32::MAX));
     for item in Parser::new_from_str(text) {
         match item {
-            Ok((event, span)) => {
-                if let Some(doc) = builder.event(event, span) {
-                    out.documents.push(doc);
+            Ok((event, span)) => match builder.event(event, span) {
+                Ok(doc) => out.documents.extend(doc),
+                Err((message, at)) => {
+                    out.errors.push(ParseError {
+                        message,
+                        range: TextRange::empty(at),
+                        limit: true,
+                    });
+                    limit = at;
+                    break;
                 }
-            }
+            },
             Err(err) => {
                 let at = offsets.get(err.marker().index());
                 out.errors.push(ParseError {
                     message: err.info().to_owned(),
                     range: TextRange::empty(at),
+                    limit: false,
                 });
                 limit = at;
                 break;
@@ -231,6 +244,26 @@ impl ByteOffsets {
     }
 }
 
+/// The message and offset of the limit a document hit.
+type Over = (String, TextSize);
+
+fn at(offset: TextSize) -> impl Fn(&'static str) -> Over {
+    move |message| (message.to_owned(), offset)
+}
+
+fn too_deep(offset: TextSize) -> Over {
+    (format!("nesting is deeper than {MAX_DEPTH} levels"), offset)
+}
+
+#[derive(Clone, Copy)]
+struct Counted {
+    /// The decoder's visit count before the collection's own visit.
+    from: u64,
+    height: usize,
+    /// The collection is a `<<` value or an item of one: a merge adds no JSON level.
+    merged: bool,
+}
+
 enum Frame {
     Seq {
         flow: bool,
@@ -244,7 +277,15 @@ enum Frame {
         anchor: usize,
         entries: Vec<Entry>,
         key: Option<Node>,
+        /// The pending key is `<<`, which `go-yaml` does not visit.
+        merge: bool,
     },
+}
+
+struct Anchored {
+    node: Node,
+    weight: u64,
+    height: usize,
 }
 
 struct Builder<'a> {
@@ -253,7 +294,12 @@ struct Builder<'a> {
     stack: Vec<Frame>,
     root: Option<Node>,
     doc_range: TextRange,
-    anchors: HashMap<usize, Node>,
+    anchors: HashMap<usize, Anchored>,
+    budget: AliasBudget,
+    /// One entry per open collection of `stack`.
+    counted: Vec<Counted>,
+    /// Open collections that add a nesting level.
+    depth: usize,
     /// Ranges of every scalar seen so far, for comment extraction.
     scalars: Vec<TextRange>,
     /// Sorted offsets of the `\'` escapes rewritten before parsing.
@@ -269,18 +315,25 @@ impl<'a> Builder<'a> {
             root: None,
             doc_range: TextRange::default(),
             anchors: HashMap::new(),
+            budget: AliasBudget::default(),
+            counted: Vec::new(),
+            depth: 0,
             scalars: Vec::new(),
             rewritten,
         }
     }
 
-    /// Feeds one event; returns a document when it ends.
-    fn event(&mut self, event: Event<'_>, span: Span) -> Option<Document> {
+    /// Feeds one event; returns a document when it ends, or the limit the document hit.
+    fn event(&mut self, event: Event<'_>, span: Span) -> Result<Option<Document>, Over> {
         let range = self.offsets.range(span);
         match event {
             Event::DocumentStart(_) => {
                 self.stack.clear();
                 self.anchors.clear();
+                self.counted.clear();
+                self.depth = 0;
+                self.budget = AliasBudget::default();
+                self.budget.visit().map_err(at(range.start()))?;
                 self.root = None;
                 self.doc_range = range;
             }
@@ -290,7 +343,7 @@ impl<'a> Builder<'a> {
                     .as_ref()
                     .map_or(self.doc_range.end(), |r| r.range.end());
                 let range = TextRange::new(self.doc_range.start(), end.max(self.doc_range.start()));
-                return Some(Document { root, range });
+                return Ok(Some(Document { root, range }));
             }
             Event::Scalar(value, style, anchor, tag) => {
                 let start = if anchor != 0 || tag.is_some() {
@@ -317,6 +370,10 @@ impl<'a> Builder<'a> {
                     value
                 };
                 self.scalars.push(range);
+                let before = self.budget.visits();
+                if !self.take_merge_key(style, &value, tag.as_deref()) {
+                    self.budget.visit().map_err(at(range.start()))?;
+                }
                 let node = if style == SaphyrStyle::Plain && value.is_empty() {
                     Node {
                         kind: NodeKind::Null,
@@ -331,17 +388,12 @@ impl<'a> Builder<'a> {
                         range,
                     }
                 };
-                self.finish(node, anchor);
+                self.finish(node, anchor, self.budget.visits() - before, 0);
             }
-            Event::Alias(id) => {
-                let node = self.anchors.get(&id).cloned().unwrap_or(Node {
-                    kind: NodeKind::Null,
-                    range,
-                });
-                self.finish(node, 0);
-            }
+            Event::Alias(id) => self.alias(id, range)?,
             Event::SequenceStart(anchor, tag) => {
                 let flow = self.is_flow(range.start(), anchor, tag.is_some());
+                self.open(range.start(), self.merge_value())?;
                 self.stack.push(Frame::Seq {
                     flow: flow.is_some(),
                     start: flow.unwrap_or(range.start()),
@@ -351,23 +403,113 @@ impl<'a> Builder<'a> {
             }
             Event::MappingStart(anchor, tag) => {
                 let flow = self.is_flow(range.start(), anchor, tag.is_some());
+                self.open(range.start(), false)?;
                 self.stack.push(Frame::Map {
                     flow: flow.is_some(),
                     start: flow.unwrap_or(range.start()),
                     anchor,
                     entries: Vec::new(),
                     key: None,
+                    merge: false,
                 });
             }
-            Event::SequenceEnd | Event::MappingEnd => {
-                if let Some(frame) = self.stack.pop() {
-                    let (node, anchor) = close(frame, range.end());
-                    self.finish(node, anchor);
-                }
-            }
+            Event::SequenceEnd | Event::MappingEnd => self.close_collection(range.end()),
             Event::StreamStart | Event::StreamEnd | Event::Nothing => {}
         }
-        None
+        Ok(None)
+    }
+
+    /// Expands an alias after checking it against the limits, so an expansion that is too
+    /// big or too deep is never cloned.
+    fn alias(&mut self, id: usize, range: TextRange) -> Result<(), Over> {
+        let (offset, merged) = (range.start(), self.in_merge());
+        let before = self.budget.visits();
+        self.budget.visit().map_err(at(offset))?;
+        let target = self.anchors.get(&id);
+        let (weight, height) = target.map_or((0, 0), |a| (a.weight, a.height));
+        self.budget.expand(weight).map_err(at(offset))?;
+        let height = height.saturating_sub(usize::from(merged));
+        if self.depth + height > MAX_DEPTH {
+            return Err(too_deep(offset));
+        }
+        let node = target.map_or(
+            Node {
+                kind: NodeKind::Null,
+                range,
+            },
+            |a| a.node.clone(),
+        );
+        self.finish(node, 0, self.budget.visits() - before, height);
+        Ok(())
+    }
+
+    fn close_collection(&mut self, end: TextSize) {
+        if let (Some(frame), Some(counted)) = (self.stack.pop(), self.counted.pop()) {
+            let (node, anchor) = close(frame, end);
+            let weight = self.budget.visits() - counted.from;
+            let level = usize::from(!counted.merged);
+            self.depth -= level;
+            self.finish(node, anchor, weight, counted.height + level);
+        }
+    }
+
+    /// Counts a collection's visit and nesting. `skipped` is a `<<` sequence: `go-yaml`
+    /// merges its items and does not visit it.
+    fn open(&mut self, offset: TextSize, skipped: bool) -> Result<(), Over> {
+        let (from, merged) = (self.budget.visits(), self.in_merge());
+        if !skipped {
+            self.budget.visit().map_err(at(offset))?;
+        }
+        if !merged {
+            if self.depth >= MAX_DEPTH {
+                return Err(too_deep(offset));
+            }
+            self.depth += 1;
+        }
+        self.counted.push(Counted {
+            from,
+            height: 0,
+            merged,
+        });
+        Ok(())
+    }
+
+    /// Whether the scalar is a `<<` key, which `go-yaml` merges and does not visit. Like
+    /// its `isMerge`, a plain `<<` without a tag or any `<<` tagged `!!merge`.
+    fn take_merge_key(&mut self, style: SaphyrStyle, value: &str, tag: Option<&Tag>) -> bool {
+        let merge = match tag {
+            None => style == SaphyrStyle::Plain,
+            Some(tag) => tag.suffix == "merge",
+        };
+        match self.stack.last_mut() {
+            Some(Frame::Map {
+                key: None,
+                merge: pending,
+                ..
+            }) if merge && value == "<<" => {
+                *pending = true;
+                true
+            }
+            _ => false,
+        }
+    }
+
+    fn merge_value(&self) -> bool {
+        matches!(
+            self.stack.last(),
+            Some(Frame::Map {
+                key: Some(_),
+                merge: true,
+                ..
+            })
+        )
+    }
+
+    fn in_merge(&self) -> bool {
+        match self.stack.last() {
+            Some(Frame::Seq { .. }) => self.counted.last().is_some_and(|c| c.merged),
+            _ => self.merge_value(),
+        }
     }
 
     /// For a collection start: the start of its `[`/`{` when it is a flow collection.
@@ -397,9 +539,18 @@ impl<'a> Builder<'a> {
     }
 
     /// Attaches a finished node to its parent (or makes it the document root).
-    fn finish(&mut self, node: Node, anchor: usize) {
+    fn finish(&mut self, node: Node, anchor: usize, weight: u64, height: usize) {
         if anchor != 0 {
-            self.anchors.insert(anchor, node.clone());
+            let node = node.clone();
+            let anchored = Anchored {
+                node,
+                weight,
+                height,
+            };
+            self.anchors.insert(anchor, anchored);
+        }
+        if let Some(counted) = self.counted.last_mut() {
+            counted.height = counted.height.max(height);
         }
         match self.stack.last_mut() {
             None => {
@@ -408,9 +559,17 @@ impl<'a> Builder<'a> {
                 self.root = (!empty).then_some(node);
             }
             Some(Frame::Seq { items, .. }) => items.push(node),
-            Some(Frame::Map { entries, key, .. }) => match key.take() {
+            Some(Frame::Map {
+                entries,
+                key,
+                merge,
+                ..
+            }) => match key.take() {
                 None => *key = Some(node),
-                Some(key) => entries.push(Entry { key, value: node }),
+                Some(key) => {
+                    *merge = false;
+                    entries.push(Entry { key, value: node });
+                }
             },
         }
     }

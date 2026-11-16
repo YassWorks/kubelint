@@ -137,7 +137,8 @@ Principles:
   tree keeps the raw text and style, and offers `resolve_kubernetes()` helpers. This is
   what makes rules like KL1009 (`value: yes` in an env var) possible.
 - **Aliases are resolved** to the anchored node, keeping the anchor's range. Manifests
-  rarely use anchors, so this is simple and good enough until proven otherwise.
+  rarely use anchors, so this is simple and good enough until proven otherwise. An alias
+  is expanded only within the limits below.
 - **Comments are extracted separately.** The parser does not emit comments. A `#` that
   starts a line or follows whitespace, and is not inside any scalar's range, starts a
   comment to the end of the line. Suppression comments are read from that list.
@@ -175,6 +176,30 @@ Principles:
   **Rejected:** rewriting every such run before parsing (it would change the text of
   scalars in files that parse fine); rewriting one run per parse (one reparse of the
   file per run, quadratic in a file that uses tabs throughout).
+- **A document stops at the alias and nesting limits kubectl enforces.** The builder
+  counts, per document, the nodes the decoder of `go-yaml` v2 (what Kubernetes 1.34 to
+  1.37 use) visits, including every node of each alias expansion. Each finished node
+  stores that count and its nesting, so an alias is checked before the anchored subtree is
+  cloned. The document is over the budget under the same rule as `decode.go`: more than
+  100 alias visits, more than 1,000 visits in all, and an alias share above a ratio that
+  falls from 0.99 (up to 400,000 visits) to 0.10 (from 4,000,000). A `<<` key is not
+  counted, as in `go-yaml`, and a merge adds no nesting level, as in the JSON. The
+  document is also over the limit when its collections nest deeper than 10,000 levels,
+  an alias expansion included, which is what the JSON decoder kubectl runs next refuses.
+  In both cases the builder reports a KL0001 error at the
+  alias or collection that crossed the limit, drops the document and resumes at the next
+  document marker.
+
+  **Why:** kubectl refuses these files ("excessive aliasing", "exceeded max depth"), so
+  they cannot be applied anyway, and a few hundred bytes of nested aliases or a 100 KB
+  line of `- ` otherwise exhaust memory or the stack and abort the whole run, every other
+  file included. The same numbers as kubectl mean kubelint neither reports a manifest
+  kubectl accepts nor accepts one it refuses.
+
+  **Rejected:** a fixed node count unrelated to kubectl (it would refuse or accept
+  different files than kubectl); a time limit (it depends on the machine and cannot stop
+  the memory growth before it happens); counting the nodes of an expansion by walking it
+  (that is the cost the limit exists to avoid).
 - **Edits apply to the original text.** Autofix (M5) changes the file by byte range,
   never by re-serializing the tree, so formatting and comments survive.
 
