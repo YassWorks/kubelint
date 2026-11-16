@@ -501,25 +501,31 @@ time ./target/release/kubelint check target/bench-corpus --format json > /dev/nu
 
 `cargo xtask gen-corpus [--objects <N>] [<DIR>]` writes a deterministic corpus of
 exactly `N` objects (default 10,000) into `DIR` (default `target/bench-corpus`). Each
-group of five files is one application in its own namespace, built from the templates
+group of five files is one application in its own namespace (its DaemonSet runs in
+`kube-system`), built from the templates
 in `crates/xtask/resources/corpus/`: Deployments, a StatefulSet, a DaemonSet, a Job and
 a CronJob with Services, ConfigMaps, a Secret, RBAC, an Ingress, a network policy and
 an autoscaler. Some parts are clean and some have typical security and reliability
 findings. The corpus has no syntax or correctness findings, which
-`crates/xtask/tests/corpus.rs` checks along with the exact object count.
+`crates/xtask/tests/corpus.rs` checks on 160 objects, along with the exact object count.
+Files hold at most four objects, so the corpus does not measure one large file.
 
-Measured on 2026-11-12 (release build, 4 cores, Linux cloud container, 10,000 objects
-in 3,125 files, 19,375 findings):
+Measured on 2026-11-16 (release build of `78b2116`, 4 cores, Linux cloud container,
+five runs each, 10,000 objects in 3,125 files, 11,250 findings with the default rules):
 
 | Output | Wall time |
 | --- | --- |
-| `--format json` | 0.18 s |
-| `--format json`, one thread (`RAYON_NUM_THREADS=1`) | 0.38 s |
-| `--format human` | 0.30 to 0.37 s |
-| `--format json`, 20,000 objects with half excluded by `[files] exclude` | 0.19 s |
+| `--format json` | 0.14 to 0.15 s |
+| `--format json`, one thread (`RAYON_NUM_THREADS=1`) | 0.29 to 0.34 s |
+| `--format human` | 0.20 to 0.23 s |
+| `--format json`, the same 10,000 objects in one file | 0.26 s |
+| `--format human`, the same 10,000 objects in one file | 60 s |
+| `--format json`, 20,000 objects with half excluded by `[files] exclude` (2026-11-12) | 0.19 s |
 
-The budget holds with room to spare, so no hotspot work is needed now. The human
-renderer is the largest single cost after linting. Reading files one by one and walking
+The corpus holds the budget with room to spare. One large file, which is what
+`helm template | kubelint check -` gives, breaks it in human output only: each finding
+rendered the whole file. The 2026-11-12 measurement counted 19,375 findings because
+KL2002 and KL2003 were still on by default. Reading files one by one and walking
 excluded directories are not measurable at this size.
 
 **Why a generated corpus:** it is reproducible on any machine with no download, scales
