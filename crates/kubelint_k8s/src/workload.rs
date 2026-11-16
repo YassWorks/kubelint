@@ -50,7 +50,7 @@ const WORKLOADS: &[(BuiltinKind, &[&str], &[&str])] = &[
 ];
 
 impl<'a> Object<'a> {
-    /// The pod spec of a workload: Pod, `PodTemplate`, Deployment, StatefulSet, DaemonSet,
+    /// The pod spec of a workload: Pod, PodTemplate, Deployment, StatefulSet, DaemonSet,
     /// ReplicaSet, ReplicationController, Job or CronJob.
     ///
     /// Returns `None` for other kinds, for a kind with the same name in another API

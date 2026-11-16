@@ -114,4 +114,11 @@ error[KL1010]: label value `{team}` of `team` is invalid: must be empty, or cont
     |           ^^^^^^^^
   = help: use letters, digits, `-`, `_` and `.`, for example `team`; free text belongs in an annotation
 
-16 finding(s) in 10 object(s)
+error[KL1010]: label key `bad label` is invalid: its name part must contain only letters, digits, `-`, `_` and `.`, and start and end with a letter or digit
+   --> correctness/KL1010.yaml:161:7
+    |
+161 |       bad label: x
+    |       ^^^^^^^^^
+  = help: write the key as an optional lowercase DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `bad-label`
+
+17 finding(s) in 11 object(s)

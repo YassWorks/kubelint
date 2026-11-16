@@ -148,3 +148,18 @@ spec:
   containers:
   - name: app
     image: app:1.0
+---
+# Reported: a PodTemplate keeps its pod labels at `template.metadata.labels`.
+apiVersion: v1
+kind: PodTemplate
+metadata:
+  name: tmpl
+template:
+  metadata:
+    labels:
+      app: web
+      bad label: x
+  spec:
+    containers:
+    - name: app
+      image: app:1.0

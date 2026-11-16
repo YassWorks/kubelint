@@ -50,7 +50,10 @@ fn label_maps(object: Object<'_>) -> Vec<(&Node, &'static str)> {
     let mut maps: Vec<(&Node, &'static str)> = Vec::new();
     maps.extend(object.labels().map(|labels| (labels, "label")));
     let spec = object.node().get("spec");
-    if object.pod_spec().is_some()
+    if object.pod_spec().is_some() && object.builtin_kind() == Some(BuiltinKind::PodTemplate) {
+        let labels = object.node().get_path(&["template", "metadata", "labels"]);
+        maps.extend(labels.map(|labels| (labels, "label")));
+    } else if object.pod_spec().is_some()
         && let Some(spec) = spec
     {
         // `pod_spec` has checked the API group.
