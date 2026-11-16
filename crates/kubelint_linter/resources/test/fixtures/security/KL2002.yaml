@@ -158,7 +158,7 @@ spec:
     securityContext:
       privileged: true
 ---
-# Not reported: a container that adds `CAP_SYS_ADMIN`, which rejects `false`.
+# Not reported: a container that adds `CAP_SYS_ADMIN`, where Kubernetes rejects `false`.
 apiVersion: v1
 kind: Pod
 metadata:
