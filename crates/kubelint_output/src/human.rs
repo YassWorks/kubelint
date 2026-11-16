@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use annotate_snippets::{Annotation, AnnotationKind, Group, Level, Renderer, Snippet};
 use kubelint_diagnostics::{Diagnostic, Label, Severity};
-use kubelint_source::{FileId, SourceFile, TextRange};
+use kubelint_source::{FileId, SourceFile, TextRange, TextSize};
 
 use crate::{file, path_string};
 
@@ -139,15 +139,11 @@ fn group<'a>(
             .iter()
             .map(|label| (label, AnnotationKind::Context)),
     );
-    let mut by_file: Vec<(FileId, Vec<Annotation<'a>>)> = Vec::new();
+    let mut by_file: Vec<(FileId, Vec<(&'a Label, AnnotationKind)>)> = Vec::new();
     for (label, kind) in labels {
-        let Some(file) = file(files, label.file) else {
-            continue;
-        };
-        let annotation = annotation(file, label, kind);
         match by_file.iter_mut().find(|(id, _)| *id == label.file) {
-            Some((_, annotations)) => annotations.push(annotation),
-            None => by_file.push((label.file, vec![annotation])),
+            Some((_, labels)) => labels.push((label, kind)),
+            None => by_file.push((label.file, vec![(label, kind)])),
         }
     }
     let mut group = Group::with_title(
@@ -155,10 +151,16 @@ fn group<'a>(
             .primary_title(diagnostic.message.as_str())
             .id(diagnostic.code),
     );
-    for (id, annotations) in by_file {
+    for (id, labels) in by_file {
         if let Some(file) = file(files, id) {
+            let spans: Vec<_> = labels.iter().map(|(l, _)| span(file, l.range)).collect();
+            let (text, first_line, offset) = excerpt(file, &spans);
+            let annotations = labels.into_iter().zip(spans).map(|((label, kind), span)| {
+                annotation(label, kind, span.start - offset..span.end - offset)
+            });
             group = group.element(
-                Snippet::source(file.text())
+                Snippet::source(text)
+                    .line_start(first_line)
                     .path(path_string(file))
                     .fold(true)
                     .annotations(annotations),
@@ -174,11 +176,36 @@ fn group<'a>(
     group
 }
 
-fn annotation<'a>(file: &SourceFile, label: &'a Label, kind: AnnotationKind) -> Annotation<'a> {
-    let annotation = kind.span(span(file, label.range));
+fn annotation(label: &Label, kind: AnnotationKind, span: Range<usize>) -> Annotation<'_> {
+    let annotation = kind.span(span);
     match &label.message {
         Some(message) => annotation.label(message.as_str()),
         None => annotation,
+    }
+}
+
+/// The whole lines that `spans` touch: their text, the number of the first one and the
+/// byte offset where they start. Rendering only these lines keeps each diagnostic from
+/// costing a pass over the whole file.
+fn excerpt<'a>(file: &'a SourceFile, spans: &[Range<usize>]) -> (&'a str, usize, usize) {
+    let text = file.text();
+    let index = file.line_index();
+    // annotate-snippets shows an offset at the end of a text that ends with a newline
+    // on its last line, so the excerpt must hold that line.
+    let line = |offset: usize| {
+        let offset = offset - usize::from(offset == text.len() && text.ends_with('\n'));
+        let offset = TextSize::new(u32::try_from(offset).unwrap_or(u32::MAX));
+        index.line_col(text, offset).line
+    };
+    let line_start = |line: u32| index.line_range(text, line).map(|r| usize::from(r.start()));
+    let lo = spans.iter().map(|s| s.start).min().unwrap_or(0);
+    let hi = spans.iter().map(|s| s.end).max().unwrap_or(0);
+    let first = line(lo);
+    let start = line_start(first).unwrap_or(lo).min(lo);
+    let end = line_start(line(hi) + 1).unwrap_or(text.len()).max(hi);
+    match text.get(start..end) {
+        Some(lines) => (lines, usize::try_from(first).unwrap_or(1), start),
+        None => (text, 1, 0),
     }
 }
 

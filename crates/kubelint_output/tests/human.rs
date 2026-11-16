@@ -211,3 +211,17 @@ fn a_label_in_an_unknown_file_does_not_panic() {
     let out = render(&files, &diagnostics, Summary::default());
     assert!(out.starts_with("error[KL1001]: message"));
 }
+
+#[test]
+fn a_label_at_the_end_of_a_file_is_on_its_last_line() {
+    let files = [SourceFile::new("eof.yaml", "a: 1\nb: [2\n")];
+    let diagnostics = [Diagnostic::new(
+        "KL0001",
+        Severity::Error,
+        "invalid YAML",
+        Label::new(FileId(0), TextRange::empty(TextSize::of("a: 1\nb: [2\n"))),
+    )];
+    let out = render(&files, &diagnostics, Summary::default());
+    assert!(out.contains(" --> eof.yaml:2:"), "{out}");
+    assert!(out.contains("2 | b: [2"), "{out}");
+}
