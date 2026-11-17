@@ -314,7 +314,7 @@ These mirror the non-negotiables in the routine prompt.
 | The docs are inconsistent | Fix the lower-precedence doc in a small `docs` PR. |
 | A dependency is broken or yanked | Pin to a working version, record why in the PR. |
 | The nightly workflow fails | An authentication error in the checkout or `git push` step means the `RELEASE_TOKEN` secret expired: say so in your final summary and change nothing. A push rejected because `main` moved needs nothing: the next night retries. For any other cause, read the logs and fix it in a PR. |
-| The release workflow fails for a tag | An authentication error in `publish-homebrew-formula` means the `HOMEBREW_TAP_TOKEN` secret expired or lost access to the tap: the GitHub release is already out and only the formula is missing, so say so in your final summary and change nothing. Otherwise rerun its failed jobs once (`gh run rerun <id> --failed`). If it fails again, fix the cause in a PR: in `dist-workspace.toml` followed by `dist generate`, never by editing `release.yml`. The next nightly ships the next version, and the failed tag stays without a release. |
+| The release workflow fails for a tag | An authentication error in `publish-homebrew-formula` means the `HOMEBREW_TAP_TOKEN` secret expired or lost access to the tap: the GitHub release is already out and only the formula is missing, so say so in your final summary and change nothing. A `denied` error in `custom-publish-ghcr` means the workflow lost write access to the `kubelint` package on ghcr.io: only the image is missing, so do the same. Otherwise rerun its failed jobs once (`gh run rerun <id> --failed`). If it fails again, fix the cause in a PR: in `dist-workspace.toml` followed by `dist generate`, never by editing `release.yml`. The next nightly ships the next version, and the failed tag stays without a release. |
 
 ## Lessons
 
@@ -374,10 +374,10 @@ Traps earlier runs fell into. Add new ones as you find them.
   (`rev: v0.18.6`, `@v0.18.7`) only once that tag exists and contains the file
   (`gh api "repos/YassWorks/kubelint/contents/<file>?ref=<tag>"`).
 - PR checks are the ten `ci.yml` jobs (including three `action (<os>)` jobs),
-  GitGuardian, and six from `release.yml` (`plan`, plus `build-local-artifacts`,
-  `build-global-artifacts`, `host`, `publish-homebrew-formula` and `announce`, which
-  show as skipped): seventeen check runs in all. A wait script that counts check runs
-  must expect all of them before it reports done.
+  GitGuardian, and seven from `release.yml` (`plan`, plus `build-local-artifacts`,
+  `build-global-artifacts`, `host`, `publish-homebrew-formula`, `custom-publish-ghcr`
+  and `announce`, which show as skipped): eighteen check runs in all. A wait script
+  that counts check runs must expect all of them before it reports done.
 - Self-review is also a fact check (skill step 2 and the brief's Facts bullet). On
   2026-11-15 it found wrong claims in four of five PRs, for example that the published
   OpenAPI v3 documents mark enums (they do not) and that a fix example works as

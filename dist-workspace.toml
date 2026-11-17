@@ -13,7 +13,8 @@ targets = [
 ]
 installers = ["shell", "powershell", "homebrew"]
 tap = "YassWorks/homebrew-tap"
-publish-jobs = ["homebrew"]
+publish-jobs = ["homebrew", "./publish-ghcr"]
+github-custom-job-permissions = { "publish-ghcr" = { contents = "read", packages = "write" } }
 install-path = ["$XDG_BIN_HOME/", "$XDG_DATA_HOME/../bin", "~/.local/bin"]
 install-updater = false
 unix-archive = ".tar.gz"
