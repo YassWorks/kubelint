@@ -77,6 +77,14 @@ On Windows:
 - A folder with a random name under `%TEMP%`, holding the downloaded `kubelint.zip` and
   the license, README and changelog from it.
 
+### With Homebrew
+
+On macOS or Linux with [Homebrew](https://brew.sh):
+
+```bash
+brew install yassworks/tap/kubelint
+```
+
 ### From a release archive
 
 Every release on the [releases page](https://github.com/YassWorks/kubelint/releases)
@@ -128,7 +136,8 @@ shell profiles and `PATH` alone. It needs `curl` or `wget` (Windows 10 and 11 in
 download folder under `%TEMP%` (step 5 of [Uninstall](#uninstall) deletes them).
 
 Installed another way, `kubelint self update` changes nothing and exits with code 2.
-Download the new release archive as above, or run the `cargo install` command again.
+With Homebrew, run `brew upgrade kubelint`. From a release archive, download the new one
+as above. From source, run the `cargo install` command again.
 
 ### Uninstall
 
@@ -165,6 +174,9 @@ Installed with the installer on Windows, in PowerShell:
    ```powershell
    Get-ChildItem $env:TEMP -Directory | Where-Object { Test-Path "$($_.FullName)\kubelint.zip" } | Remove-Item -Recurse
    ```
+
+Installed with Homebrew: `brew uninstall kubelint`, then `brew untap yassworks/tap` if
+you use no other formula from it.
 
 Built from source: `cargo uninstall kubelint`.
 

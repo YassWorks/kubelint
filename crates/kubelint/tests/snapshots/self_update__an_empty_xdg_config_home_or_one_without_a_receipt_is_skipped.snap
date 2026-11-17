@@ -5,4 +5,4 @@ expression: empty
 exit: 2
 --- stdout
 --- stderr
-error: this kubelint ([EXE]) was not installed by the installer, which put kubelint in [ROOT]/default-bin. Update this one with the tool you installed it with
+error: this kubelint ([EXE]) was not installed by the installer, which put kubelint in [ROOT]/default-bin. Update this one with the tool you installed it with, for example `brew upgrade kubelint`

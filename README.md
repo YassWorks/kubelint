@@ -30,6 +30,14 @@ If Microsoft Defender blocks that command, install from the release archive inst
 
 The installer puts `kubelint` in `~/.local/bin` and adds that folder to your `PATH`.
 Update it with `kubelint self update`.
+
+Or install with [Homebrew](https://brew.sh) on macOS or Linux, and update with
+`brew upgrade kubelint`:
+
+```bash
+brew install yassworks/tap/kubelint
+```
+
 [Getting started](docs/user/getting-started.md#install) covers the release archives,
 building from source, and how to uninstall.
 
