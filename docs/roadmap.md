@@ -142,8 +142,6 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 - `saphyr-parser` stops flow collections nested deeper than 255 levels, so kubelint
   reports KL0001 on flow nesting from 256 to 9,999 levels that kubectl accepts. That
   error gets the "fix the YAML syntax" help, not the one for the alias and nesting limits.
-- KL0002 recurses on nesting depth, so a deeply nested block sequence overflows the
-  stack and aborts the run.
 - Explicit tags (`!!str`, `!!int`) are ignored, and a float out of range (`1e400`) is
   read as a number where kubectl keeps a string.
 - An alias to an anchor in another document is read as null, with no finding.
