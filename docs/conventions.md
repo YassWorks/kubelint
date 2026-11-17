@@ -203,7 +203,11 @@ and snapshot double as documentation of its behavior.
   the config. To change it, edit `dist-workspace.toml`, run `dist generate` with the
   dist version named in `cargo-dist-version`, and commit both. A dist version bump is
   its own PR and checks the installer facts in `docs/user/getting-started.md` again
-  (What the installer writes, Uninstall).
+  (What the installer writes, Uninstall). After the first release built with the new
+  version, run `kubelint self update` from the release before it on Linux and Windows:
+  the command relies on the installer's `KUBELINT_INSTALL_DIR` and
+  `KUBELINT_NO_MODIFY_PATH` and on `dist-manifest.json`
+  ([self update](architecture.md#self-update)).
 - Nobody edits the version or `CHANGELOG.md` by hand, and nobody tags or releases by
   hand. Only the maintainer may run the nightly workflow by hand, for an urgent release.
 

@@ -25,6 +25,9 @@ Install on Windows, in PowerShell:
 powershell -ExecutionPolicy Bypass -c "irm https://github.com/YassWorks/kubelint/releases/latest/download/kubelint-installer.ps1 | iex"
 ```
 
+If Microsoft Defender blocks that command, install from the release archive instead
+([Getting started](docs/user/getting-started.md#install) says how).
+
 The installer puts `kubelint` in `~/.local/bin` and adds that folder to your `PATH`.
 Update it with `kubelint self update`.
 [Getting started](docs/user/getting-started.md#install) covers the release archives,

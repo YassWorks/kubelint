@@ -17,6 +17,13 @@ On Windows, in PowerShell:
 powershell -ExecutionPolicy Bypass -c "irm https://github.com/YassWorks/kubelint/releases/latest/download/kubelint-installer.ps1 | iex"
 ```
 
+Microsoft Defender can block this command as `Trojan:Win32/Commando`: its machine
+learning judges the command's shape, download and run, which malware also uses. If it
+does, download `kubelint-x86_64-pc-windows-msvc.zip` from the
+[releases page](https://github.com/YassWorks/kubelint/releases/latest) and put
+`kubelint.exe` in a folder on your `PATH`
+([from a release archive](#from-a-release-archive)).
+
 The installer downloads the archive for your platform and puts `kubelint` in the first
 of these folders:
 
