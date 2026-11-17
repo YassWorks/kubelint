@@ -2,10 +2,14 @@
 
 use kubelint_diagnostics::Severity;
 
-use super::{TypeField, check_type_field, entry_range, missing_field_range};
+use super::{TypeField, check_type_field, entry_range, lacks_metadata, missing_field_range};
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
 /// Reports an object without a `kind`, or with an empty one.
+///
+/// A missing `kind` on an object with no `metadata` key is not reported: a Helm
+/// repository index or `Chart.yaml` has an `apiVersion` and no `kind`, and a manifest
+/// that forgot its `kind` nearly always has `metadata`.
 pub struct MissingKind;
 
 static META: RuleMeta = RuleMeta {
@@ -28,6 +32,9 @@ impl Rule for MissingKind {
         let Some(problem) = check_type_field(object, "kind") else {
             return;
         };
+        if matches!(problem, TypeField::Missing) && lacks_metadata(object) {
+            return;
+        }
         let subject = match object.name().and_then(|name| name.as_str()) {
             Some(name) if !name.trim().is_empty() => format!("object `{name}`"),
             _ => "object".to_owned(),

@@ -54,7 +54,12 @@ kubelint check .
 
 kubelint searches the directories you name for `*.yaml` and `*.yml` files, honoring
 `.gitignore`, `.ignore` and your global Git excludes. It skips hidden files and
-directories and does not follow symbolic links: name such a file to lint it. The rules run on Kubernetes objects only. Other YAML (CI files, Helm
+directories and does not follow symbolic links: name such a file to lint it. If the `.gitignore` and
+`.ignore` files above a directory you name (and the repository's `.git/info/exclude`) hide all
+of its YAML files, they do not apply to that directory, so `kubelint check gen` lints `gen/`
+even when the repository's `.gitignore` lists `gen/*`. The global Git excludes and the ignore
+files inside the directory always apply. When some of its YAML files are visible, all the
+rules apply and the hidden ones stay skipped. The rules run on Kubernetes objects only. Other YAML (CI files, Helm
 values) is only checked for valid syntax. You can also name files, or pass `-` to read standard input.
 
 ## Read a finding

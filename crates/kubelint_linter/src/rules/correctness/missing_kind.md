@@ -9,6 +9,10 @@ Reports a Kubernetes object that has no `kind` field, or whose `kind` is empty.
 stops there, and applies none after it. An empty `kind` behaves differently: kubectl
 reports that the object has no kind, and the documents after it are still applied.
 
+Files that only look like objects, such as a Helm repository index or a `Chart.yaml`,
+are not reported when they have no `metadata` key and no `kind` key. An empty `kind:`
+and an item of a `kind: List` are always reported.
+
 ## Example
 
 ```yaml
