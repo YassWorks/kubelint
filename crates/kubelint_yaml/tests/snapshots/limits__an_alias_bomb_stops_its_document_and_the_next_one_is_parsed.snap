@@ -1,0 +1,13 @@
+---
+source: crates/kubelint_yaml/tests/limits.rs
+expression: "format!(\"{errors:?}\\n{documents}\")"
+---
+[("aliases expand to too many nodes", 181..181)]
+document 280..294
+  mapping 284..294
+    entry
+      scalar Plain "b" 284..285
+      scalar Plain "é" 290..292
+    entry
+      scalar Plain "c" 293..294
+      scalar Plain "é" 290..292

@@ -77,3 +77,58 @@ fn other_kinds_are_not_builtin() {
         assert_eq!(stable_api_version(name), None, "{name:?}");
     }
 }
+
+#[test]
+fn scopes() {
+    let cluster = [
+        "Namespace",
+        "PersistentVolume",
+        "IngressClass",
+        "ClusterRole",
+        "ClusterRoleBinding",
+        "CSIDriver",
+        "StorageClass",
+        "VolumeAttachment",
+        "PriorityClass",
+        "CustomResourceDefinition",
+        "MutatingWebhookConfiguration",
+        "ValidatingWebhookConfiguration",
+    ];
+    let namespaced = [
+        "ConfigMap",
+        "Endpoints",
+        "LimitRange",
+        "PersistentVolumeClaim",
+        "Pod",
+        "PodTemplate",
+        "ReplicationController",
+        "ResourceQuota",
+        "Secret",
+        "Service",
+        "ServiceAccount",
+        "ControllerRevision",
+        "DaemonSet",
+        "Deployment",
+        "ReplicaSet",
+        "StatefulSet",
+        "CronJob",
+        "Job",
+        "HorizontalPodAutoscaler",
+        "Ingress",
+        "NetworkPolicy",
+        "Role",
+        "RoleBinding",
+        "PodDisruptionBudget",
+        "Lease",
+    ];
+    for (kinds, expected) in [(cluster.as_slice(), true), (namespaced.as_slice(), false)] {
+        for kind in kinds {
+            let parsed = BuiltinKind::parse(kind);
+            assert_eq!(
+                parsed.map(BuiltinKind::is_cluster_scoped),
+                Some(expected),
+                "{kind}"
+            );
+        }
+    }
+}

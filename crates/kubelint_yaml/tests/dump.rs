@@ -31,10 +31,12 @@ fn dump_of_nested_tree_with_non_ascii() {
             kind: NodeKind::Mapping(vec![
                 Entry {
                     key: scalar("name", ScalarStyle::Plain, range(0, 4)),
+                    origin: 0,
                     value: scalar("é", ScalarStyle::DoubleQuoted, range(6, 9)),
                 },
                 Entry {
                     key: scalar("ports", ScalarStyle::Plain, range(10, 15)),
+                    origin: 0,
                     value: Node {
                         kind: NodeKind::Sequence(vec![scalar(
                             "80",
@@ -46,6 +48,7 @@ fn dump_of_nested_tree_with_non_ascii() {
                 },
                 Entry {
                     key: scalar("none", ScalarStyle::Plain, range(22, 26)),
+                    origin: 0,
                     value: Node {
                         kind: NodeKind::Null,
                         range: range(27, 27),

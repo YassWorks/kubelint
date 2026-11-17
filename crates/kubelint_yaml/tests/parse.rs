@@ -57,6 +57,13 @@ fn tabs_after_a_colon_separate_the_value() {
 }
 
 #[test]
+fn tabs_after_a_colon_inside_scalars_and_comments_stay() {
+    insta::assert_snapshot!(dump(include_str!(
+        "fixtures/parse/tabs_after_a_colon_in_scalars.yaml"
+    )));
+}
+
+#[test]
 fn double_quoted_scalars_accept_escaped_single_quotes() {
     // Like libyaml and `go-yaml`, `\'` reads as `'`. `\q` stays an unknown escape.
     insta::assert_snapshot!(dump(include_str!(

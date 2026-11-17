@@ -16,9 +16,11 @@ any Kubernetes check: no admission control, no Pod Security Standard, no audit l
 entry for the new container. A mounted socket is root on the node.
 
 The usual reason is building images inside the cluster ("Docker in Docker"). Builders
-that need no daemon do this without the socket. Monitoring agents that read container
-metadata can usually use the kubelet API instead. If an agent really needs the socket,
-silence the finding for that object and say why.
+that need no daemon do this without the socket, but check what they require: the rootless
+mode of BuildKit, for example, needs an `Unconfined` seccomp profile, which `baseline`
+rejects. Monitoring agents that read container metadata can usually use the kubelet API
+instead. If an agent really needs the socket, silence the finding for that object and say
+why.
 
 ## Example
 

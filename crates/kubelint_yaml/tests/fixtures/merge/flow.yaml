@@ -1,0 +1,3 @@
+é: &a {m: merged}
+flow: {k: v, <<: *a, n: 1}
+list: [{<<: *a, k: v}]

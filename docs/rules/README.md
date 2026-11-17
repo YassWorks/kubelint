@@ -49,7 +49,7 @@ and those references must stay valid and readable across releases.
 | Code | Name | Default | Severity | Status | Milestone | What it catches |
 | --- | --- | --- | --- | --- | --- | --- |
 | KL0001 | `invalid-yaml` | on (cannot be disabled) | error | implemented | M1 | The file cannot be parsed as YAML. |
-| KL0002 | `duplicate-key` | on | error | implemented | M2 | The same key appears twice in one mapping; Kubernetes rejects it or silently keeps the last one. |
+| KL0002 | `duplicate-key` | on | error | implemented | M2 | The same key appears twice in one mapping; `kubectl` keeps the last one without a warning. |
 | KL0003 | `invalid-suppression` | on | warning | implemented | M2 | A `# kubelint-disable-...` comment or a `kubelint/ignore` annotation names an unknown rule, names KL0001 (which cannot be suppressed) or names no rule, so it silences nothing. |
 
 ## Correctness
@@ -63,7 +63,7 @@ and those references must stay valid and readable across releases.
 | KL1005 | `selector-mismatch` | on | error | implemented | M2 | A workload's `spec.selector` does not match its pod template labels. |
 | KL1006 | `duplicate-container-name` | on | error | implemented | M2 | Two containers (including init containers) in one pod share a name. |
 | KL1007 | `invalid-resource-quantity` | on | error | implemented | M2 | A CPU/memory value like `512mb` or `0.5cores` that Kubernetes cannot parse. |
-| KL1008 | `invalid-object-name` | on | error | implemented | M2 | `metadata.name` is not valid for its kind (DNS-1123 subdomain or label, DNS-1035 for Services), or `metadata.namespace` is not a valid namespace name. |
+| KL1008 | `invalid-object-name` | on | error | implemented | M2 | `metadata.name` or `metadata.generateName` is not valid for its kind (DNS-1123 subdomain or label, DNS-1035 for Services, path segment for RBAC and PodDisruptionBudget, with the CronJob and Job length limits), or `metadata.namespace` is not a valid namespace name. |
 | KL1009 | `non-string-env-value` | on | error | implemented | M2 | An env var `value` that YAML reads as a number or boolean (`8080`, `yes`, `true`). |
 | KL1010 | `invalid-label` | on | error | implemented | M2 | A label key or value that breaks Kubernetes' label syntax, or a label value that YAML reads as a number or boolean. |
 | KL1011 | `duplicate-env-name` | on | warning | implemented | M2 | The same env var name is set twice in one container; only the last one wins. |
@@ -85,8 +85,37 @@ alternative examples), and only one of them is applied. On four public repositor
 comparing the files of one directory (65 of those findings were variants side by side
 in one directory, such as `pod-nginx.yaml` and `pod-nginx-specific-node.yaml`).
 
-KL1008 and KL1010 skip a name, namespace, label key or label value with a template
-placeholder: `{{`, or `$` followed by `{`, `(`, a letter or `_`.
+KL1004 and KL1008 know the scope of the kinds kubelint lists only. On a listed
+cluster-scoped kind (Namespace, ClusterRole, StorageClass and so on) the written
+`metadata.namespace` is not part of the identity and is not checked. On any other kind,
+custom resources and built-in kinds kubelint does not list (Node, RuntimeClass), both
+stay as written.
+
+**Why:** the API server ignores the namespace of a cluster-scoped object, so two
+ClusterRoles that differ only in `namespace` are one object. A custom resource's scope
+is in its CustomResourceDefinition, which kubelint does not read.
+
+**Rejected:** treating unknown kinds as cluster-scoped (it misses real duplicates and bad
+namespaces on custom resources, which are mostly namespaced); reading the scope from a
+CRD in the same file (a CRD is usually applied from another file).
+
+KL1008 checks a `metadata.generateName` with the name's format, as a prefix that may end
+with `-`. When the object has no `name`, it also checks the name the server generates
+(the first 58 characters of the prefix and 5 more) and gives a CronJob prefix at most 47
+characters. It stays silent when the answer depends on the Kubernetes version: a Service
+prefix that starts with a digit, and a ReplicationController prefix when `name` is set.
+
+**Why:** without a `name`, every create validates the generated name. With a `name`, the
+server validates only the prefix characters and length of the prefix, and 1.34 alone
+also rejects a bad ReplicationController prefix. There is no `--kubernetes-version`
+flag yet, and a false positive is worse than a miss.
+
+**Rejected:** checking a Service prefix as DNS-1035 (a false positive on 1.36 and later);
+checking the generated name and the CronJob limit when `name` is set (the server accepts
+`a.-` and a 60 character CronJob prefix then).
+
+KL1008 and KL1010 skip a name, `generateName`, namespace, label key or label value with a
+template placeholder: `{{`, or `$` followed by `{`, `(`, a letter or `_`.
 
 **Why:** manifests kept as templates for tools other than Helm (envsubst, Jinja,
 shell scripts) are linted as they are. A placeholder makes the value invalid only
@@ -99,6 +128,29 @@ Known costs: the literal text around a placeholder is not checked either
 (`My_App-{{x}}` is silent although no rendering fixes it), and a `$NAME` in a manifest
 that no tool renders is silent too, although Kubernetes expands `$(VAR)` only in
 `command`, `args` and `env`, never in metadata.
+
+A document with no `metadata` key is more likely a configuration file than an object, so
+KL1001 reports its missing `apiVersion` only when its `kind` is a built-in kind, KL1002
+does not report its missing `kind`, and KL1003 reports its missing name only when its
+`kind` is a built-in kind. A field written with an empty value (`kind:`) and an item of a
+`kind: List` are reported as before.
+
+**Why:** on public repositories, KL1001 reported a Kustomize `kustomization.yaml` (it has
+`kind` and no `apiVersion`, and `kubectl kustomize` accepts it) and KL1002 reported a Helm
+repository `index.yaml` (it has `apiVersion` and no `kind`). Neither is a Kubernetes
+object, and `kubelint check .` is meant to skip YAML that is not Kubernetes. A manifest
+that forgot `kind` nearly always has `metadata`, so the missing `metadata` is the signal
+that separates the two.
+
+**Rejected:** a list of known non-Kubernetes kinds (`Kustomization`, `Component`,
+`Config`, ...), which never ends and misses every tool kubelint has not heard of;
+checking file names (`kustomization.yaml`, `index.yaml`), which misses the same files
+under other names, such as a chart description kept in another directory.
+
+Known costs: a document that has neither `metadata` nor one of the two type fields is
+silent unless its `kind` is a built-in kind written exactly (`kind: deployment` with no
+`apiVersion`, or `apiVersion: apps/v1` with only a `spec`), although kubectl refuses it.
+A `kustomization.yaml` that has `metadata` and no `apiVersion` is still reported.
 
 ## Security
 

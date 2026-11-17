@@ -1,0 +1,29 @@
+é: &s plain
+m:
+  <<: x
+---
+é: &s plain
+m:
+  <<: [{a: b}, c]
+---
+é: &s plain
+m:
+  <<: [[{a: b}]]
+---
+é: &s plain
+m:
+  <<: ~
+---
+é: &s plain
+m:
+  <<: 
+---
+é: &s plain
+m:
+  <<: *s
+---
+é: &s plain
+m:
+  <<: [*s]
+---
+b: 1

@@ -9,13 +9,17 @@ allow `resources` on them.
 
 ## Why it matters
 
-The scheduler places pods by their requests. A container without requests counts as
-needing nothing, so the scheduler can pack too many pods on one node, and they then
-compete for CPU and memory under load. A container without a memory request is also
-among the first to be evicted when the node runs low on memory, and a pod where no
-container sets any request or limit gets the `BestEffort` quality of service class,
-which is evicted before all others. Some namespaces set default requests with a
-`LimitRange`, but the manifest cannot rely on it being there.
+The scheduler decides whether a pod fits a node by the sum of its requests, after a
+missing request has been filled from the limit. A container with neither a request nor a
+limit adds nothing to that sum, so the scheduler can pack too many pods on one node, and
+they then compete for CPU and memory under load. When the node runs low on memory, the
+kubelet evicts first the pods that use more memory than they requested, so a pod with no
+memory request and no memory limit is always a candidate, and then orders them by
+priority and by how far they are over their request. A pod where no container sets any
+request or limit gets the `BestEffort` quality of service class, and its processes get
+the highest out-of-memory score, so the kernel prefers them when it has to kill
+something. Some namespaces set default requests with a `LimitRange`, but the manifest
+cannot rely on it being there.
 
 ## Example
 
@@ -35,4 +39,6 @@ containers:
     requests:
       cpu: 100m
       memory: 256Mi
+    limits:
+      memory: 512Mi
 ```

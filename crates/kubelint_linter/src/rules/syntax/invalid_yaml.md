@@ -1,13 +1,18 @@
 ## What it does
 
 Reports a YAML syntax error, such as a bad indentation, an unclosed bracket or quote, or
-a tab used for indentation. This rule cannot be disabled.
+a tab used for indentation. It also reports a document that is valid YAML but over a limit
+kubectl enforces: aliases that expand to far more nodes than the file holds, or
+collections nested more than 10,000 levels deep. A merge key (`<<`) whose value is not a
+mapping or a list of mappings is reported too, because kubectl refuses it. This rule
+cannot be disabled.
 
 ## Why it matters
 
-Kubernetes cannot read a document with a syntax error, and `kubectl apply` rejects the
-whole file. kubelint cannot check the broken document either: it skips it and continues
-with the next document after a `---` line.
+Kubernetes cannot read a document with a syntax error. `kubectl apply` applies the
+documents before the broken one, stops there with an error, and applies none after it.
+kubelint cannot check the broken document either: it skips it and continues with the next
+document after a `---` line.
 
 ## Example
 
