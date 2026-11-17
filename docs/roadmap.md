@@ -133,9 +133,9 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 
 ### YAML layer
 
-- Aliases are copied at every use with no budget, so a few hundred bytes of nested
-  aliases exhaust memory and abort the run. kubectl stops them with "excessive
-  aliasing".
+- `saphyr-parser` stops flow collections nested deeper than 255 levels, so kubelint
+  reports KL0001 on flow nesting from 256 to 9,999 levels that kubectl accepts. That
+  error gets the "fix the YAML syntax" help, not the one for the alias and nesting limits.
 - KL0002 recurses on nesting depth, so a deeply nested block sequence overflows the
   stack and aborts the run.
 - Merge keys (`<<: *anchor`) are not expanded: rules miss merged fields and report

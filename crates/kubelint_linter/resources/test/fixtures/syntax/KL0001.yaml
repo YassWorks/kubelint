@@ -39,6 +39,17 @@ kind: ConfigMap
 data:
   greeting: "\q"
 ---
+# Reported: aliases that expand to far more nodes than the file holds, which kubectl
+# refuses.
+apiVersion: v1
+kind: ConfigMap
+data:
+  a0: &a0 [x, x, x, x, x, x, x, x, x, x]
+  a1: &a1 [*a0, *a0, *a0, *a0, *a0, *a0, *a0, *a0, *a0, *a0]
+  a2: &a2 [*a1, *a1, *a1, *a1, *a1, *a1, *a1, *a1, *a1, *a1]
+  a3: &a3 [*a2, *a2, *a2, *a2, *a2, *a2, *a2, *a2, *a2, *a2]
+  a4: &a4 [*a3, *a3, *a3, *a3, *a3, *a3, *a3, *a3, *a3, *a3]
+---
 # Not reported: the last document is valid.
 apiVersion: apps/v1
 kind: Deployment

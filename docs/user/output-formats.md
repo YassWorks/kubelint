@@ -239,7 +239,7 @@ added; renaming or removing one is a breaking change.
 | `category` | string | `"syntax"` |
 | `default_enabled` | boolean | `true` |
 | `default_severity` | string | `"error"` |
-| `summary` | string | `"The file is not valid YAML."` |
+| `summary` | string | `"The file is not valid YAML or is over a limit kubectl enforces."` |
 
 `kubelint rule <CODE|NAME>` prints the rule's documentation as Markdown: a heading with
 the code and name, the summary, a line with the category, severity and default state,
