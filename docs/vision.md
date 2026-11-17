@@ -29,7 +29,8 @@ that are hard to act on ("check failed" with no line number and no fix).
 These are product requirements, not slogans. Every feature is judged against them.
 
 1. **Instant.** A single static binary. Linting a large repo (10,000 objects) takes
-   well under a second. No cluster, no network, no runtime to install.
+   well under a second. No cluster, no runtime to install, and no network except for
+   `kubelint self update`.
 2. **Zero config.** `kubelint check .` does the right thing in any repository. It finds
    Kubernetes YAML, skips YAML that is not Kubernetes (CI files, Helm templates) and
    enables a sensible default rule set.

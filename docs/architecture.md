@@ -57,7 +57,7 @@ All crates live in `crates/` and are named `kubelint_*` (the CLI binary is just
 | `kubelint_config` | Config file discovery and parsing (`kubelint.toml`, `.kubelint.toml`), CLI overrides, resolved `Settings`. Knows rule *selectors* as strings, not the rule registry. | source |
 | `kubelint_linter` | `Rule` trait, `RuleMeta`, `Category`, the static rule registry, selector resolution, suppression comments and annotations, the lint engine, all built-in rules, and the rule test harness. | source, yaml, k8s, diagnostics, config |
 | `kubelint_output` | Renderers: `human` (`annotate-snippets`), `json`, `sarif`, `github`. | source, diagnostics |
-| `kubelint` | CLI: `clap` argument parsing, file discovery (`ignore` crate, Helm chart detection), stdin, orchestration, exit codes. Thin. | all of the above |
+| `kubelint` | CLI: `clap` argument parsing, file discovery (`ignore` crate, Helm chart detection), stdin, orchestration, exit codes, and [`kubelint self update`](#self-update), the only code that uses the network. Thin. | all of the above |
 | `xtask` | Developer automation run with `cargo xtask <task>`: `gen-rule-docs` writes `docs/rules/<CODE>.md`, `gen-corpus` writes the [benchmark corpus](#measuring-it). Not part of the release binary. | linter |
 
 **Layering rule:** dependencies point downward in the table only. Lower crates never know
@@ -526,6 +526,43 @@ kind into a diagnostic. KL1102 never reports a value that KL1009 or KL1010 check
 whether or not those rules are enabled, so one rule's output never depends on another
 rule's configuration. User-provided CRD schemas come after M4, through the same
 validator.
+
+### Self update
+
+`kubelint self update` runs the latest release's installer again, the way a user
+installs:
+
+1. Read the receipt the installer wrote
+   ([what the installer writes](user/getting-started.md#what-the-installer-writes)).
+   Stop unless the running binary is in the folder it names.
+2. Read the latest version from `dist-manifest.json`, which every release carries, at
+   `releases/latest/download/`.
+3. When that version is newer, run its installer with `KUBELINT_INSTALL_DIR` set to the
+   receipt's folder and `KUBELINT_NO_MODIFY_PATH=1`. The installer replaces the binary
+   and rewrites the receipt, and leaves the shell profiles and the `PATH` as the first
+   install set them up, even if the user changed them since.
+
+Downloads use `curl`, or `wget` when `curl` is missing (Windows 10 and 11 include `curl`).
+On Windows the installer runs from the downloaded file with `powershell -File`. Windows
+cannot replace a running exe but can rename it, so `kubelint.exe` is renamed to
+`kubelint.previous.exe` and a copy takes its place until the installer overwrites it. A
+failed install renames it back, and a hidden PowerShell deletes it after kubelint exits.
+
+**Why:** no new dependency. The binary grows by about 160 KB (the JSON parser) and the
+build time does not change.
+
+**Rejected:**
+
+- The `axoupdater` crate, which does the same steps in process. It adds about 110 crates
+  (an HTTP and TLS stack and `tokio`), more than doubles the binary (3.4 MB to 7.6 MB on
+  Windows, to about 8.5 MB on Linux) and the release build time. Version 0.10.3 also
+  fails on Windows when the temp folder path has a space, leaves no `kubelint.exe` when
+  the update is interrupted, and adds the `PATH` setup back when the user removed it.
+- dist's `install-updater`, which ships a separate `kubelint-update` binary instead of a
+  `kubelint self` command.
+- Running the Windows installer the way the install command does,
+  `powershell -c "irm <url> | iex"`. Microsoft Defender's machine learning can flag that
+  command shape as `Trojan:Win32/Commando`, and blocked it on 2026-11-17.
 
 ## Testing
 

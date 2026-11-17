@@ -1,0 +1,8 @@
+---
+source: crates/kubelint/tests/self_update.rs
+expression: root.run(Some(&root.xdg()))
+---
+exit: 2
+--- stdout
+--- stderr
+error: cannot read the installer's receipt [ROOT]/xdg/kubelint/kubelint-receipt.json. Run the installer again to rewrite it

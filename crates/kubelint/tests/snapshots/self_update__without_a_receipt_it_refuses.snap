@@ -1,0 +1,8 @@
+---
+source: crates/kubelint/tests/self_update.rs
+expression: home.run()
+---
+exit: 2
+--- stdout
+--- stderr
+error: kubelint was not installed by its installer, so it cannot update itself. Update it with the tool you installed it with
