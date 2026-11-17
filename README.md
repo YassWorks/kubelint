@@ -7,9 +7,9 @@
 **A fast, friendly linter for Kubernetes manifests.** The Ruff/ESLint experience, for
 Kubernetes YAML.
 
-> **Status: early development.** Every merge to `main` that changes code is released
-> automatically, so versions move fast and anything may change before 1.0. Follow
-> progress in [`docs/roadmap.md`](docs/roadmap.md).
+> **Status: early development.** Code merged to `main` is released automatically every
+> night, so versions move fast and anything may change before 1.0. Follow progress in
+> [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Quickstart
 

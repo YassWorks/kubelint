@@ -150,7 +150,7 @@ and snapshot double as documentation of its behavior.
 
 - **Where docs live:** contributor docs in `docs/`, user docs in `docs/user/`, the rule
   catalog in `docs/rules/`, the routine's manual in `docs/agent/playbook.md`. The root
-  keeps only `README.md`, `CLAUDE.md` and `LICENSE`.
+  keeps only `README.md`, `CLAUDE.md`, `LICENSE` and `CHANGELOG.md`.
 - **Same PR rule:** a PR that changes behavior updates the docs that describe it.
 - **Decisions live in the doc they are about,** written as plain statements in the same
   PR as the change: a public contract in `docs/user/`, a design choice in
@@ -184,25 +184,35 @@ and snapshot double as documentation of its behavior.
 
 ## Releases
 
-- Every push to `main` that changes code (`crates/`, `Cargo.toml`, `Cargo.lock`,
-  `rust-toolchain.toml`) publishes a GitHub Release with binaries for Linux, macOS and
-  Windows (`.github/workflows/release.yml`). Docs-only changes publish nothing.
+- Every night at 00:17 UTC, `.github/workflows/nightly.yml` releases what was merged
+  since the last tag, if it changed code (`crates/`, `Cargo.toml`, `Cargo.lock`,
+  `rust-toolchain.toml`). Docs-only changes release nothing.
 - The version comes from the commit titles since the last tag: a breaking change (`!`)
   or a `feat` bumps the minor version, anything else the patch version. Before 1.0, a
   breaking change never bumps the major version.
-- The tag is the source of truth. `Cargo.toml` on `main` keeps `0.0.0`; the release
-  build writes the real version into its own copy.
-- Nobody tags or releases by hand.
+- The nightly job writes the version into `Cargo.toml` and `Cargo.lock`, adds a section
+  built from the commit titles to `CHANGELOG.md`, commits `chore(release): vX.Y.Z` to
+  `main`, tags that commit `vX.Y.Z` and pushes both at once. It pushes with the
+  `RELEASE_TOKEN` secret: the default token cannot pass the `main` ruleset, and its
+  pushes never start other workflows.
+- The tag starts `.github/workflows/release.yml`, which builds binaries for Linux, macOS
+  and Windows and publishes a GitHub Release with the tag's `CHANGELOG.md` section as
+  notes.
+- Nobody edits the version or `CHANGELOG.md` by hand, and nobody tags or releases by
+  hand. Only the maintainer may run the nightly workflow by hand, for an urgent release.
 
-**Why:** releases need no human step, and every merged feature reaches users the same
-day.
+**Why:** releases need no human step, and one release a day reads as one coherent
+change, with the day's notes in one place. With the real version on `main`, source
+builds report it too.
 
 **Rejected:**
 
-- A version bump commit on `main` (release-plz, release-please). The `main` ruleset
-  requires passing checks on every commit, so it would need a bot token and an extra PR
-  per release.
-- Releases on a schedule. Fewer versions, but each merge waits for the next window.
+- A release PR per release (release-plz, release-please). Every release needs its own
+  PR, CI run and merge, by hand or through more automation.
+- One release per merge. Ten releases in 25 minutes on 2026-11-17, each with a one-line
+  note.
+- `0.0.0` on `main` with the version only in the tag. Source builds report `0.0.0`, and
+  release tools that read the version from `Cargo.toml` (dist) cannot release the tag.
 
 ## Workflows and scripts
 

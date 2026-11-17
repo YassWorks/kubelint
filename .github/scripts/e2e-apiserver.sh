@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
+#
+# --- E2E ---
+#
 # Starts a real Kubernetes API server (etcd and kube-apiserver, no kubelet) for end to
-# end checks, and the Docker daemon for running containers. Usage:
-#   .github/scripts/e2e-apiserver.sh [VERSION]
+# end checks, and the Docker daemon for running containers.
+# Usage: .github/scripts/e2e-apiserver.sh [VERSION]
 # VERSION is a minor (1.34), a release (v1.34.13 or 1.34.13), or empty for the binaries
 # on the PATH, else the latest release. Missing binaries are downloaded into
 # target/e2e/bin. Prints the export line for KUBECONFIG and PATH. One server runs per
 # checkout, on ports free when it starts: a call for the same version reuses it, a call
 # for another replaces it, and other checkouts keep their own.
+#
+# -----------
+#
 set -euo pipefail
 
 etcd_version=v3.6.16
