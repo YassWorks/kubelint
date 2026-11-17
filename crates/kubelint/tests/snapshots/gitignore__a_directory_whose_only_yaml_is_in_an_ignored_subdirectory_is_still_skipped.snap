@@ -1,0 +1,8 @@
+---
+source: crates/kubelint/tests/gitignore.rs
+expression: "project.run(\".\", &[\"check\", \"app\"])"
+---
+exit: 0
+--- stdout
+All checks passed. Checked 0 files and 0 objects in [TIME].
+--- stderr
