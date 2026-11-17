@@ -100,6 +100,29 @@ Known costs: the literal text around a placeholder is not checked either
 that no tool renders is silent too, although Kubernetes expands `$(VAR)` only in
 `command`, `args` and `env`, never in metadata.
 
+A document with no `metadata` key is more likely a configuration file than an object, so
+KL1001 reports its missing `apiVersion` only when its `kind` is a built-in kind, KL1002
+does not report its missing `kind`, and KL1003 reports its missing name only when its
+`kind` is a built-in kind. A field written with an empty value (`kind:`) and an item of a
+`kind: List` are reported as before.
+
+**Why:** on public repositories, KL1001 reported a Kustomize `kustomization.yaml` (it has
+`kind` and no `apiVersion`, and `kubectl kustomize` accepts it) and KL1002 reported a Helm
+repository `index.yaml` (it has `apiVersion` and no `kind`). Neither is a Kubernetes
+object, and `kubelint check .` is meant to skip YAML that is not Kubernetes. A manifest
+that forgot `kind` nearly always has `metadata`, so the missing `metadata` is the signal
+that separates the two.
+
+**Rejected:** a list of known non-Kubernetes kinds (`Kustomization`, `Component`,
+`Config`, ...), which never ends and misses every tool kubelint has not heard of;
+checking file names (`kustomization.yaml`, `index.yaml`), which misses the same files
+under other names, such as a chart description kept in another directory.
+
+Known costs: a document that has neither `metadata` nor one of the two type fields is
+silent unless its `kind` is a built-in kind written exactly (`kind: deployment` with no
+`apiVersion`, or `apiVersion: apps/v1` with only a `spec`), although kubectl refuses it.
+A `kustomization.yaml` that has `metadata` and no `apiVersion` is still reported.
+
 ## Security
 
 | Code | Name | Default | Severity | Status | Milestone | What it catches |

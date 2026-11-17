@@ -32,6 +32,29 @@ items:
 - metadata:
     name: bare
 ---
+# Not reported: a Helm repository index has no kind and no metadata.
+apiVersion: v1
+entries:
+  web:
+  - name: web
+    version: 1.0.0
+generated: "2026-01-01T00:00:00Z"
+---
+# Not reported: a chart description under another file name.
+apiVersion: v2
+name: café
+version: 0.1.0
+---
+# Reported: an empty kind is a field the file declares, so metadata is not needed.
+apiVersion: v1
+entries:
+kind:
+---
+# Not reported: a Kustomize file with no apiVersion.
+kind: Kustomization
+resources:
+- deployment.yaml
+---
 # Not reported: both fields set.
 apiVersion: apps/v1
 kind: Deployment

@@ -64,9 +64,10 @@ enum values, and removed or deprecated API versions.
   for KL2001 and KL2004 to KL2007, `restricted` for KL2002 and KL2003) names the check
   the server reports in a namespace labeled with that level: a Pod is rejected, a
   workload gets a warning. A case the rule passes does not trigger that check. Cases the
-  server cannot judge (template placeholders, custom resources, schema problems) are
-  marked in the fixture and skipped. A mismatch fails CI. Placed before the schema
-  rules so they are checked against the API server from their first PR
+  server cannot judge (template placeholders, custom resources, schema problems, files
+  of other tools that KL1001 and KL1002 pass) are marked in the fixture and skipped. A
+  mismatch fails CI. Placed before the schema rules so they are checked against the API
+  server from their first PR
 - [ ] Span-aware validator that walks an object against its schema and stays silent on
   kinds it does not know (custom resources). User-provided CRD schemas come after M4
 - [ ] KL1101 `unknown-field`, with "did you mean" suggestions
