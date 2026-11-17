@@ -11,7 +11,8 @@ use super::entry_range;
 use crate::{Category, Rule, RuleMeta, RunContext};
 
 /// Reports an object defined more than once in one file: the same API group, kind,
-/// namespace and name.
+/// namespace and name. A listed cluster-scoped kind has no namespace, because the API
+/// server ignores the written one.
 ///
 /// The version is not part of the identity, because `apps/v1` and `apps/v1beta2` serve
 /// the same objects. A missing namespace is kept apart from every written one, including
@@ -94,7 +95,8 @@ fn identity(object: Object<'_>) -> Option<(Identity<'_>, TextRange)> {
     let namespace = object
         .namespace()
         .and_then(|namespace| namespace.as_str())
-        .filter(|namespace| !namespace.trim().is_empty());
+        .filter(|namespace| !namespace.trim().is_empty())
+        .filter(|_| !object.is_cluster_scoped());
     let identity = Identity {
         group: gvk.group,
         kind: gvk.kind,

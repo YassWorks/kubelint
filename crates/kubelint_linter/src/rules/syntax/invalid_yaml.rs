@@ -19,19 +19,24 @@ static META: RuleMeta = RuleMeta {
     category: Category::Syntax,
     default_severity: Severity::Error,
     default_enabled: true,
-    summary: "The file is not valid YAML.",
+    summary: "The file is not valid YAML or is over a limit kubectl enforces.",
     explanation: include_str!("invalid_yaml.md"),
 };
 
 impl InvalidYaml {
     pub(crate) fn diagnostic(file: FileId, error: &ParseError) -> Diagnostic {
+        let help = if error.limit {
+            "use fewer aliases or less nesting; kubelint skips this document until it is within the limit"
+        } else {
+            "fix the YAML syntax; kubelint skips this document until it parses"
+        };
         Diagnostic::new(
             META.code,
             META.default_severity,
             format!("invalid YAML: {}", error.message),
             Label::new(file, error.range),
         )
-        .with_help("fix the YAML syntax; kubelint skips this document until it parses")
+        .with_help(help)
     }
 }
 

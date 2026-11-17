@@ -1,0 +1,13 @@
+é: &a {x: first, y: first}
+z: &b {x: second, z: second}
+list:
+  <<: [*a, *b]
+  w: plain
+block:
+  <<:
+    - {x: block}
+    - *b
+alias_first:
+  <<:
+    - *a
+    - {w: block}

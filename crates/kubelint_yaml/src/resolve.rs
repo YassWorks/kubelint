@@ -1,10 +1,11 @@
 //! Kubernetes-style scalar typing.
 //!
 //! Kubernetes decodes manifests with `sigs.k8s.io/yaml`, which reads YAML through
-//! `gopkg.in/yaml.v2` and converts it to JSON. That decoder follows YAML 1.1 for plain
+//! `go.yaml.in/yaml/v2` and converts it to JSON. That decoder follows YAML 1.1 for plain
 //! scalars: `yes`, `no`, `on`, `off`, `y` and `n` are booleans, `0777` is octal, and
-//! `1_000` is an integer. The rules below mirror `resolve.go` in yaml.v2
-//! (<https://github.com/go-yaml/yaml/blob/v2.4.0/resolve.go>).
+//! `1_000` is an integer. The rules below mirror `resolve.go` in that module at v2.4.4,
+//! the version Kubernetes v1.37.2 pins
+//! (<https://github.com/yaml/go-yaml/blob/v2.4.4/resolve.go>).
 
 use crate::{Scalar, ScalarStyle};
 

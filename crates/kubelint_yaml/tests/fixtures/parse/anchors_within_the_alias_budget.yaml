@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: café
+  labels: &labels
+    app: web
+    tier: frontend
+spec:
+  selector:
+    matchLabels: *labels
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+        - &web
+          name: web
+          image: nginx:1.27
+          env: &env
+            - {name: LANG, value: é}
+        - <<: *web
+          name: sidecar
+          env: *env

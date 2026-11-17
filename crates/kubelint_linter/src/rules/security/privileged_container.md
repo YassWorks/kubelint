@@ -10,17 +10,21 @@ not confined by seccomp or AppArmor. Anyone who controls the process controls th
 they can mount the host filesystem, load kernel modules and read the secrets of every
 other pod scheduled there. The `baseline` Pod Security Standard forbids it.
 
-Very few workloads need it. Most that ask for it need one capability (`NET_ADMIN` for
-network setup, `SYS_PTRACE` for a debugger) or one device. If the container really must
-be privileged (some CNI or storage drivers), silence the finding for that object and
-say why.
+Very few workloads need it. Most that ask for it need one capability or one device. A
+server that binds a port below 1024 as a non-root user needs only `NET_BIND_SERVICE`,
+which `baseline` allows. A capability outside the `baseline` list, such as `NET_ADMIN`
+for network setup or `SYS_PTRACE` for a debugger, is rejected in a namespace that
+enforces `baseline`, and KL2006 reports it: a workload that needs one must run in a
+namespace at the `privileged` Pod Security level. If the container really must be
+privileged (some CNI or storage drivers), silence the finding for that object and say
+why.
 
 ## Example
 
 ```yaml
 containers:
-- name: vpn
-  image: example/vpn:1.4
+- name: web
+  image: example/web:1.4
   securityContext:
     privileged: true
 ```
@@ -29,9 +33,10 @@ Use instead:
 
 ```yaml
 containers:
-- name: vpn
-  image: example/vpn:1.4
+- name: web
+  image: example/web:1.4
   securityContext:
     capabilities:
-      add: ["NET_ADMIN"]
+      drop: ["ALL"]
+      add: ["NET_BIND_SERVICE"]
 ```

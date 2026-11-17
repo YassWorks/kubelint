@@ -163,3 +163,26 @@ template:
     containers:
     - name: app
       image: app:1.0
+---
+# Not reported: a merge key is not a label key, and the merged labels are valid.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: merged
+  labels:
+    <<: {app: cafe, tier: front}
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Reported: a merged label is checked as if written there.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: merged-bad
+  labels: {<<: {bad label: x}}
+spec:
+  containers:
+  - name: app
+    image: app:1.0

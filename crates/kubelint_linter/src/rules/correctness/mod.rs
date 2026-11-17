@@ -27,7 +27,7 @@ pub use missing_object_name::MissingObjectName;
 pub use non_string_env_value::NonStringEnvValue;
 pub use selector_mismatch::SelectorMismatch;
 
-use kubelint_k8s::Object;
+use kubelint_k8s::{BuiltinKind, Object};
 use kubelint_source::TextRange;
 use kubelint_yaml::{Entry, Node, NodeKind, ResolvedScalar};
 
@@ -49,6 +49,23 @@ fn check_type_field<'a>(object: Object<'a>, key: &str) -> Option<TypeField<'a>> 
         return Some(TypeField::Missing);
     };
     is_empty(&entry.value).then_some(TypeField::Empty(entry))
+}
+
+/// Whether `object` has no `metadata` key and is not an item of a `kind: List`, which
+/// makes it more likely a configuration file (`kustomization.yaml`, a Helm index) than
+/// an API object.
+fn lacks_metadata(object: Object<'_>) -> bool {
+    object.metadata().is_none() && !object.is_list_item()
+}
+
+/// Whether `object` is a built-in kind, so a missing type field is a mistake and not a
+/// file of another tool.
+fn is_builtin_kind(object: Object<'_>) -> bool {
+    object
+        .kind()
+        .and_then(|kind| kind.as_str())
+        .and_then(BuiltinKind::parse)
+        .is_some()
 }
 
 fn is_empty(value: &Node) -> bool {

@@ -1,0 +1,60 @@
+---
+source: crates/kubelint_yaml/tests/merge.rs
+expression: "dump(include_str!(\"fixtures/merge/sources.yaml\"))"
+---
+document 0..172
+  mapping 0..172
+    entry
+      scalar Plain "é" 0..2
+      mapping 7..27
+        entry
+          scalar Plain "x" 8..9
+          scalar Plain "first" 11..16
+        entry
+          scalar Plain "y" 18..19
+          scalar Plain "first" 21..26
+    entry
+      scalar Plain "z" 28..29
+      mapping 34..56
+        entry
+          scalar Plain "x" 35..36
+          scalar Plain "second" 38..44
+        entry
+          scalar Plain "z" 46..47
+          scalar Plain "second" 49..55
+    entry
+      scalar Plain "list" 57..61
+      mapping 65..88
+        entry
+          scalar Plain "z" 46..47
+          scalar Plain "second" 49..55
+        entry
+          scalar Plain "x" 8..9
+          scalar Plain "first" 11..16
+        entry
+          scalar Plain "y" 18..19
+          scalar Plain "first" 21..26
+        entry
+          scalar Plain "w" 80..81
+          scalar Plain "plain" 83..88
+    entry
+      scalar Plain "block" 89..94
+      mapping 98..127
+        entry
+          scalar Plain "z" 46..47
+          scalar Plain "second" 49..55
+        entry
+          scalar Plain "x" 109..110
+          scalar Plain "block" 112..117
+    entry
+      scalar Plain "alias_first" 128..139
+      mapping 143..172
+        entry
+          scalar Plain "w" 163..164
+          scalar Plain "block" 166..171
+        entry
+          scalar Plain "x" 8..9
+          scalar Plain "first" 11..16
+        entry
+          scalar Plain "y" 18..19
+          scalar Plain "first" 21..26

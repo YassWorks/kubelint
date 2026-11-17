@@ -1,0 +1,10 @@
+---
+source: crates/kubelint/tests/gitignore.rs
+expression: "project.run(\".\", &[\"check\", \"chart/templates\"])"
+---
+exit: 0
+--- stdout
+All checks passed. Checked 0 files and 0 objects, skipped 1 file in [TIME].
+--- stderr
+note: skipped 1 file of the Helm chart `chart`; kubelint checks rendered manifests, not templates
+  = help: run `helm template chart | kubelint check -`

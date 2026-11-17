@@ -14,10 +14,13 @@ databases that do not replicate. Enable it with `--select KL3005` or in
 
 With one replica, every event that stops that pod stops the workload: the pod crashes,
 its node fails or is drained for an upgrade, or the cluster autoscaler removes the
-node. A Deployment rollout with one replica also leaves no spare pod if the new one
-does not become ready. A PodDisruptionBudget cannot help either: with one replica it
-either blocks every node drain or allows the only pod to go. Two or more replicas,
-ideally spread across nodes, keep the workload serving while one of them is replaced.
+node. So can an update. For example, an update of a StatefulSet stops its only pod before
+a new one exists, and an update of a Deployment with `strategy.type: Recreate` or
+`maxUnavailable: 1` does not wait for the new pod to be ready. A Deployment with the
+default strategy starts the new pod first and keeps the old one until the new one is
+ready. A PodDisruptionBudget cannot help with a drain: with one replica it either blocks
+every drain or allows the only pod to go. Two or more replicas, ideally spread across
+nodes, keep the workload serving while one of them is replaced.
 
 ## Example
 
