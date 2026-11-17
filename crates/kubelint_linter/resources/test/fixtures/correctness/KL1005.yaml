@@ -161,3 +161,37 @@ spec:
       labels: {app: b}
     spec:
       containers: []
+---
+# Not reported: the template labels merge the anchored selector labels, as kubectl reads them.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: merged
+spec:
+  selector:
+    matchLabels: &labels
+      app: web
+  template:
+    metadata:
+      labels:
+        <<: *labels
+        tier: front
+    spec:
+      containers: []
+---
+# Reported: an explicit label after the merge overrides the selector's value.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: overridden
+spec:
+  selector:
+    matchLabels: &labels
+      app: web
+  template:
+    metadata:
+      labels:
+        <<: *labels
+        app: other
+    spec:
+      containers: []

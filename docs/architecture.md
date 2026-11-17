@@ -203,6 +203,37 @@ Principles:
   different files than kubectl); a time limit (it depends on the machine and cannot stop
   the memory growth before it happens); counting the nodes of an expansion by walking it
   (that is the cost the limit exists to avoid).
+- **Merge keys (`<<`) are expanded when their mapping closes,** with the precedence
+  `go-yaml` v2 gives them, which is what `kubectl` and the API server use. Only a plain
+  `<<`, one tagged `!!merge` or one tagged with the verbatim `!<tag:yaml.org,2002:merge>`
+  is a merge key; a quoted `"<<"` or a local `!merge <<` is an ordinary key. The entries
+  are written in document order and the last write of a key wins, so the builder replaces
+  each `<<` entry in place by the entries of its source mapping (they keep the source's
+  ranges, as an alias does). A key written before a `<<` that repeats it is overridden by
+  the merge, and a key written after it overrides the merged one. In a sequence of
+  sources the earlier source wins, so the builder lists the sources backwards. It then
+  drops each entry that a later entry of another source overrides, so rules that read a
+  key see the value the server gets, unless its own source repeats the key. Every entry
+  has an `origin`: 0 when it is written in its mapping, otherwise a number shared by the
+  entries of one merge source. KL0002 compares keys only within an origin, so it reports
+  every key written twice (inside an inline source too, and around a merge) and never a
+  key that only a merge repeats. A duplicate inside the value of an entry that a merge or
+  a later key overrides is not reported, because the server never reads it. A mapping's
+  range covers what it writes: the merged entries and a `<<` value written as an alias do
+  not widen it. A `<<` value that is not a mapping or a sequence of mappings is refused
+  by `kubectl`, so the builder reports a KL0001 error at the `<<` and drops the document.
+
+  **Why:** every rule reads the tree as the server reads the object. Without the
+  expansion, rules miss merged fields (a selector that `<<: *labels` fills) and report the
+  `<<` key itself (KL1010) on files the server accepts.
+
+  **Rejected:** the YAML 1.1 merge specification, where an explicit key always beats a
+  merged one (`kubectl` lets a `<<` override a key written before it, so the tree would
+  differ from what the server gets); keeping the `<<` entry and resolving it in each rule
+  (every rule would repeat the precedence); expanding in `kubelint_k8s` views (KL0002 and
+  the tree dump would still see `<<`); reporting duplicates on the expanded mapping alone
+  (it cannot tell a key written twice from a key a merge repeats); keeping every
+  overridden entry (rules would check values the server never reads).
 - **Edits apply to the original text.** Autofix (M5) changes the file by byte range,
   never by re-serializing the tree, so formatting and comments survive.
 

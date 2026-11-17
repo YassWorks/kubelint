@@ -75,12 +75,13 @@ struct Duplicate {
 fn find_duplicates(node: &Node, path: &mut String, found: &mut Vec<Duplicate>) {
     match &node.kind {
         NodeKind::Mapping(entries) => {
-            let mut first_seen: HashMap<&str, TextRange> = HashMap::new();
+            // Entries a merge brought in repeat a key only within their own merge source.
+            let mut first_seen: HashMap<(&str, u32), TextRange> = HashMap::new();
             for entry in entries {
-                let Some(key) = comparable_key(entry) else {
+                let Some(key) = entry.key_str() else {
                     continue;
                 };
-                match first_seen.entry(key) {
+                match first_seen.entry((key, entry.origin)) {
                     Entry::Vacant(vacant) => {
                         vacant.insert(entry.key.range);
                     }
@@ -109,12 +110,6 @@ fn find_duplicates(node: &Node, path: &mut String, found: &mut Vec<Duplicate>) {
         }
         NodeKind::Scalar(_) | NodeKind::Null => {}
     }
-}
-
-/// The key text used to compare entries, or `None` for keys this rule does not compare:
-/// mappings or sequences used as keys, and YAML merge keys (`<<`), which may repeat.
-fn comparable_key(entry: &kubelint_yaml::Entry) -> Option<&str> {
-    entry.key_str().filter(|key| *key != "<<")
 }
 
 /// Appends `key` to a path: `.key` for simple keys, `["key"]` for keys with dots or other

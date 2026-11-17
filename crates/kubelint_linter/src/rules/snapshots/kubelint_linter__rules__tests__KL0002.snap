@@ -101,4 +101,92 @@ error[KL0002]: duplicate key `data` at the top level of the ConfigMap
    | ---- first defined here
   = help: keep one `data`: Kubernetes either rejects the object or uses only the last value
 
-9 finding(s) in 8 object(s)
+error[KL0002]: duplicate key `app` in `metadata.labels`
+  --> syntax/KL0002.yaml:93:5
+   |
+93 |     app: b
+   |     ^^^
+  --> syntax/KL0002.yaml:92:5
+   |
+92 |     app: a
+   |     --- first defined here
+  = help: keep one `app`: Kubernetes either rejects the object or uses only the last value
+
+error[KL0002]: duplicate key `<<` in `data`
+   --> syntax/KL0002.yaml:133:3
+    |
+133 |   "<<": b
+    |   ^^^^
+   --> syntax/KL0002.yaml:132:3
+    |
+132 |   "<<": a
+    |   ---- first defined here
+  = help: keep one `<<`: Kubernetes either rejects the object or uses only the last value
+
+error[KL0002]: duplicate key `a` in `data`
+   --> syntax/KL0002.yaml:140:16
+    |
+140 |   <<: {a: "1", a: "2"}
+    |                ^
+   --> syntax/KL0002.yaml:140:8
+    |
+140 |   <<: {a: "1", a: "2"}
+    |        - first defined here
+  = help: keep one `a`: Kubernetes either rejects the object or uses only the last value
+
+error[KL0002]: duplicate key `a` in `data`
+   --> syntax/KL0002.yaml:147:17
+    |
+147 |   <<: [{a: "1", a: "2"}]
+    |                 ^
+   --> syntax/KL0002.yaml:147:9
+    |
+147 |   <<: [{a: "1", a: "2"}]
+    |         - first defined here
+  = help: keep one `a`: Kubernetes either rejects the object or uses only the last value
+
+error[KL0002]: duplicate key `a` in `x-source`
+   --> syntax/KL0002.yaml:155:3
+    |
+155 |   a: "2"
+    |   ^
+   --> syntax/KL0002.yaml:154:3
+    |
+154 |   a: "1"
+    |   - first defined here
+  = help: keep one `a`: Kubernetes either rejects the object or uses only the last value
+
+error[KL0002]: duplicate key `a` in `data`
+   --> syntax/KL0002.yaml:165:3
+    |
+165 |   a: "2"
+    |   ^
+   --> syntax/KL0002.yaml:164:3
+    |
+164 |   a: "1"
+    |   - first defined here
+  = help: keep one `a`: Kubernetes either rejects the object or uses only the last value
+
+error[KL0002]: duplicate key `a` in `data`
+   --> syntax/KL0002.yaml:175:3
+    |
+175 |   a: two
+    |   ^
+   --> syntax/KL0002.yaml:173:3
+    |
+173 |   a: one
+    |   - first defined here
+  = help: keep one `a`: Kubernetes either rejects the object or uses only the last value
+
+error[KL0002]: duplicate key `a` in `data`
+   --> syntax/KL0002.yaml:184:3
+    |
+184 |   a: "2"
+    |   ^
+   --> syntax/KL0002.yaml:183:3
+    |
+183 |   a: "1"
+    |   - first defined here
+  = help: keep one `a`: Kubernetes either rejects the object or uses only the last value
+
+17 finding(s) in 22 object(s)

@@ -1,0 +1,63 @@
+---
+source: crates/kubelint_yaml/tests/merge.rs
+expression: "dump(include_str!(\"fixtures/merge/keys.yaml\"))"
+---
+document 0..239
+  mapping 0..239
+    entry
+      scalar Plain "é" 0..2
+      mapping 7..18
+        entry
+          scalar Plain "m" 8..9
+          scalar Plain "merged" 11..17
+    entry
+      scalar Plain "quoted" 19..25
+      mapping 29..51
+        entry
+          scalar DoubleQuoted "<<" 29..33
+          scalar Plain "literal" 35..42
+        entry
+          scalar SingleQuoted "k" 45..48
+          scalar Plain "v" 50..51
+    entry
+      scalar Plain "tagged" 52..58
+      mapping 70..83
+        entry
+          scalar Plain "m" 8..9
+          scalar Plain "merged" 11..17
+        entry
+          scalar Plain "k" 79..80
+          scalar Plain "v" 82..83
+    entry
+      scalar Plain "quoted_tagged" 84..97
+      mapping 109..117
+        entry
+          scalar Plain "m" 8..9
+          scalar Plain "merged" 11..17
+    entry
+      scalar Plain "other_tag" 118..127
+      mapping 137..148
+        entry
+          scalar Plain "<<" 137..139
+          scalar Plain "literal" 141..148
+    entry
+      scalar Plain "verbatim_tag" 149..161
+      mapping 192..205
+        entry
+          scalar Plain "m" 8..9
+          scalar Plain "merged" 11..17
+        entry
+          scalar Plain "k" 201..202
+          scalar Plain "v" 204..205
+    entry
+      scalar Plain "local_tag" 206..215
+      mapping 7..239
+        entry
+          scalar Plain "<<" 226..228
+          mapping 7..18
+            entry
+              scalar Plain "m" 8..9
+              scalar Plain "merged" 11..17
+        entry
+          scalar Plain "k" 235..236
+          scalar Plain "v" 238..239

@@ -78,26 +78,10 @@ document 0..407
                             entry
                               scalar Plain "value" 340..345
                               scalar Plain "é" 347..349
-                    mapping 255..407
+                    mapping 327..407
                       entry
-                        scalar Plain "<<" 361..363
-                        mapping 255..350
-                          entry
-                            scalar Plain "name" 255..259
-                            scalar Plain "web" 261..264
-                          entry
-                            scalar Plain "image" 275..280
-                            scalar Plain "nginx:1.27" 282..292
-                          entry
-                            scalar Plain "env" 303..306
-                            sequence 327..350
-                              mapping 327..350
-                                entry
-                                  scalar Plain "name" 328..332
-                                  scalar Plain "LANG" 334..338
-                                entry
-                                  scalar Plain "value" 340..345
-                                  scalar Plain "é" 347..349
+                        scalar Plain "image" 275..280
+                        scalar Plain "nginx:1.27" 282..292
                       entry
                         scalar Plain "name" 380..384
                         scalar Plain "sidecar" 386..393

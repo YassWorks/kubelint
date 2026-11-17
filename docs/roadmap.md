@@ -138,8 +138,6 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   error gets the "fix the YAML syntax" help, not the one for the alias and nesting limits.
 - KL0002 recurses on nesting depth, so a deeply nested block sequence overflows the
   stack and aborts the run.
-- Merge keys (`<<: *anchor`) are not expanded: rules miss merged fields and report
-  errors on objects the server accepts.
 - Explicit tags (`!!str`, `!!int`) are ignored, and a float out of range (`1e400`) is
   read as a number where kubectl keeps a string.
 - An alias to an anchor in another document is read as null, with no finding.
