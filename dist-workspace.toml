@@ -11,7 +11,9 @@ targets = [
   "aarch64-apple-darwin",
   "x86_64-pc-windows-msvc",
 ]
-installers = ["shell", "powershell"]
+installers = ["shell", "powershell", "homebrew"]
+tap = "YassWorks/homebrew-tap"
+publish-jobs = ["homebrew"]
 install-path = ["$XDG_BIN_HOME/", "$XDG_DATA_HOME/../bin", "~/.local/bin"]
 install-updater = false
 unix-archive = ".tar.gz"

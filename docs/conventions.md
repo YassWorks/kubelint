@@ -196,8 +196,11 @@ and snapshot double as documentation of its behavior.
   `RELEASE_TOKEN` secret: the default token cannot pass the `main` ruleset, and its
   pushes never start other workflows.
 - The tag starts `.github/workflows/release.yml`, which builds archives for Linux, macOS
-  and Windows, the shell and PowerShell installers and the checksums, and publishes a
-  GitHub Release with the tag's `CHANGELOG.md` section as notes.
+  and Windows, the shell and PowerShell installers, a Homebrew formula and the
+  checksums, and publishes a GitHub Release with the tag's `CHANGELOG.md` section as
+  notes. Then it commits the formula to the `YassWorks/homebrew-tap` repository with
+  the `HOMEBREW_TAP_TOKEN` secret, a maintainer's token that can push there: the
+  default token reaches only this repository.
 - dist generates `release.yml` from `dist-workspace.toml`. Never edit `release.yml` by
   hand: its `plan` job, which also runs on every PR, fails when the file does not match
   the config. To change it, edit `dist-workspace.toml`, run `dist generate` with the
@@ -214,7 +217,8 @@ and snapshot double as documentation of its behavior.
 **Why:** releases need no human step, and one release a day reads as one coherent
 change, with the day's notes in one place. With the real version on `main`, source
 builds report it too. dist builds the archives, installers and checksums from one config
-file, and its installers write a receipt that records how kubelint was installed.
+file, and its installers write a receipt that records how kubelint was installed. A tap
+of our own lets Homebrew users install and update kubelint with no review by Homebrew.
 
 **Rejected:**
 
@@ -226,6 +230,9 @@ file, and its installers write a receipt that records how kubelint was installed
   dist, which reads the version from `Cargo.toml`, cannot release the tag.
 - Hand-written build and publish scripts. They offer no installers, and every release
   change means editing the workflow.
+- Publishing the formula to homebrew-core. It takes only formulas that build from
+  source, not dist's prebuilt binaries, and only projects with at least 75 stars, 30
+  forks or 30 watchers (225, 90 or 90 when the owner submits it).
 
 ## Workflows and scripts
 

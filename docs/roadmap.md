@@ -275,4 +275,4 @@ never built. The others need an account or a token the routine does not have.
 - User-defined rules or policies (*non-goal*).
 - Publishing to crates.io (needs a crates.io token).
 - A PyPI wheel, so the pre-commit hook installs kubelint itself (needs a PyPI account).
-- Distribution through Homebrew, Krew or the VS Code marketplace (needs accounts).
+- Distribution through Krew or the VS Code marketplace (needs accounts).

@@ -29,7 +29,8 @@ fn update() -> anyhow::Result<ExitCode> {
     if !installed {
         bail!(
             "this kubelint ({}) was not installed by the installer, which put kubelint in {}. \
-             Update this one with the tool you installed it with",
+             Update this one with the tool you installed it with, for example \
+             `brew upgrade kubelint`",
             exe.display(),
             receipt.bin_dir.display()
         );
@@ -95,7 +96,8 @@ impl Receipt {
         let Some(path) = receipt_paths().find(|path| path.is_file()) else {
             bail!(
                 "kubelint was not installed by its installer, so it cannot update itself. \
-                 Update it with the tool you installed it with"
+                 Update it with the tool you installed it with, for example \
+                 `brew upgrade kubelint`"
             );
         };
         let unreadable = || {
