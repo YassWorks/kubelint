@@ -1,0 +1,8 @@
+---
+source: crates/kubelint/tests/self_update.rs
+expression: root.run(Some(&root.xdg()))
+---
+exit: 2
+--- stdout
+--- stderr
+error: this kubelint ([EXE]) was not installed by the installer, which put kubelint in [ROOT]/xdg-bin. Update this one with the tool you installed it with

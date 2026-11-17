@@ -4,6 +4,7 @@
 mod discover;
 mod exclude;
 mod rules_cmd;
+mod self_cmd;
 mod settings;
 
 use std::io::{IsTerminal as _, Read as _, Write as _};
@@ -46,6 +47,9 @@ enum Command {
         /// The rule's code (`KL1001`) or name (`missing-api-version`).
         rule: String,
     },
+    /// Manage this kubelint installation.
+    #[command(name = "self", subcommand)]
+    SelfCmd(self_cmd::SelfCommand),
 }
 
 #[derive(Debug, clap::Args)]
@@ -161,6 +165,7 @@ fn main() -> ExitCode {
                 ),
             }),
         },
+        Command::SelfCmd(command) => self_cmd::run(&command),
     };
     match result {
         Ok(code) => code,

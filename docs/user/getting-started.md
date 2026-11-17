@@ -107,6 +107,22 @@ Install [rustup](https://rustup.rs) and run:
 cargo install --locked --git https://github.com/YassWorks/kubelint kubelint
 ```
 
+### Update
+
+Installed with the installer:
+
+```bash
+kubelint self update
+```
+
+It runs the latest release's installer again, into the same folder, and leaves your
+shell profiles and `PATH` alone. It needs `curl` or `wget` (Windows 10 and 11 include
+`curl`), and PowerShell on Windows. On Windows each update, like the install, leaves a
+download folder under `%TEMP%` (step 5 of [Uninstall](#uninstall) deletes them).
+
+Installed another way, `kubelint self update` changes nothing and exits with code 2.
+Download the new release archive as above, or run the `cargo install` command again.
+
 ### Uninstall
 
 Installed with the installer on Linux or macOS:

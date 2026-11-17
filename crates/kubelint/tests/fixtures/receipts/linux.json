@@ -1,0 +1,1 @@
+{"install_prefix":"/root/.local/bin","install_layout":"flat","binaries":["kubelint"],"cdylibs":[],"cstaticlibs":[],"source":{"release_type":"github","owner":"YassWorks","name":"kubelint","app_name":"kubelint"},"version":"0.20.3","provider":{"source":"cargo-dist","version":"0.34.0"},"binary_aliases":{},"modify_path":true}

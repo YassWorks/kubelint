@@ -26,6 +26,7 @@ powershell -ExecutionPolicy Bypass -c "irm https://github.com/YassWorks/kubelint
 ```
 
 The installer puts `kubelint` in `~/.local/bin` and adds that folder to your `PATH`.
+Update it with `kubelint self update`.
 [Getting started](docs/user/getting-started.md#install) covers the release archives,
 building from source, and how to uninstall.
 
@@ -141,7 +142,8 @@ See the full [rule catalog](docs/rules/README.md).
 
 ## Why kubelint
 
-- **Instant:** a single static binary written in Rust. No cluster, no network, no runtime.
+- **Instant:** a single static binary written in Rust. No cluster, no runtime, and no
+  network except for `kubelint self update`.
 - **Zero config:** `kubelint check .` finds your Kubernetes YAML and skips everything else.
 - **Precise:** every finding points at the exact line and column.
 - **Explains itself:** every finding says what is wrong, why it matters and how to fix it.
