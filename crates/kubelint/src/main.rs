@@ -51,7 +51,10 @@ enum Command {
 #[derive(Debug, clap::Args)]
 struct CheckArgs {
     /// Files or directories to lint, or `-` for standard input. Directories are searched
-    /// for `*.yaml` and `*.yml` files, honoring `.gitignore`.
+    /// for `*.yaml` and `*.yml` files, honoring `.gitignore`, `.ignore` and the global git
+    /// excludes. When a directory has no such file left and the `.gitignore` and `.ignore`
+    /// files above it (or the repository's `.git/info/exclude`) hide all of its YAML files,
+    /// it is searched again without them.
     #[arg(default_value = ".")]
     paths: Vec<PathBuf>,
 
