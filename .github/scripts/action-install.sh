@@ -27,17 +27,22 @@ case "$RUNNER_OS/$RUNNER_ARCH" in
     ;;
 esac
 
-name="kubelint-$VERSION-$target"
+name="kubelint-$target"
+sums=sha256.sum
 dir="$RUNNER_TEMP/kubelint"
 mkdir -p "$dir"
 cd "$dir"
+if ! curl -fsLO "$repo/releases/download/$VERSION/$sums"; then
+  name="kubelint-$VERSION-$target"
+  sums=SHA256SUMS
+  curl -fsSLO "$repo/releases/download/$VERSION/$sums"
+fi
 curl -fsSLO "$repo/releases/download/$VERSION/$name.$ext"
-curl -fsSLO "$repo/releases/download/$VERSION/SHA256SUMS"
-grep " $name.$ext\$" SHA256SUMS > expected
+grep -E " \*?$name\.$ext\$" "$sums" > expected
 if command -v sha256sum > /dev/null; then sha256sum -c expected; else shasum -a 256 -c expected; fi
 
 if [ "$ext" = zip ]; then
-  unzip -q -o "$name.$ext"
+  unzip -q -o -j "$name.$ext" -d "$name"
 else
   tar -xzf "$name.$ext"
 fi

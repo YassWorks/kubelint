@@ -58,3 +58,7 @@ unwrap_used = "warn"
 lto = "thin"
 codegen-units = 1
 strip = true
+
+# dist builds release archives with this profile.
+[profile.dist]
+inherits = "release"

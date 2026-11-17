@@ -29,8 +29,8 @@ curl -fsSL "https://github.com/YassWorks/kubelint/releases/download/$VERSION/kub
 ./kubelint --version
 ```
 
-The archive names for other platforms are listed in
-[getting started](getting-started.md#install).
+For another platform, set `TARGET` to the part after `kubelint-` in its archive name,
+listed in [getting started](getting-started.md#from-a-release-archive).
 
 ## GitHub Actions
 
@@ -73,7 +73,7 @@ Without the action, download the release yourself as shown in
 ### Why a composite action
 
 The action is a composite action: two shell scripts in `.github/scripts/` that download
-the release archive, check it against `SHA256SUMS`, and run it.
+the release archive, check it against the release's checksum file, and run it.
 
 **Why:** it installs the same static binary as every other setup, starts in seconds and
 works on every runner operating system.

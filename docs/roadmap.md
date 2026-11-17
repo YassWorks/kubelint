@@ -234,7 +234,6 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 
 ### Releases and CI integration
 
-- The Windows binary needs `VCRUNTIME140.dll`, so it is not self-contained.
 - `cargo install --git` builds with the user's default toolchain, not the pinned one.
 - The Action's SARIF mode prints nothing and fails the step when there are findings,
   fails on an output path in a missing directory, and leaves an empty file on exit code

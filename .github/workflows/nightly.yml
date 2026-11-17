@@ -15,7 +15,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  CODE_PATHS: crates Cargo.toml Cargo.lock rust-toolchain.toml
+  CODE_PATHS: crates Cargo.toml Cargo.lock rust-toolchain.toml dist-workspace.toml
 
 jobs:
   nightly:
