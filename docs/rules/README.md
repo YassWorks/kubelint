@@ -63,7 +63,7 @@ and those references must stay valid and readable across releases.
 | KL1005 | `selector-mismatch` | on | error | implemented | M2 | A workload's `spec.selector` does not match its pod template labels. |
 | KL1006 | `duplicate-container-name` | on | error | implemented | M2 | Two containers (including init containers) in one pod share a name. |
 | KL1007 | `invalid-resource-quantity` | on | error | implemented | M2 | A CPU/memory value like `512mb` or `0.5cores` that Kubernetes cannot parse. |
-| KL1008 | `invalid-object-name` | on | error | implemented | M2 | `metadata.name` is not valid for its kind (DNS-1123 subdomain or label, DNS-1035 for Services), or `metadata.namespace` is not a valid namespace name. |
+| KL1008 | `invalid-object-name` | on | error | implemented | M2 | `metadata.name` or `metadata.generateName` is not valid for its kind (DNS-1123 subdomain or label, DNS-1035 for Services, path segment for RBAC and PodDisruptionBudget, with the CronJob and Job length limits), or `metadata.namespace` is not a valid namespace name. |
 | KL1009 | `non-string-env-value` | on | error | implemented | M2 | An env var `value` that YAML reads as a number or boolean (`8080`, `yes`, `true`). |
 | KL1010 | `invalid-label` | on | error | implemented | M2 | A label key or value that breaks Kubernetes' label syntax, or a label value that YAML reads as a number or boolean. |
 | KL1011 | `duplicate-env-name` | on | warning | implemented | M2 | The same env var name is set twice in one container; only the last one wins. |
@@ -99,8 +99,23 @@ is in its CustomResourceDefinition, which kubelint does not read.
 namespaces on custom resources, which are mostly namespaced); reading the scope from a
 CRD in the same file (a CRD is usually applied from another file).
 
-KL1008 and KL1010 skip a name, namespace, label key or label value with a template
-placeholder: `{{`, or `$` followed by `{`, `(`, a letter or `_`.
+KL1008 checks a `metadata.generateName` with the name's format, as a prefix that may end
+with `-`. When the object has no `name`, it also checks the name the server generates
+(the first 58 characters of the prefix and 5 more) and gives a CronJob prefix at most 47
+characters. It stays silent when the answer depends on the Kubernetes version: a Service
+prefix that starts with a digit, and a ReplicationController prefix when `name` is set.
+
+**Why:** without a `name`, every create validates the generated name. With a `name`, the
+server validates only the prefix characters and length of the prefix, and 1.34 alone
+also rejects a bad ReplicationController prefix. There is no `--kubernetes-version`
+flag yet, and a false positive is worse than a miss.
+
+**Rejected:** checking a Service prefix as DNS-1035 (a false positive on 1.36 and later);
+checking the generated name and the CronJob limit when `name` is set (the server accepts
+`a.-` and a 60 character CronJob prefix then).
+
+KL1008 and KL1010 skip a name, `generateName`, namespace, label key or label value with a
+template placeholder: `{{`, or `$` followed by `{`, `(`, a letter or `_`.
 
 **Why:** manifests kept as templates for tools other than Helm (envsubst, Jinja,
 shell scripts) are linted as they are. A placeholder makes the value invalid only

@@ -171,10 +171,10 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 
 ### Rules
 
-- KL1008 disagrees with the server on some kinds: PodDisruptionBudget names are only
-  path segments, StatefulSet names are DNS labels, CronJob names have at most 52
-  characters and Job names at most 63, and Service names may start with a digit from
-  1.36 (this one needs the `--kubernetes-version` flag).
+- KL1008 disagrees with the server on two version dependent cases: it reports a Service
+  name that starts with a digit, which is valid from 1.36, and it stays silent on a
+  ReplicationController `generateName` with invalid characters when `name` is set, which
+  1.34 rejects. Both need the `--kubernetes-version` flag.
 - KL2003 reports only a container that may run as root, while its catalog row and the
   end to end CI item treat it as the `restricted` check `runAsNonRoot`. They differ on
   a non-zero `runAsUser` without `runAsNonRoot`, Windows pods, `hostUsers: false`
