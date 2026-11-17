@@ -101,4 +101,48 @@ error[KL1005]: `Deployment` selector requires `app: web`, but the pod template h
     |         ---------- pod template label
   = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
 
-9 finding(s) in 12 object(s)
+error[KL1005]: `Deployment` selector requires `k: "null"`, but the pod template has `k: null`
+   --> correctness/KL1005.yaml:208:7
+    |
+208 |       k: "null"
+    |       ^^^^^^^^^
+   --> correctness/KL1005.yaml:213:9
+    |
+213 |         k: null
+    |         ------- pod template label
+  = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
+
+error[KL1005]: `StatefulSet` selector requires `k: x`, but the pod template has `k: ~`
+   --> correctness/KL1005.yaml:227:7
+    |
+227 |       k: x
+    |       ^^^^
+   --> correctness/KL1005.yaml:232:9
+    |
+232 |         k: ~
+    |         ---- pod template label
+  = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
+
+error[KL1005]: `ReplicaSet` selector requires `k` in [""], but the pod template has `k: x`
+   --> correctness/KL1005.yaml:245:7
+    |
+245 |     - {key: k, operator: In, values: [null]}
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   --> correctness/KL1005.yaml:250:9
+    |
+250 |         k: x
+    |         ---- pod template label
+  = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
+
+error[KL1005]: `ReplicationController` selector requires `k: x`, but the pod template has `k: null`
+   --> correctness/KL1005.yaml:262:5
+    |
+262 |     k: x
+    |     ^^^^
+   --> correctness/KL1005.yaml:267:9
+    |
+267 |         k: null
+    |         ------- pod template label
+  = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
+
+13 finding(s) in 24 object(s)

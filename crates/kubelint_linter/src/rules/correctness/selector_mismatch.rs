@@ -73,8 +73,11 @@ impl Rule for SelectorMismatch {
             let (Some(key), Some(value)) = (entry.key_str(), entry.value.as_str()) else {
                 continue;
             };
-            if template.value(key) != Some(value) {
-                let requirement = format!("`{key}: {value}`");
+            if entry.value.is_kubernetes_null() {
+                continue;
+            }
+            if !template.satisfies(key, |label| label == Some(value)) {
+                let requirement = format!("`{key}: {}`", shown(&entry.value));
                 findings.push((entry_range(entry), requirement, key));
             }
         }
@@ -83,7 +86,7 @@ impl Rule for SelectorMismatch {
             let Some(requirement) = Requirement::parse(expression) else {
                 continue;
             };
-            if !requirement.matches(template.value(requirement.key)) {
+            if !template.satisfies(requirement.key, |label| requirement.matches(label)) {
                 findings.push((expression.range, requirement.to_string(), requirement.key));
             }
         }
@@ -93,7 +96,7 @@ impl Rule for SelectorMismatch {
                     format!(
                         "`{kind}` selector requires {requirement}, but the pod template has \
                          `{key}: {}`",
-                        entry.value.as_str().unwrap_or_default()
+                        shown(&entry.value)
                     ),
                     cx.label(entry_range(entry))
                         .with_message("pod template label"),
@@ -113,6 +116,15 @@ impl Rule for SelectorMismatch {
                     .with_help(HELP),
             );
         }
+    }
+}
+
+/// A label value as written, quoted when it is quoted text that is empty or null-like.
+fn shown(node: &Node) -> String {
+    match node.as_scalar() {
+        Some(scalar) if scalar.is_null_text_in_quotes() => format!("\"{}\"", scalar.value),
+        Some(scalar) => scalar.value.clone(),
+        None => "null".to_owned(),
     }
 }
 
@@ -148,8 +160,16 @@ impl<'a> Template<'a> {
         self.labels?.get_entry(key)
     }
 
-    fn value(&self, key: &str) -> Option<&'a str> {
-        self.entry(key)?.value.as_str()
+    /// Whether `test` accepts the template's value of `key` as `kubectl create` stores it
+    /// (a null is an empty value) or as `kubectl apply` stores it (a null drops the key).
+    fn satisfies(&self, key: &str, test: impl Fn(Option<&str>) -> bool) -> bool {
+        let Some(entry) = self.entry(key) else {
+            return test(None);
+        };
+        if entry.value.is_kubernetes_null() {
+            return test(Some("")) || test(None);
+        }
+        test(entry.value.as_str())
     }
 }
 
@@ -183,7 +203,13 @@ impl<'a> Requirement<'a> {
             .get("values")
             .into_iter()
             .flat_map(Node::items)
-            .map(Node::as_str)
+            .map(|value| {
+                if value.is_kubernetes_null() {
+                    Some("")
+                } else {
+                    value.as_str()
+                }
+            })
             .collect::<Option<Vec<_>>>()?;
         Some(Self {
             key,
@@ -206,7 +232,12 @@ impl<'a> Requirement<'a> {
 impl std::fmt::Display for Requirement<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let key = self.key;
-        let values = self.values.join(", ");
+        let values = self
+            .values
+            .iter()
+            .map(|value| if value.is_empty() { "\"\"" } else { value })
+            .collect::<Vec<_>>()
+            .join(", ");
         match self.operator {
             Operator::In => write!(f, "`{key}` in [{values}]"),
             Operator::NotIn => write!(f, "`{key}` not in [{values}]"),

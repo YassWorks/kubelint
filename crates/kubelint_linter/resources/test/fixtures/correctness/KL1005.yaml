@@ -195,3 +195,225 @@ spec:
         app: other
     spec:
       containers: []
+---
+# Reported: a quoted "null" is text, and the template value is null.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quoted-null
+spec:
+  selector:
+    matchLabels:
+      app: web
+      k: "null"
+  template:
+    metadata:
+      labels:
+        app: web
+        k: null
+    spec:
+      containers: []
+---
+# Reported: a null template value never equals a non-empty selector value.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: null-label
+spec:
+  serviceName: db
+  selector:
+    matchLabels:
+      app: web
+      k: x
+  template:
+    metadata:
+      labels:
+        app: web
+        k: ~
+    spec:
+      containers: []
+---
+# Reported: `null` in `values` is an empty value, which the template's `x` fails.
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: null-in-values
+spec:
+  selector:
+    matchExpressions:
+    - {key: app, operator: In, values: [web]}
+    - {key: k, operator: In, values: [null]}
+  template:
+    metadata:
+      labels:
+        app: web
+        k: x
+    spec:
+      containers: []
+---
+# Reported: a null template value against a ReplicationController's plain map.
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: rc-null-label
+spec:
+  selector:
+    app: web
+    k: x
+  template:
+    metadata:
+      labels:
+        app: web
+        k: null
+    spec:
+      containers: []
+---
+# Not reported: a null selector value matches an empty template value.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: null-selector
+spec:
+  selector:
+    matchLabels:
+      app: web
+      k: null
+  template:
+    metadata:
+      labels:
+        app: web
+        k: ""
+    spec:
+      containers: []
+---
+# Not reported: every null spelling is null, in the selector and the template.
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: null-spellings
+spec:
+  selector:
+    matchLabels:
+      app: web
+      k:
+      j: ~
+      i: Null
+      h: NULL
+  template:
+    metadata:
+      labels:
+        app: web
+        k: ~
+        j: null
+        i: NULL
+        h: Null
+    spec:
+      containers: []
+---
+# Not reported: apply and create disagree on a null selector value against "null".
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: null-vs-quoted-null
+spec:
+  selector:
+    matchLabels:
+      app: web
+      k: null
+  template:
+    metadata:
+      labels:
+        app: web
+        k: "null"
+    spec:
+      containers: []
+---
+# Not reported: apply and create disagree on a null selector value against `x`.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: null-vs-text
+spec:
+  selector:
+    matchLabels:
+      app: web
+      k: null
+  template:
+    metadata:
+      labels:
+        app: web
+        k: x
+    spec:
+      containers: []
+---
+# Not reported: apply and create disagree on a null selector value with no template label.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: null-no-label
+spec:
+  selector:
+    matchLabels:
+      app: web
+      k: null
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers: []
+---
+# Not reported: apply and create disagree on an empty string selector value against null.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: empty-vs-null
+spec:
+  selector:
+    matchLabels:
+      app: web
+      k: ""
+  template:
+    metadata:
+      labels:
+        app: web
+        k: null
+    spec:
+      containers: []
+---
+# Not reported: Exists and DoesNotExist on a null template value (apply and create disagree).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: null-exists
+spec:
+  selector:
+    matchExpressions:
+    - {key: app, operator: In, values: [web]}
+    - {key: k, operator: Exists}
+    - {key: j, operator: DoesNotExist}
+  template:
+    metadata:
+      labels:
+        app: web
+        k: null
+        j: null
+    spec:
+      containers: []
+---
+# Not reported: a null value in a ReplicationController's plain map selector.
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: null-rc
+spec:
+  selector:
+    app: web
+    k: null
+  template:
+    metadata:
+      labels:
+        app: web
+        k: ""
+    spec:
+      containers: []
