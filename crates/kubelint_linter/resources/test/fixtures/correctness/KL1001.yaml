@@ -32,6 +32,43 @@ items:
 - metadata:
     name: bare
 ---
+# Reported: a built-in kind with no apiVersion and no metadata.
+kind: Deployment
+spec:
+  replicas: 1
+---
+# Reported: a kind: List item that is a bare mapping with a built-in kind.
+apiVersion: v1
+kind: List
+items:
+- kind: Service
+---
+# Not reported: a Kustomize file has no apiVersion and no metadata.
+kind: Kustomization
+resources:
+- deployment.yaml
+---
+kind: Component
+resources:
+- base
+---
+# Not reported: a Helm repository index has no kind (KL1002 does not report it either).
+apiVersion: v1
+entries:
+  web:
+  - name: web
+    version: 1.0.0
+generated: "2026-01-01T00:00:00Z"
+---
+# Not reported: a chart description under another file name.
+apiVersion: v2
+name: café
+version: 0.1.0
+---
+# Reported: an empty apiVersion is a field the file declares, so metadata is not needed.
+apiVersion:
+kind: Kustomization
+---
 # Not reported: both fields set.
 apiVersion: apps/v1
 kind: Deployment

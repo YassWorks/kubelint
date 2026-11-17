@@ -2,10 +2,16 @@
 
 use kubelint_diagnostics::Severity;
 
-use super::{TypeField, check_type_field, entry_range, missing_field_range};
+use super::{
+    TypeField, check_type_field, entry_range, is_builtin_kind, lacks_metadata, missing_field_range,
+};
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
 /// Reports an object without an `apiVersion`, or with an empty one.
+///
+/// A missing `apiVersion` on an object with no `metadata` key is reported only when its
+/// kind is a built-in kind. `kustomization.yaml` has a `kind` and no `apiVersion`, and
+/// `kubectl kustomize` accepts it.
 pub struct MissingApiVersion;
 
 static META: RuleMeta = RuleMeta {
@@ -28,6 +34,12 @@ impl Rule for MissingApiVersion {
         let Some(problem) = check_type_field(object, "apiVersion") else {
             return;
         };
+        if matches!(problem, TypeField::Missing)
+            && lacks_metadata(object)
+            && !is_builtin_kind(object)
+        {
+            return;
+        }
         let kind = object
             .kind()
             .and_then(|kind| kind.as_str())

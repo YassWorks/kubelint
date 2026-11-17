@@ -7,6 +7,10 @@ Reports a Kubernetes object that has no `kind` field, or whose `kind` is empty.
 `apiVersion` and `kind` together tell Kubernetes what an object is. Without `kind`,
 `kubectl apply` fails with "kind not set" and nothing in the file is applied.
 
+Files that only look like objects, such as a Helm repository index or a `Chart.yaml`,
+are not reported when they have no `metadata` key and no `kind` key. An empty `kind:`
+and an item of a `kind: List` are always reported.
+
 ## Example
 
 ```yaml

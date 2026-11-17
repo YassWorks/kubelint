@@ -341,6 +341,42 @@ lives:
   before matching. Excluded directories are still walked and their files filtered
   afterwards.
 
+### File discovery
+
+`crates/kubelint/src/discover.rs` searches each directory named on the command line with
+the `ignore` crate: `.gitignore`, `.ignore`, `.git/info/exclude`, the global git excludes
+(also outside a git repository) and hidden-file skipping apply, and so do the ignore files
+in parent directories. If that search finds no YAML file and the parent rules would ignore
+a YAML file placed directly in the directory (`gen/*`, `gen/**`, `/gen/*`, a root
+`*.yaml`), it is searched again without the parent rules: the `.gitignore` and `.ignore`
+files above it and the repository's `.git/info/exclude`. The ignore files inside the
+directory, the global git excludes, hidden-file skipping, `[files] exclude` and Helm
+chart skipping still apply. The test is a probe path in the directory matched against the
+parent ignore files, so a directory whose only YAML sits under an ignored subdirectory
+(`node_modules/` above `app/node_modules/pkg/x.yaml`) is not searched again. A directory
+with at least one visible YAML file is searched once with every rule, so hidden files
+next to visible ones stay skipped.
+
+**Why:** a root `.gitignore` with `gen/*` hides `gen/a.yaml`, yet `kubelint check gen`
+after `helm template > gen/all.yaml` is a request to lint that directory. Without the
+exception it checked 0 files and exited 0, so a CI step could pass while checking
+nothing. The probe keeps the other parent rules working: `kubelint check .` inside a
+subdirectory still skips the `node_modules/` the repository root ignores, and a root
+`*.tmp.yaml` still hides one file among others. The probe reads the parent files itself
+because the `ignore` crate offers no way to ask whether its parent rules hide a path.
+
+**Rejected:**
+
+- Never applying parent ignore files. `kubelint check .` inside a subdirectory would lint
+  a `node_modules/` that the root ignores.
+- Searching again whenever the first search finds nothing. A directory whose only YAML is
+  under an ignored subdirectory would then lint that subdirectory.
+- An error when a named directory yields no file. It fails CI for a legitimately empty
+  directory and still lints nothing.
+- Keeping the behavior. A CI step can pass while checking nothing.
+- Keeping `.git/info/exclude` in the second search. The `ignore` crate loads it together
+  with the parent ignore files, so it cannot be separated from them.
+
 ### Output formats
 
 | `--format` | For | Notes |
