@@ -17,8 +17,9 @@ printed on standard error in the human format.
 ## `human`
 
 Code snippets pointing at the exact line and column, with help and the rule name, then a
-summary line. `--color auto|always|never` controls colors. The layout is for people and
-may change between versions; do not parse it.
+summary line. `--color auto|always|never` controls colors. Columns count characters
+(Unicode code points). The layout is for people and may change between versions; do not
+parse it.
 
 ## `json`
 
@@ -147,9 +148,8 @@ only the message next to the code.
   used here.
 - Listing only the rules that ran or fired. Rule indexes would change with
   configuration.
-- Columns in Unicode code points. The `github` format and editors speaking LSP count
-  UTF-16 code units, so every machine-readable format agrees on a column. SARIF has no
-  default unit.
+- Columns in Unicode code points. SARIF has no default unit, and the `github` format and
+  editors speaking LSP count UTF-16 code units, so SARIF states UTF-16.
 
 ### Uploading to GitHub code scanning
 

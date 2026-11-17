@@ -12,8 +12,9 @@ not reported.
 Without a memory limit, a container can use all the free memory of its node. A leak or
 a traffic spike in one container then makes the node run out of memory, and the kernel
 kills processes of other pods too, often ones that did nothing wrong. With a limit, only
-the container that goes over it is restarted (`OOMKilled`), and the scheduler can place
-pods knowing how much memory they may use at most. Some namespaces set a default limit
+the container that goes over it is restarted (`OOMKilled`). The scheduler places pods by
+their requests, so a memory limit changes where the pod runs only when the request is
+missing and is filled from the limit (see KL3002). Some namespaces set a default limit
 with a `LimitRange`, but the manifest cannot rely on it being there.
 
 ## Example
@@ -24,6 +25,7 @@ containers:
   image: nginx:1.27
   resources:
     requests:
+      cpu: 100m
       memory: 256Mi
 ```
 
@@ -35,6 +37,7 @@ containers:
   image: nginx:1.27
   resources:
     requests:
+      cpu: 100m
       memory: 256Mi
     limits:
       memory: 512Mi

@@ -52,8 +52,7 @@ impl Rule for DuplicateKey {
                 cx.diagnostic(duplicate.repeat, message)
                     .with_secondary(cx.label(duplicate.first).with_message("first defined here"))
                     .with_help(format!(
-                        "keep one `{}`: Kubernetes either rejects the object or uses only the \
-                         last value",
+                        "keep one `{}`: `kubectl` uses only the last value and does not warn",
                         duplicate.key
                     )),
             );
