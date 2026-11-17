@@ -1,0 +1,49 @@
+name: Nightly release
+
+# The tag this workflow pushes starts release.yml (docs/conventions.md#releases).
+on:
+  schedule:
+    - cron: "17 0 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CODE_PATHS: crates Cargo.toml Cargo.lock rust-toolchain.toml
+
+jobs:
+  nightly:
+    name: nightly
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_TOKEN }}
+      - id: next
+        run: bash .github/scripts/next-version.sh
+      - if: steps.next.outputs.version != ''
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          cache: false
+      - if: steps.next.outputs.version != ''
+        run: bash .github/scripts/bump-version.sh
+        env:
+          VERSION: ${{ steps.next.outputs.version }}
+      - if: steps.next.outputs.version != ''
+        run: bash .github/scripts/changelog.sh
+        env:
+          VERSION: ${{ steps.next.outputs.version }}
+          PREVIOUS: ${{ steps.next.outputs.previous }}
+      - if: steps.next.outputs.version != ''
+        run: bash .github/scripts/push-release.sh
+        env:
+          VERSION: ${{ steps.next.outputs.version }}

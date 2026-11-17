@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# Installs a kubelint release for the GitHub Action (action.yml) and puts it on the PATH.
-# Reads VERSION (a tag, or "latest"), ACTION_REF, RUNNER_OS, RUNNER_ARCH, RUNNER_TEMP and
-# GITHUB_PATH.
 set -euo pipefail
 
 repo="https://github.com/YassWorks/kubelint"

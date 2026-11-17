@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Writes the next release version and the previous tag to $GITHUB_OUTPUT.
-# Reads CODE_PATHS. Writes no version when no code changed since the last release.
 set -euo pipefail
 
 previous="$(git tag --list 'v*' --sort=-v:refname | head -n1)"

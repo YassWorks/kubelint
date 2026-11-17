@@ -134,8 +134,8 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   KL1004 tells two such objects apart, although the API server ignores it. Adding the
   kinds fixes it.
 
-- The release workflow treats every change under `crates/` as code, so a change that
-  touches only `crates/xtask` publishes a release with an unchanged binary.
+- The nightly release workflow treats every change under `crates/` as code, so a change
+  that touches only `crates/xtask` publishes a release with an unchanged binary.
 
 ### YAML layer
 
@@ -235,8 +235,7 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 ### Releases and CI integration
 
 - The Windows binary needs `VCRUNTIME140.dll`, so it is not self-contained.
-- `cargo install --git` builds with the user's default toolchain, not the pinned one,
-  and installs version `0.0.0`.
+- `cargo install --git` builds with the user's default toolchain, not the pinned one.
 - The Action's SARIF mode prints nothing and fails the step when there are findings,
   fails on an output path in a missing directory, and leaves an empty file on exit code
   2. Its `args` take quotes and globs literally, a `version` without `v` gives a bare
