@@ -181,4 +181,55 @@ impl BuiltinKind {
             .split_once('/')
             .map_or("", |(group, _)| group)
     }
+
+    /// Whether the kind is cluster-scoped, as `kubectl api-resources --namespaced=false`
+    /// lists it. The API server ignores `metadata.namespace` on these kinds.
+    ///
+    /// ```
+    /// use kubelint_k8s::BuiltinKind;
+    ///
+    /// assert!(BuiltinKind::ClusterRole.is_cluster_scoped());
+    /// assert!(!BuiltinKind::Role.is_cluster_scoped());
+    /// ```
+    pub fn is_cluster_scoped(self) -> bool {
+        match self {
+            Self::Namespace
+            | Self::PersistentVolume
+            | Self::IngressClass
+            | Self::ClusterRole
+            | Self::ClusterRoleBinding
+            | Self::CSIDriver
+            | Self::StorageClass
+            | Self::VolumeAttachment
+            | Self::PriorityClass
+            | Self::CustomResourceDefinition
+            | Self::MutatingWebhookConfiguration
+            | Self::ValidatingWebhookConfiguration => true,
+            Self::ConfigMap
+            | Self::Endpoints
+            | Self::LimitRange
+            | Self::PersistentVolumeClaim
+            | Self::Pod
+            | Self::PodTemplate
+            | Self::ReplicationController
+            | Self::ResourceQuota
+            | Self::Secret
+            | Self::Service
+            | Self::ServiceAccount
+            | Self::ControllerRevision
+            | Self::DaemonSet
+            | Self::Deployment
+            | Self::ReplicaSet
+            | Self::StatefulSet
+            | Self::CronJob
+            | Self::Job
+            | Self::HorizontalPodAutoscaler
+            | Self::Ingress
+            | Self::NetworkPolicy
+            | Self::Role
+            | Self::RoleBinding
+            | Self::PodDisruptionBudget
+            | Self::Lease => false,
+        }
+    }
 }

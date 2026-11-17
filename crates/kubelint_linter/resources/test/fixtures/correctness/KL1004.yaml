@@ -55,6 +55,57 @@ kind: ClusterRole
 metadata:
   name: "reader"
 ---
+# Reported: the server ignores `metadata.namespace` on a built-in cluster-scoped kind, so
+# the second and third Namespace are the first, and the ClusterRole is the ones above.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tools
+  namespace: a
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tools
+  namespace: b
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tools
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: reader
+  namespace: ignored
+---
+# Not reported: a custom resource's scope is unknown, so the written namespace counts.
+apiVersion: example.com/v1
+kind: Widget
+metadata:
+  name: gear
+  namespace: a
+---
+apiVersion: example.com/v1
+kind: Widget
+metadata:
+  name: gear
+  namespace: b
+---
+# Not reported: a namespaced built-in kind keeps its namespace in the identity.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tools
+  namespace: a
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tools
+  namespace: b
+---
 # Reported: items of a kind: List count too.
 apiVersion: v1
 kind: List

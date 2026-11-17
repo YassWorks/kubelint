@@ -35,15 +35,48 @@ error[KL1004]: `ClusterRole` `reader` is defined more than once
    |   ------------ first defined here
   = help: rename one of them or remove the copy; when applied, the last one silently replaces the first
 
-error[KL1004]: `ConfigMap` `settings` is defined more than once
-  --> correctness/KL1004.yaml:69:5
+error[KL1004]: `Namespace` `tools` is defined more than once
+  --> correctness/KL1004.yaml:69:3
    |
-69 |     name: settings
-   |     ^^^^^^^^^^^^^^
-  --> correctness/KL1004.yaml:65:5
+69 |   name: tools
+   |   ^^^^^^^^^^^
+  --> correctness/KL1004.yaml:63:3
    |
-65 |     name: settings
-   |     -------------- first defined here
+63 |   name: tools
+   |   ----------- first defined here
   = help: rename one of them or remove the copy; when applied, the last one silently replaces the first
 
-4 finding(s) in 18 object(s)
+error[KL1004]: `Namespace` `tools` is defined more than once
+  --> correctness/KL1004.yaml:75:3
+   |
+75 |   name: tools
+   |   ^^^^^^^^^^^
+  --> correctness/KL1004.yaml:63:3
+   |
+63 |   name: tools
+   |   ----------- first defined here
+  = help: rename one of them or remove the copy; when applied, the last one silently replaces the first
+
+error[KL1004]: `ClusterRole` `reader` is defined more than once
+  --> correctness/KL1004.yaml:80:3
+   |
+80 |   name: reader
+   |   ^^^^^^^^^^^^
+  --> correctness/KL1004.yaml:51:3
+   |
+51 |   name: reader
+   |   ------------ first defined here
+  = help: rename one of them or remove the copy; when applied, the last one silently replaces the first
+
+error[KL1004]: `ConfigMap` `settings` is defined more than once
+   --> correctness/KL1004.yaml:120:5
+    |
+120 |     name: settings
+    |     ^^^^^^^^^^^^^^
+   --> correctness/KL1004.yaml:116:5
+    |
+116 |     name: settings
+    |     -------------- first defined here
+  = help: rename one of them or remove the copy; when applied, the last one silently replaces the first
+
+7 finding(s) in 26 object(s)

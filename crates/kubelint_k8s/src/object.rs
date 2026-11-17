@@ -143,6 +143,22 @@ impl<'a> Object<'a> {
             .then_some(kind)
     }
 
+    /// Whether the object's kind is a listed built-in cluster-scoped one. The scope of any
+    /// other kind is unknown here, so it counts as namespaced.
+    ///
+    /// ```
+    /// let cluster = |text: &str| {
+    ///     kubelint_k8s::objects(&kubelint_yaml::parse(text).documents[0])[0].is_cluster_scoped()
+    /// };
+    /// assert!(cluster("apiVersion: v1\nkind: Namespace\n"));
+    /// assert!(!cluster("apiVersion: v1\nkind: ConfigMap\n"));
+    /// assert!(!cluster("apiVersion: example.com/v1\nkind: Namespace\n"));
+    /// ```
+    pub fn is_cluster_scoped(self) -> bool {
+        self.builtin_kind()
+            .is_some_and(BuiltinKind::is_cluster_scoped)
+    }
+
     pub fn metadata(self) -> Option<&'a Node> {
         self.node.get("metadata")
     }
