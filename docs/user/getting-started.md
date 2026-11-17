@@ -5,44 +5,145 @@ what it reports. It takes about five minutes.
 
 ## Install
 
+On Linux or macOS:
+
+```bash
+curl -LsSf https://github.com/YassWorks/kubelint/releases/latest/download/kubelint-installer.sh | sh
+```
+
+On Windows, in PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/YassWorks/kubelint/releases/latest/download/kubelint-installer.ps1 | iex"
+```
+
+The installer downloads the archive for your platform and puts `kubelint` in the first
+of these folders:
+
+1. `$XDG_BIN_HOME`, when it is set.
+2. `$XDG_DATA_HOME/../bin`, when it is set.
+3. `~/.local/bin` (`%USERPROFILE%\.local\bin` on Windows).
+
+**Why:** `~/.local/bin` is the folder for user programs in the XDG base directory
+specification, and many Linux distributions already put it on `PATH`. People who set
+`XDG_BIN_HOME` get their own folder.
+
+**Rejected:**
+
+- `~/.cargo/bin`, the installer tool's default. It creates a Rust folder for people who
+  never use Rust.
+- `~/.kubelint/bin`. It is never on `PATH` by default and adds another folder to the
+  home directory.
+
+When the install folder is not on your `PATH`, the installer adds it. Set
+`KUBELINT_NO_MODIFY_PATH=1` before running it to skip that. Open a new terminal and
+check that it works:
+
+```bash
+kubelint --version
+```
+
+To install one version instead of the latest, replace `latest/download` in the command
+with `download/<tag>`, where `<tag>` is a release tag such as `v1.2.3` whose assets list
+`kubelint-installer.sh`.
+
+### What the installer writes
+
+On Linux and macOS:
+
+- `kubelint` in the install folder above, created if missing.
+- `~/.config/kubelint/` (`$XDG_CONFIG_HOME/kubelint/` when set), holding
+  `kubelint-receipt.json`, which records where and how kubelint was installed. When the
+  installer changes your `PATH`, this folder also holds `env.sh` and `env.fish`.
+- When it changes your `PATH`: a line `. "$HOME/.config/kubelint/env.sh"` at the end of
+  `~/.profile` and of each of `~/.bashrc`, `~/.bash_profile` and `~/.bash_login` that
+  exists, and of `~/.zshrc` or `~/.zshenv` (in `$ZDOTDIR` when set). It creates
+  `~/.profile` and `~/.zshrc` when they are missing. It also writes
+  `~/.config/fish/conf.d/kubelint.env.fish`, creating its folders when missing.
+
+On Windows:
+
+- `kubelint.exe` in the install folder above, created if missing.
+- `%LOCALAPPDATA%\kubelint\kubelint-receipt.json` (`%XDG_CONFIG_HOME%\kubelint\` when
+  set).
+- When it changes your `PATH`: the install folder at the front of your user `Path`.
+- A folder with a random name under `%TEMP%`, holding the downloaded `kubelint.zip` and
+  the license, README and changelog from it.
+
+### From a release archive
+
 Every release on the [releases page](https://github.com/YassWorks/kubelint/releases)
 has an archive for each platform:
 
 | Platform | Archive |
 | --- | --- |
-| Linux, x86-64 | `kubelint-<version>-x86_64-unknown-linux-musl.tar.gz` |
-| Linux, ARM64 | `kubelint-<version>-aarch64-unknown-linux-musl.tar.gz` |
-| macOS, Intel | `kubelint-<version>-x86_64-apple-darwin.tar.gz` |
-| macOS, Apple silicon | `kubelint-<version>-aarch64-apple-darwin.tar.gz` |
-| Windows, x86-64 | `kubelint-<version>-x86_64-pc-windows-msvc.zip` |
+| Linux, x86-64 | `kubelint-x86_64-unknown-linux-musl.tar.gz` |
+| Linux, ARM64 | `kubelint-aarch64-unknown-linux-musl.tar.gz` |
+| macOS, Intel | `kubelint-x86_64-apple-darwin.tar.gz` |
+| macOS, Apple silicon | `kubelint-aarch64-apple-darwin.tar.gz` |
+| Windows, x86-64 | `kubelint-x86_64-pc-windows-msvc.zip` |
 
-Each archive holds one directory with the `kubelint` binary, the license and the
-README. The Linux binaries are static and run on any distribution. `SHA256SUMS` lists
-the checksum of every archive.
+Each archive holds the `kubelint` binary, the license, the README and the changelog: in
+a `kubelint-<platform>/` folder in a `.tar.gz`, at the top of a `.zip`. The Linux
+binaries are static and run on any distribution, and the Windows binary needs no Visual
+C++ runtime. `sha256.sum` lists the checksum of every archive, and each archive also
+has its own `<archive>.sha256`. Older releases put the version in archive names, such as
+`kubelint-v0.18.15-x86_64-unknown-linux-musl.tar.gz`, and list checksums in `SHA256SUMS`.
 
-On Linux or macOS, set the version and platform, then download and unpack:
+On Linux or macOS, set the platform, then download the latest release and unpack it:
 
 ```bash
-VERSION=v0.18.15
 TARGET=x86_64-unknown-linux-musl
-curl -fsSL "https://github.com/YassWorks/kubelint/releases/download/$VERSION/kubelint-$VERSION-$TARGET.tar.gz" \
-  | tar -xz --strip-components=1 "kubelint-$VERSION-$TARGET/kubelint"
+curl -fsSL "https://github.com/YassWorks/kubelint/releases/latest/download/kubelint-$TARGET.tar.gz" \
+  | tar -xz --strip-components=1 "kubelint-$TARGET/kubelint"
 sudo mv kubelint /usr/local/bin/
 ```
 
-Take the latest version from the
-[latest release](https://github.com/YassWorks/kubelint/releases/latest). To build from
-source instead, install [rustup](https://rustup.rs) and run:
+### From source
+
+Install [rustup](https://rustup.rs) and run:
 
 ```bash
 cargo install --locked --git https://github.com/YassWorks/kubelint kubelint
 ```
 
-Check that it works:
+### Uninstall
 
-```bash
-kubelint --version
-```
+Installed with the installer on Linux or macOS:
+
+1. Delete the binary: `rm "$(command -v kubelint)"`. Delete its folder too if it is now
+   empty.
+2. List the shell profiles the installer changed:
+
+   ```bash
+   grep -l 'kubelint/env.sh' ~/.profile ~/.bashrc ~/.bash_profile ~/.bash_login \
+     "${ZDOTDIR:-$HOME}/.zshrc" "${ZDOTDIR:-$HOME}/.zshenv" 2>/dev/null
+   ```
+
+   In each, delete the line that sources `kubelint/env.sh` and the empty line above it.
+   Delete `~/.profile` or `.zshrc` if it is then empty: the installer created it.
+3. Delete `~/.config/fish/conf.d/kubelint.env.fish`, and its folders if they are then
+   empty.
+4. Delete the receipt folder: `rm -r "${XDG_CONFIG_HOME:-$HOME/.config}/kubelint"`. Delete
+   `~/.config` too if it is now empty.
+
+Installed with the installer on Windows, in PowerShell:
+
+1. Note the install folder: `Split-Path (Get-Command kubelint).Source`.
+2. Delete the binary: `Remove-Item (Get-Command kubelint).Source`.
+3. Delete the receipt folder: `Remove-Item -Recurse "$env:LOCALAPPDATA\kubelint"`
+   (`"$env:XDG_CONFIG_HOME\kubelint"` when that variable is set).
+4. If the install folder is now empty, delete it (and `%USERPROFILE%\.local` if that is
+   then empty) and remove it from your user `Path` (search "environment variables" in
+   the Start menu). Nothing records whether the installer added it, so keep it when
+   other programs live there.
+5. Delete the installer's download folder:
+
+   ```powershell
+   Get-ChildItem $env:TEMP -Directory | Where-Object { Test-Path "$($_.FullName)\kubelint.zip" } | Remove-Item -Recurse
+   ```
+
+Built from source: `cargo uninstall kubelint`.
 
 ## Lint a project
 

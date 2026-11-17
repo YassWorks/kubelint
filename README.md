@@ -13,16 +13,21 @@ Kubernetes YAML.
 
 ## Quickstart
 
-Download the archive for your platform from the
-[latest release](https://github.com/YassWorks/kubelint/releases/latest), unpack it and
-put `kubelint` on your `PATH`. Linux binaries are static and run on any distribution.
-
-Or build it from source (you need [rustup](https://rustup.rs); the pinned toolchain
-installs itself):
+Install on Linux or macOS:
 
 ```bash
-cargo install --locked --git https://github.com/YassWorks/kubelint kubelint
+curl -LsSf https://github.com/YassWorks/kubelint/releases/latest/download/kubelint-installer.sh | sh
 ```
+
+Install on Windows, in PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/YassWorks/kubelint/releases/latest/download/kubelint-installer.ps1 | iex"
+```
+
+The installer puts `kubelint` in `~/.local/bin` and adds that folder to your `PATH`.
+[Getting started](docs/user/getting-started.md#install) covers the release archives,
+building from source, and how to uninstall.
 
 Lint every Kubernetes YAML file under the current directory:
 

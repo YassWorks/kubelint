@@ -50,7 +50,7 @@ These are product requirements, not slogans. Every feature is judged against the
 | What it catches | Broken manifests (structure, then full schema validation), security risks, reliability best practices. Removed/deprecated API versions come with schema validation. |
 | Where it runs | CLI first. Then CI integration (SARIF, GitHub Action, pre-commit). Then editor support (language server). |
 | First milestone | "Useful in CI", small and solid, around 3 weeks after kickoff (target: late November 2026). |
-| Releases | Automatic and nightly: the code merged since the last release is published as a new version with binaries on GitHub Releases. |
+| Releases | Automatic and nightly: the code merged since the last release is published as a new version with binaries and one-line installers on GitHub Releases. |
 | Language | Rust. Single static binary. |
 | License | MIT. |
 | Development model | Built mostly by an autonomous daily Claude Code routine, merging its own small PRs on green CI, with all memory kept in this repository. See [`agent/playbook.md`](agent/playbook.md). |

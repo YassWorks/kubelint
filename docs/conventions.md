@@ -186,7 +186,7 @@ and snapshot double as documentation of its behavior.
 
 - Every night at 00:17 UTC, `.github/workflows/nightly.yml` releases what was merged
   since the last tag, if it changed code (`crates/`, `Cargo.toml`, `Cargo.lock`,
-  `rust-toolchain.toml`). Docs-only changes release nothing.
+  `rust-toolchain.toml`, `dist-workspace.toml`). Docs-only changes release nothing.
 - The version comes from the commit titles since the last tag: a breaking change (`!`)
   or a `feat` bumps the minor version, anything else the patch version. Before 1.0, a
   breaking change never bumps the major version.
@@ -195,15 +195,22 @@ and snapshot double as documentation of its behavior.
   `main`, tags that commit `vX.Y.Z` and pushes both at once. It pushes with the
   `RELEASE_TOKEN` secret: the default token cannot pass the `main` ruleset, and its
   pushes never start other workflows.
-- The tag starts `.github/workflows/release.yml`, which builds binaries for Linux, macOS
-  and Windows and publishes a GitHub Release with the tag's `CHANGELOG.md` section as
-  notes.
+- The tag starts `.github/workflows/release.yml`, which builds archives for Linux, macOS
+  and Windows, the shell and PowerShell installers and the checksums, and publishes a
+  GitHub Release with the tag's `CHANGELOG.md` section as notes.
+- dist generates `release.yml` from `dist-workspace.toml`. Never edit `release.yml` by
+  hand: its `plan` job, which also runs on every PR, fails when the file does not match
+  the config. To change it, edit `dist-workspace.toml`, run `dist generate` with the
+  dist version named in `cargo-dist-version`, and commit both. A dist version bump is
+  its own PR and checks the installer facts in `docs/user/getting-started.md` again
+  (What the installer writes, Uninstall).
 - Nobody edits the version or `CHANGELOG.md` by hand, and nobody tags or releases by
   hand. Only the maintainer may run the nightly workflow by hand, for an urgent release.
 
 **Why:** releases need no human step, and one release a day reads as one coherent
 change, with the day's notes in one place. With the real version on `main`, source
-builds report it too.
+builds report it too. dist builds the archives, installers and checksums from one config
+file, and its installers write a receipt that records how kubelint was installed.
 
 **Rejected:**
 
@@ -212,7 +219,9 @@ builds report it too.
 - One release per merge. Ten releases in 25 minutes on 2026-11-17, each with a one-line
   note.
 - `0.0.0` on `main` with the version only in the tag. Source builds report `0.0.0`, and
-  release tools that read the version from `Cargo.toml` (dist) cannot release the tag.
+  dist, which reads the version from `Cargo.toml`, cannot release the tag.
+- Hand-written build and publish scripts. They offer no installers, and every release
+  change means editing the workflow.
 
 ## Workflows and scripts
 
