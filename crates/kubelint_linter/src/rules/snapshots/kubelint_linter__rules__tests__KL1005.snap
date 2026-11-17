@@ -90,4 +90,15 @@ error[KL1005]: `ReplicationController` selector requires `app: legacy`, but the 
    |         -------- pod template label
   = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
 
-8 finding(s) in 10 object(s)
+error[KL1005]: `Deployment` selector requires `app: web`, but the pod template has `app: other`
+   --> correctness/KL1005.yaml:190:7
+    |
+190 |       app: web
+    |       ^^^^^^^^
+   --> correctness/KL1005.yaml:195:9
+    |
+195 |         app: other
+    |         ---------- pod template label
+  = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
+
+9 finding(s) in 12 object(s)

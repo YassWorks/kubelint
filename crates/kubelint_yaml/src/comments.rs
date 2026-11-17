@@ -55,17 +55,16 @@ fn find_comment_start(
     (start..end).find(|&i| {
         bytes[i] == b'#'
             && (i == start || matches!(bytes[i - 1], b' ' | b'\t'))
-            && !inside_scalar(scalars, i)
+            && !inside_range(scalars, i)
     })
 }
 
-/// Whether byte offset `at` lies inside one of the (sorted) scalar ranges.
-fn inside_scalar(scalars: &[TextRange], at: usize) -> bool {
+/// Whether byte offset `at` lies inside one of the sorted, non-overlapping ranges.
+pub(crate) fn inside_range(ranges: &[TextRange], at: usize) -> bool {
     let at = to_size(at);
-    // The last scalar starting at or before `at` is the only one that can contain it,
-    // because scalars never overlap.
-    let idx = scalars.partition_point(|r| r.start() <= at);
-    idx > 0 && scalars[idx - 1].contains(at)
+    // The last range starting at or before `at` is the only one that can contain it.
+    let idx = ranges.partition_point(|r| r.start() <= at);
+    idx > 0 && ranges[idx - 1].contains(at)
 }
 
 pub(crate) fn to_size(offset: usize) -> TextSize {

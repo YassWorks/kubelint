@@ -58,4 +58,11 @@ error[KL1002]: object `bare` has no `kind`
    |   ^^^^^^^^
   = help: add the object's type, such as `kind: Deployment`
 
-8 finding(s) in 12 object(s)
+error[KL1002]: object has an empty `kind`
+  --> correctness/KL1002.yaml:51:1
+   |
+51 | kind:
+   | ^^^^
+  = help: add the object's type, such as `kind: Deployment`
+
+9 finding(s) in 16 object(s)

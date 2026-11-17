@@ -58,11 +58,25 @@ error[KL1008]: `Team_A` in `metadata.namespace` is not a valid namespace name: m
    |              ^^^^^^
   = help: use lowercase letters, digits and `-`, for example `team-a`
 
+error[KL1008]: `Team_A` in `metadata.namespace` is not a valid namespace name: must contain only lowercase letters, digits and `-`, and start and end with a letter or digit
+  --> correctness/KL1008.yaml:73:14
+   |
+73 |   namespace: Team_A
+   |              ^^^^^^
+  = help: use lowercase letters, digits and `-`, for example `team-a`
+
+error[KL1008]: `Team_A` is not a valid `Namespace` name: must contain only lowercase letters, digits and `-`, and start and end with a letter or digit
+  --> correctness/KL1008.yaml:79:9
+   |
+79 |   name: Team_A
+   |         ^^^^^^
+  = help: use lowercase letters, digits and `-`, for example `team-a`
+
 error[KL1008]: `price-$5` is not a valid `ConfigMap` name: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start and end with a letter or digit
-   --> correctness/KL1008.yaml:105:9
+   --> correctness/KL1008.yaml:138:9
     |
-105 |   name: price-$5
+138 |   name: price-$5
     |         ^^^^^^^^
   = help: use lowercase letters, digits, `-` and `.`, for example `price-5`
 
-9 finding(s) in 18 object(s)
+11 finding(s) in 23 object(s)

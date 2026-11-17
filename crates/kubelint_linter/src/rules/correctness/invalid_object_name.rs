@@ -11,7 +11,9 @@ use super::{has_placeholder, shown};
 use crate::{Category, ObjectContext, Rule, RuleMeta};
 
 /// Reports a `metadata.name` that the API server would reject for the object's kind,
-/// and a `metadata.namespace` that is not a valid namespace name.
+/// and a `metadata.namespace` that is not a valid namespace name. The namespace is not
+/// checked on a listed cluster-scoped kind, where the server ignores it. The namespace of
+/// any other kind is checked.
 ///
 /// Names are checked only for built-in kinds ([`BuiltinKind`], in their own API group),
 /// because a custom resource's name rules are up to its definition. Most kinds need a
@@ -57,7 +59,8 @@ impl Rule for InvalidObjectName {
 
     fn check_object(&self, cx: &mut ObjectContext<'_>) {
         let object = cx.object();
-        if let Some(namespace) = object.namespace()
+        if !object.is_cluster_scoped()
+            && let Some(namespace) = object.namespace()
             && let Some(text) = string_value(namespace)
             && let Err(error) = is_dns1123_label(text)
         {

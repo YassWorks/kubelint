@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name:	web
+  labels:
+    café:	bar
+data:
+  dq: "a:	b"
+  after:	value
+  sq: 'a:	b'
+  "key:	x": one
+  é: "ü:	b"
+  literal: |
+    a:	b
+  folded: >
+    c:	d
+  escaped: "it\'s"
+  later:	value
+  comment: ok # a:	b
+  # a:	b
+---
+kind: ConfigMap
+data:
+  dq: "a:	b"
+  sq: 'a:	b'
+  legit:	value

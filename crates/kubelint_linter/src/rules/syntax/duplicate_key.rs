@@ -51,8 +51,7 @@ impl Rule for DuplicateKey {
                 cx.diagnostic(duplicate.repeat, message)
                     .with_secondary(cx.label(duplicate.first).with_message("first defined here"))
                     .with_help(format!(
-                        "keep one `{}`: Kubernetes either rejects the object or uses only the \
-                         last value",
+                        "keep one `{}`: `kubectl` uses only the last value and does not warn",
                         duplicate.key
                     )),
             );
@@ -119,12 +118,13 @@ fn find_duplicates(root: &Node) -> Vec<Duplicate> {
 
 /// Collects the keys of one mapping that repeat an earlier key, in source order.
 fn collect_repeats(entries: &[kubelint_yaml::Entry], path: &str, found: &mut Vec<Duplicate>) {
-    let mut first_seen: HashMap<&str, TextRange> = HashMap::new();
+    // Entries a merge brought in repeat a key only within their own merge source.
+    let mut first_seen: HashMap<(&str, u32), TextRange> = HashMap::new();
     for entry in entries {
-        let Some(key) = comparable_key(entry) else {
+        let Some(key) = entry.key_str() else {
             continue;
         };
-        match first_seen.entry(key) {
+        match first_seen.entry((key, entry.origin)) {
             Entry::Vacant(vacant) => {
                 vacant.insert(entry.key.range);
             }
@@ -136,12 +136,6 @@ fn collect_repeats(entries: &[kubelint_yaml::Entry], path: &str, found: &mut Vec
             }),
         }
     }
-}
-
-/// The key text used to compare entries, or `None` for keys this rule does not compare:
-/// mappings or sequences used as keys, and YAML merge keys (`<<`), which may repeat.
-fn comparable_key(entry: &kubelint_yaml::Entry) -> Option<&str> {
-    entry.key_str().filter(|key| *key != "<<")
 }
 
 /// Appends `key` to a path: `.key` for simple keys, `["key"]` for keys with dots or other

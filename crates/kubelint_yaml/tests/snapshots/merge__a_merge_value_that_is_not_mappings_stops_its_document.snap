@@ -1,0 +1,16 @@
+---
+source: crates/kubelint_yaml/tests/merge.rs
+expression: "dump(include_str!(\"fixtures/merge/invalid_values.yaml\"))"
+---
+document 214..222
+  mapping 218..222
+    entry
+      scalar Plain "b" 218..219
+      scalar Plain "1" 221..222
+error "a merge key needs a mapping or a list of mappings" at 18 limit false
+error "a merge key needs a mapping or a list of mappings" at 46 limit false
+error "a merge key needs a mapping or a list of mappings" at 84 limit false
+error "a merge key needs a mapping or a list of mappings" at 121 limit false
+error "a merge key needs a mapping or a list of mappings" at 149 limit false
+error "a merge key needs a mapping or a list of mappings" at 176 limit false
+error "a merge key needs a mapping or a list of mappings" at 205 limit false

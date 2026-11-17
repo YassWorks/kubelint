@@ -1,0 +1,14 @@
+é: &a {a: merged, b: merged}
+before:
+  a: before
+  <<: *a
+  c: explicit
+after:
+  <<: *a
+  a: explicit
+twice:
+  a: one
+  <<: {a: merged}
+  a: two
+inline:
+  <<: {é: inline}

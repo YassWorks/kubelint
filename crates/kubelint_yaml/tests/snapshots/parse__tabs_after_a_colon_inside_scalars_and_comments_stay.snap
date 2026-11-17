@@ -1,0 +1,74 @@
+---
+source: crates/kubelint_yaml/tests/parse.rs
+expression: "dump(include_str!(\"fixtures/parse/tabs_after_a_colon_in_scalars.yaml\"))"
+---
+document 0..245
+  mapping 0..245
+    entry
+      scalar Plain "apiVersion" 0..10
+      scalar Plain "v1" 12..14
+    entry
+      scalar Plain "kind" 15..19
+      scalar Plain "ConfigMap" 21..30
+    entry
+      scalar Plain "metadata" 31..39
+      mapping 43..77
+        entry
+          scalar Plain "name" 43..47
+          scalar Plain "web" 49..52
+        entry
+          scalar Plain "labels" 55..61
+          mapping 67..77
+            entry
+              scalar Plain "café" 67..72
+              scalar Plain "bar" 74..77
+    entry
+      scalar Plain "data" 78..82
+      mapping 86..245
+        entry
+          scalar Plain "dq" 86..88
+          scalar DoubleQuoted "a:\tb" 90..96
+        entry
+          scalar Plain "after" 99..104
+          scalar Plain "value" 106..111
+        entry
+          scalar Plain "sq" 114..116
+          scalar SingleQuoted "a:\tb" 118..124
+        entry
+          scalar DoubleQuoted "key:\tx" 127..135
+          scalar Plain "one" 137..140
+        entry
+          scalar Plain "é" 143..145
+          scalar DoubleQuoted "ü:\tb" 147..154
+        entry
+          scalar Plain "literal" 157..164
+          scalar Literal "a:\tb\n" 172..179
+        entry
+          scalar Plain "folded" 179..185
+          scalar Folded "c:\td\n" 193..200
+        entry
+          scalar Plain "escaped" 200..207
+          scalar DoubleQuoted "it's" 209..216
+        entry
+          scalar Plain "later" 219..224
+          scalar Plain "value" 226..231
+        entry
+          scalar Plain "comment" 234..241
+          scalar Plain "ok" 243..245
+document 262..328
+  mapping 266..328
+    entry
+      scalar Plain "kind" 266..270
+      scalar Plain "ConfigMap" 272..281
+    entry
+      scalar Plain "data" 282..286
+      mapping 290..328
+        entry
+          scalar Plain "dq" 290..292
+          scalar DoubleQuoted "a:\tb" 294..300
+        entry
+          scalar Plain "sq" 303..305
+          scalar SingleQuoted "a:\tb" 307..313
+        entry
+          scalar Plain "legit" 316..321
+          scalar Plain "value" 323..328

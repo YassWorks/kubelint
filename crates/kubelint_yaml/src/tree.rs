@@ -35,6 +35,10 @@ pub enum NodeKind {
 pub struct Entry {
     pub key: Node,
     pub value: Node,
+    /// 0 for an entry written in its own mapping. Entries a merge key (`<<`) brought in
+    /// share a nonzero number per merge source, so a repeat is a duplicate only between
+    /// entries with the same origin.
+    pub origin: u32,
 }
 
 /// Untyped: Kubernetes decides whether `yes` or `8080` is a string, a bool or a number,

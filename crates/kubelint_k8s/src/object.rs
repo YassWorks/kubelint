@@ -12,6 +12,7 @@ use crate::{BuiltinKind, GroupVersion, GroupVersionKind};
 #[derive(Debug, Clone, Copy)]
 pub struct Object<'a> {
     node: &'a Node,
+    in_list: bool,
 }
 
 /// The Kubernetes objects of a document, in source order.
@@ -47,7 +48,10 @@ pub fn objects(document: &Document) -> Vec<Object<'_>> {
         .into_iter()
         .flat_map(Node::items)
         .filter(|item| item.as_mapping().is_some())
-        .map(|node| Object { node })
+        .map(|node| Object {
+            node,
+            in_list: true,
+        })
         .collect()
 }
 
@@ -66,7 +70,16 @@ impl<'a> Object<'a> {
     pub fn from_node(node: &'a Node) -> Option<Self> {
         let is_object = node.as_mapping().is_some()
             && (node.get_entry("apiVersion").is_some() || node.get_entry("kind").is_some());
-        is_object.then_some(Self { node })
+        is_object.then_some(Self {
+            node,
+            in_list: false,
+        })
+    }
+
+    /// Whether the object is an item of a `kind: List` document, where a mapping can only
+    /// be meant as an object.
+    pub fn is_list_item(self) -> bool {
+        self.in_list
     }
 
     pub fn node(self) -> &'a Node {
@@ -128,6 +141,22 @@ impl<'a> Object<'a> {
         self.group_version()
             .is_none_or(|gv| gv.group == kind.group())
             .then_some(kind)
+    }
+
+    /// Whether the object's kind is a listed built-in cluster-scoped one. The scope of any
+    /// other kind is unknown here, so it counts as namespaced.
+    ///
+    /// ```
+    /// let cluster = |text: &str| {
+    ///     kubelint_k8s::objects(&kubelint_yaml::parse(text).documents[0])[0].is_cluster_scoped()
+    /// };
+    /// assert!(cluster("apiVersion: v1\nkind: Namespace\n"));
+    /// assert!(!cluster("apiVersion: v1\nkind: ConfigMap\n"));
+    /// assert!(!cluster("apiVersion: example.com/v1\nkind: Namespace\n"));
+    /// ```
+    pub fn is_cluster_scoped(self) -> bool {
+        self.builtin_kind()
+            .is_some_and(BuiltinKind::is_cluster_scoped)
     }
 
     pub fn metadata(self) -> Option<&'a Node> {

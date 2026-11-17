@@ -39,12 +39,45 @@ kind: ClusterRole
 metadata:
   name: team/reader
 ---
-# Reported: an invalid namespace, on any kind.
+# Reported: an invalid namespace on a custom resource.
 apiVersion: example.com/v1
 kind: Widget
 metadata:
   name: Anything_Goes
   namespace: Team_A
+---
+# Not reported: the server ignores `metadata.namespace` on a cluster-scoped kind.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: reader
+  namespace: Team_A
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: team-a
+  namespace: Team_A
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: fast
+  namespace: Team_A
+---
+# Reported: the namespace of a namespaced built-in kind.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: settings
+  namespace: Team_A
+---
+# Reported: a cluster-scoped kind still has its name checked.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: Team_A
+  namespace: fine
 ---
 # Not reported: valid names for each format, including a subdomain with dots, an
 # uppercase-free RBAC name with colons, and a namespace.

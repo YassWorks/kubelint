@@ -1,0 +1,48 @@
+---
+source: crates/kubelint_yaml/tests/merge.rs
+expression: "dump(include_str!(\"fixtures/merge/nested.yaml\"))"
+---
+document 0..135
+  mapping 0..135
+    entry
+      scalar Plain "é" 0..2
+      mapping 10..28
+        entry
+          scalar Plain "a" 11..12
+          scalar Plain "base" 14..18
+        entry
+          scalar Plain "b" 20..21
+          scalar Plain "base" 23..27
+    entry
+      scalar Plain "mid" 29..32
+      mapping 41..59
+        entry
+          scalar Plain "a" 11..12
+          scalar Plain "base" 14..18
+        entry
+          scalar Plain "b" 53..54
+          scalar Plain "mid" 56..59
+    entry
+      scalar Plain "top" 60..63
+      mapping 67..84
+        entry
+          scalar Plain "a" 11..12
+          scalar Plain "base" 14..18
+        entry
+          scalar Plain "b" 53..54
+          scalar Plain "mid" 56..59
+        entry
+          scalar Plain "c" 78..79
+          scalar Plain "top" 81..84
+    entry
+      scalar Plain "inner" 85..90
+      mapping 94..135
+        entry
+          scalar Plain "k" 102..103
+          mapping 111..135
+            entry
+              scalar Plain "b" 20..21
+              scalar Plain "base" 23..27
+            entry
+              scalar Plain "a" 127..128
+              scalar Plain "inner" 130..135
