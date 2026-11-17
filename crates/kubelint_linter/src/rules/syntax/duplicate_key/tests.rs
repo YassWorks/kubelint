@@ -24,7 +24,8 @@ fn paths_quote_keys_that_are_not_simple() {
 
 #[test]
 fn deep_nesting_does_not_overflow_a_small_stack() {
-    let text = format!("x:\n{}{{a: 1, a: 2}}\n", "- ".repeat(9_999));
+    // With the root and the inner mapping, 10,000 nested collections: the most kubectl accepts.
+    let text = format!("x:\n{}{{a: 1, a: 2}}\n", "- ".repeat(9_998));
     // Parsing and dropping the tree recurse per level, so they get a large stack and only
     // the walk runs on a small one.
     let found = std::thread::Builder::new()
@@ -48,6 +49,6 @@ fn deep_nesting_does_not_overflow_a_small_stack() {
         .expect("the thread starts")
         .join()
         .expect("parsing fits in a large stack");
-    let path = format!("x{}", "[0]".repeat(9_999));
+    let path = format!("x{}", "[0]".repeat(9_998));
     assert_eq!(found, [("a".to_owned(), path)]);
 }
