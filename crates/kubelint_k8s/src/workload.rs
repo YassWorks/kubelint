@@ -107,6 +107,17 @@ impl<'a> PodSpec<'a> {
         self.node.get_path(&["os", "name"]).and_then(Node::as_str) == Some("windows")
     }
 
+    /// Whether the pod sets `hostUsers: false`, which gives it a user namespace.
+    ///
+    /// ```
+    /// let parse = kubelint_yaml::parse("kind: Pod\nspec:\n  hostUsers: false\n");
+    /// let pod = kubelint_k8s::objects(&parse.documents[0])[0].pod_spec().unwrap();
+    /// assert!(pod.has_user_namespace());
+    /// ```
+    pub fn has_user_namespace(self) -> bool {
+        self.node.get("hostUsers").and_then(Node::as_bool) == Some(false)
+    }
+
     /// The items of `volumes`, in source order.
     pub fn volumes(self) -> impl Iterator<Item = &'a Node> {
         self.node.get("volumes").into_iter().flat_map(Node::items)

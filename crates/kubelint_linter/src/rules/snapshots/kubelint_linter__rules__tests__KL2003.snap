@@ -2,81 +2,151 @@
 source: crates/kubelint_linter/src/rules/tests.rs
 expression: check_fixture(rule)
 ---
-warning[KL2003]: container `web` may run as root
-  --> security/KL2003.yaml:14:15
+warning[KL2003]: container `web` does not set `runAsNonRoot: true`
+  --> security/KL2003.yaml:15:15
    |
-14 |       - name: web
+15 |       - name: web
    |               ^^^
-  = help: set `runAsNonRoot: true` and a non-zero `runAsUser` in the container or pod `securityContext`
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
 
-warning[KL2003]: container `empty` may run as root
-  --> security/KL2003.yaml:16:15
+warning[KL2003]: container `empty` does not set `runAsNonRoot: true`
+  --> security/KL2003.yaml:17:15
    |
-16 |       - name: empty
+17 |       - name: empty
    |               ^^^^^
-  = help: set `runAsNonRoot: true` and a non-zero `runAsUser` in the container or pod `securityContext`
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
 
-warning[KL2003]: container `other` may run as root
-  --> security/KL2003.yaml:19:15
+warning[KL2003]: container `other` does not set `runAsNonRoot: true`
+  --> security/KL2003.yaml:20:15
    |
-19 |       - name: other
+20 |       - name: other
    |               ^^^^^
-  = help: set `runAsNonRoot: true` and a non-zero `runAsUser` in the container or pod `securityContext`
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
 
-warning[KL2003]: container `app` runs as root (`runAsUser: 0`)
-  --> security/KL2003.yaml:32:5
+warning[KL2003]: container `user-only` does not set `runAsNonRoot: true`
+  --> security/KL2003.yaml:24:15
    |
-32 |     runAsUser: 0
+24 |       - name: user-only
+   |               ^^^^^^^^^
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
+
+warning[KL2003]: the pod runs as root (`runAsUser: 0`)
+  --> security/KL2003.yaml:37:5
+   |
+37 |     runAsUser: 0
    |     ^^^^^^^^^^^^
-  = help: set `runAsNonRoot: true` and a non-zero `runAsUser` in the container or pod `securityContext`
+  = help: set a non-zero `runAsUser`, or remove it and set `runAsNonRoot: true`
 
 warning[KL2003]: container `setup` runs as root (`runAsUser: 0`)
-  --> security/KL2003.yaml:36:23
+  --> security/KL2003.yaml:42:23
    |
-36 |     securityContext: {runAsUser: 0}
+42 |     securityContext: {runAsUser: 0}
    |                       ^^^^^^^^^^^^
-  = help: set `runAsNonRoot: true` and a non-zero `runAsUser` in the container or pod `securityContext`
+  = help: set a non-zero `runAsUser`, or remove it and set `runAsNonRoot: true`
 
-warning[KL2003]: container `app` may run as root (`runAsNonRoot: false`)
-  --> security/KL2003.yaml:51:5
+warning[KL2003]: the pod may run as root (`runAsNonRoot: false`)
+  --> security/KL2003.yaml:58:5
    |
-51 |     runAsNonRoot: false
+58 |     runAsNonRoot: false
    |     ^^^^^^^^^^^^^^^^^^^
-  = help: set `runAsNonRoot: true` and a non-zero `runAsUser` in the container or pod `securityContext`
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
 
 warning[KL2003]: container `débogage` may run as root (`runAsNonRoot: false`)
-  --> security/KL2003.yaml:51:5
-   |
-51 |     runAsNonRoot: false
-   |     ^^^^^^^^^^^^^^^^^^^
-  = help: set `runAsNonRoot: true` and a non-zero `runAsUser` in the container or pod `securityContext`
-
-warning[KL2003]: container may run as root (`runAsNonRoot: false`)
   --> security/KL2003.yaml:72:7
    |
-72 |       runAsNonRoot: no
-   |       ^^^^^^^^^^^^^^^^
-  = help: set `runAsNonRoot: true` and a non-zero `runAsUser` in the container or pod `securityContext`
+72 |       runAsNonRoot: false
+   |       ^^^^^^^^^^^^^^^^^^^
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
 
-warning[KL2003]: container `agent` may run as root
-  --> security/KL2003.yaml:87:16
+warning[KL2003]: container may run as root (`runAsNonRoot: false`)
+  --> security/KL2003.yaml:85:7
    |
-87 |       - {name: agent, image: agent:3}
-   |                ^^^^^
-  = help: set `runAsNonRoot: true` and a non-zero `runAsUser` in the container or pod `securityContext`
+85 |       runAsNonRoot: no
+   |       ^^^^^^^^^^^^^^^^
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
 
-warning[KL2003]: container `report` may run as root
-   --> security/KL2003.yaml:102:20
+warning[KL2003]: container `agent` does not set `runAsNonRoot: true`
+   --> security/KL2003.yaml:100:16
     |
-102 |           - {name: report, image: report:2}
+100 |       - {name: agent, image: agent:3}
+    |                ^^^^^
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
+
+warning[KL2003]: container `report` does not set `runAsNonRoot: true`
+   --> security/KL2003.yaml:115:20
+    |
+115 |           - {name: report, image: report:2}
     |                    ^^^^^^
-  = help: set `runAsNonRoot: true` and a non-zero `runAsUser` in the container or pod `securityContext`
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
 
-warning[KL2003]: container may run as root
-   --> security/KL2003.yaml:114:9
+warning[KL2003]: container does not set `runAsNonRoot: true`
+   --> security/KL2003.yaml:127:9
     |
-114 |       - image: app:1.0
+127 |       - image: app:1.0
     |         ^^^^^
-  = help: set `runAsNonRoot: true` and a non-zero `runAsUser` in the container or pod `securityContext`
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
 
-11 finding(s) in 16 object(s)
+warning[KL2003]: container `db` does not set `runAsNonRoot: true`
+   --> security/KL2003.yaml:182:15
+    |
+182 |       - name: db
+    |               ^^
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
+
+warning[KL2003]: container `backup` may run as root (`runAsNonRoot: false`)
+   --> security/KL2003.yaml:186:44
+    |
+186 |         securityContext: {runAsUser: 1000, runAsNonRoot: false}
+    |                                            ^^^^^^^^^^^^^^^^^^^
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
+
+warning[KL2003]: the pod runs as root (`runAsUser: 0`)
+   --> security/KL2003.yaml:195:5
+    |
+195 |     runAsUser: 0
+    |     ^^^^^^^^^^^^
+  = help: set a non-zero `runAsUser`, or remove it and set `runAsNonRoot: true`
+
+warning[KL2003]: the pod may run as root (`runAsNonRoot: false`)
+   --> security/KL2003.yaml:210:5
+    |
+210 |     runAsNonRoot: false
+    |     ^^^^^^^^^^^^^^^^^^^
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
+
+warning[KL2003]: container `app` does not set `runAsNonRoot: true`
+   --> security/KL2003.yaml:263:11
+    |
+263 |   - name: app
+    |           ^^^
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
+
+warning[KL2003]: container `app` does not set `runAsNonRoot: true`
+   --> security/KL2003.yaml:311:11
+    |
+311 |   - name: app
+    |           ^^^
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
+
+warning[KL2003]: container `setup` does not set `runAsNonRoot: true`
+   --> security/KL2003.yaml:321:11
+    |
+321 |   - name: setup
+    |           ^^^^^
+  = help: set `runAsNonRoot: true` in the container or pod `securityContext`
+
+warning[KL2003]: container `a` runs as root (`runAsUser: 0`)
+   --> security/KL2003.yaml:376:23
+    |
+376 |     securityContext: {runAsUser: 0.0}
+    |                       ^^^^^^^^^^^^^^
+  = help: set a non-zero `runAsUser`, or remove it and set `runAsNonRoot: true`
+
+warning[KL2003]: container `b` runs as root (`runAsUser: 0`)
+   --> security/KL2003.yaml:379:23
+    |
+379 |     securityContext: {runAsUser: 0e0}
+    |                       ^^^^^^^^^^^^^^
+  = help: set a non-zero `runAsUser`, or remove it and set `runAsNonRoot: true`
+
+21 finding(s) in 23 object(s)
