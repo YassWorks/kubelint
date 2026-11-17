@@ -22,10 +22,10 @@ ready-made setups for GitHub Actions, GitLab CI and pre-commit.
 Download the release archive for the runner's platform. On a Linux x86-64 runner:
 
 ```bash
-VERSION=v0.18.15
+VERSION=v0.20.3
 TARGET=x86_64-unknown-linux-musl
-curl -fsSL "https://github.com/YassWorks/kubelint/releases/download/$VERSION/kubelint-$VERSION-$TARGET.tar.gz" \
-  | tar -xz --strip-components=1 "kubelint-$VERSION-$TARGET/kubelint"
+curl -fsSL "https://github.com/YassWorks/kubelint/releases/download/$VERSION/kubelint-$TARGET.tar.gz" \
+  | tar -xz --strip-components=1 "kubelint-$TARGET/kubelint"
 ./kubelint --version
 ```
 
@@ -92,12 +92,12 @@ works on every runner operating system.
 kubelint:
   image: alpine:3
   variables:
-    VERSION: v0.18.15
+    VERSION: v0.20.3
     TARGET: x86_64-unknown-linux-musl
   script:
     - apk add --no-cache curl
-    - curl -fsSL "https://github.com/YassWorks/kubelint/releases/download/$VERSION/kubelint-$VERSION-$TARGET.tar.gz"
-      | tar -xz --strip-components=1 "kubelint-$VERSION-$TARGET/kubelint"
+    - curl -fsSL "https://github.com/YassWorks/kubelint/releases/download/$VERSION/kubelint-$TARGET.tar.gz"
+      | tar -xz --strip-components=1 "kubelint-$TARGET/kubelint"
     - ./kubelint check .
 ```
 

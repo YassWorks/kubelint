@@ -112,7 +112,7 @@ cargo install --locked --git https://github.com/YassWorks/kubelint kubelint
 Installed with the installer on Linux or macOS:
 
 1. Delete the binary: `rm "$(command -v kubelint)"`. Delete its folder too if it is now
-   empty.
+   empty, and `~/.local` if that is then empty.
 2. List the shell profiles the installer changed:
 
    ```bash
