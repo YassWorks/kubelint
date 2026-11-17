@@ -61,7 +61,8 @@ enum values, and removed or deprecated API versions.
   rule's own field. A correctness finding is rejected with an error naming that field
   (KL1011 is accepted with a warning, KL1001 and KL1002 are rejected by `kubectl`
   itself, KL1004 needs both objects in one request). A Pod Security finding (`baseline`
-  for KL2001 and KL2004 to KL2007, `restricted` for KL2002 and KL2003) names the check
+  for KL2001 and KL2004 to KL2007, `restricted` for KL2002 and KL2003, where KL2003
+  skips `hostUsers: false`, which 1.34 still rejects) names the check
   the server reports in a namespace labeled with that level: a Pod is rejected, a
   workload gets a warning. A case the rule passes does not trigger that check. Cases the
   server cannot judge (template placeholders, custom resources, schema problems, files
@@ -175,11 +176,6 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   name that starts with a digit, which is valid from 1.36, and it stays silent on a
   ReplicationController `generateName` with invalid characters when `name` is set, which
   1.34 rejects. Both need the `--kubernetes-version` flag.
-- KL2003 reports only a container that may run as root, while its catalog row and the
-  end to end CI item treat it as the `restricted` check `runAsNonRoot`. They differ on
-  a non-zero `runAsUser` without `runAsNonRoot`, Windows pods, `hostUsers: false`
-  (restricted accepts it from 1.35) and a pod-level `runAsUser: 0` that every container
-  overrides. Decide which one the rule is.
 - No rule covers several `baseline` checks (see Rule ideas), so the default security
   rules check only part of `baseline`.
 - Some rule fixtures encode a verdict the API server gives differently, so the end to

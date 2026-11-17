@@ -158,7 +158,7 @@ A `kustomization.yaml` that has `metadata` and no `apiVersion` is still reported
 | --- | --- | --- | --- | --- | --- | --- |
 | KL2001 | `privileged-container` | on | error | implemented | M2 | `securityContext.privileged: true`. |
 | KL2002 | `privilege-escalation-allowed` | off | warning | implemented | M2 | `allowPrivilegeEscalation` is not set to `false`. |
-| KL2003 | `run-as-root` | off | warning | implemented | M2 | The container may run as root (`runAsNonRoot` not true, or `runAsUser: 0`), honoring pod-level defaults. |
+| KL2003 | `run-as-root` | off | warning | implemented | M2 | The `restricted` checks `runAsNonRoot` and `runAsUser`: `runAsNonRoot` is not `true` or is `false`, or `runAsUser` is `0`, honoring pod-level defaults. |
 | KL2004 | `host-namespace` | on | warning | implemented | M2 | `hostNetwork`, `hostPID` or `hostIPC` is enabled. |
 | KL2005 | `host-path-volume` | on | warning | implemented | M2 | A `hostPath` volume exposes the node's filesystem. |
 | KL2006 | `dangerous-capability` | on | warning | implemented | M2 | Adds a Linux capability outside the `baseline` Pod Security Standard list, like `SYS_ADMIN`, `NET_ADMIN` or `ALL`. |
@@ -182,6 +182,47 @@ with Pod Security Admission.
 
 **Rejected:** shipping them on, which floods a first run; shipping only one of them on,
 which splits one standard with no principled line between the two.
+
+KL2003 `run-as-root` is the `restricted` Pod Security checks about root, `runAsNonRoot`
+and `runAsUser`. It agrees with Pod Security admission on every manifest shape its
+fixture and the audit cases cover, on Kubernetes 1.34 to 1.37 except `hostUsers: false`
+(see below). It reports a container that does not set `runAsNonRoot: true` (a non-zero
+`runAsUser` alone is reported), an explicit `runAsNonRoot: false` on the pod or a
+container, and `runAsUser: 0` on the pod or a container (also spelled `0.0` or `0e0`,
+which the API server reads as 0), including a pod-level value that every container
+overrides. Windows pods are checked like the others, and a pod with `hostUsers: false`
+is skipped, as `restricted` accepts it from 1.35. Until `--kubernetes-version` exists
+the rule follows the newest version.
+
+**Why:** the rule is off by default and documented as a `restricted` requirement, so a
+user who turns it on expects it to agree with the cluster. The rule and the end to end
+CI item then use one definition, and the cases the old rule passed (an explicit `false`
+next to `runAsUser: 1000`, a pod `false` that a container overrides, a pod `runAsUser: 0`
+that every container overrides, a Windows pod without `runAsNonRoot`) are rejected by
+the server and now reported.
+
+**Rejected:**
+
+- Keeping "the container may run as root" and changing the catalog row and the end to
+  end CI item to match. A non-zero `runAsUser` without `runAsNonRoot` runs as non-root,
+  so this is the more precise question, but it answers a different one than the
+  standard the rule's off-by-default choice rests on, and it would keep passing an
+  explicit `runAsNonRoot: false` next to a non-zero `runAsUser`, a pod `false` that a
+  container overrides, a pod `runAsUser: 0` that every container overrides and a Windows
+  pod without `runAsNonRoot`, which the cluster rejects.
+- Two rules, one per Pod Security check. It would split one standard over two codes and
+  two selections, and both checks answer the same question for the user.
+
+KL2002 `privilege-escalation-allowed` keeps skipping a privileged container and a
+container that adds `CAP_SYS_ADMIN`, although `restricted` reports both as
+`allowPrivilegeEscalation != false`.
+
+**Why:** Kubernetes rejects `allowPrivilegeEscalation: false` next to either setting, so
+KL2002's help could not be followed. KL2001 and KL2006 already report both containers,
+with the fix that works (remove the setting).
+
+**Rejected:** reporting them in KL2002 as well, which gives one container two findings
+and one of them with an impossible fix.
 
 KL2006 calls a capability dangerous when the `baseline` Pod Security Standard forbids
 adding it.

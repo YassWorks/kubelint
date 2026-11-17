@@ -1,4 +1,5 @@
-# Reported: no settings at all, an empty securityContext and only unrelated settings.
+# Reported: no settings at all, an empty securityContext, only unrelated settings and a
+# non-zero `runAsUser` alone (restricted wants `runAsNonRoot: true`).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -20,9 +21,13 @@ spec:
         image: app:1.0
         securityContext:
           allowPrivilegeEscalation: false
+      - name: user-only
+        image: app:1.0
+        securityContext:
+          runAsUser: 1000
 ---
-# Reported: `runAsUser: 0` in a container, and `runAsUser: 0` from the pod even with
-# `runAsNonRoot: true` (the kubelet then refuses to start it).
+# Reported: `runAsUser: 0` on the pod (once, even when a container overrides it) and in a
+# container, even with `runAsNonRoot: true`.
 apiVersion: v1
 kind: Pod
 metadata:
@@ -30,6 +35,7 @@ metadata:
 spec:
   securityContext:
     runAsUser: 0
+    runAsNonRoot: true
   initContainers:
   - name: setup
     image: busybox:1.36
@@ -38,10 +44,11 @@ spec:
   - name: app
     image: app:1.0
     securityContext:
-      runAsNonRoot: true
+      runAsUser: 1000
 ---
-# Reported: a null container value falls back to the pod's `runAsNonRoot: false`, and
-# so does an ephemeral container.
+# Reported: a pod `runAsNonRoot: false` is reported on the pod, once, whether a container
+# leaves it unset, sets it to null or sets `true`. An ephemeral container that sets
+# `false` is reported too.
 apiVersion: v1
 kind: Pod
 metadata:
@@ -54,9 +61,15 @@ spec:
     image: app:1.0
     securityContext:
       runAsNonRoot: ~
+  - name: safe
+    image: app:1.0
+    securityContext:
+      runAsNonRoot: true
   ephemeralContainers:
   - name: débogage
     image: busybox:1.36
+    securityContext:
+      runAsNonRoot: false
 ---
 # Reported: `runAsNonRoot: no` in a container without a name overrides the pod's `true`.
 apiVersion: v1
@@ -128,8 +141,7 @@ spec:
   - name: app
     image: app:1.0
 ---
-# Not reported: a non-zero `runAsUser` on the pod or the container, or a container
-# `runAsNonRoot: true`.
+# Not reported: a container `runAsNonRoot: true` next to any non-zero `runAsUser`.
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -142,19 +154,38 @@ spec:
     metadata:
       labels: {app: db}
     spec:
+      containers:
+      - name: db
+        image: postgres:17
+        securityContext: {runAsNonRoot: true, runAsUser: 999}
+      - name: exporter
+        image: exporter:1
+        securityContext: {runAsNonRoot: true}
+---
+# Reported: `runAsUser: 1000` does not replace `runAsNonRoot: true`, and an explicit
+# `runAsNonRoot: false` is reported whatever `runAsUser` says.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: user-only
+spec:
+  serviceName: user-only
+  selector:
+    matchLabels: {app: user-only}
+  template:
+    metadata:
+      labels: {app: user-only}
+    spec:
       securityContext:
         runAsUser: 999
       containers:
       - name: db
         image: postgres:17
-      - name: exporter
-        image: exporter:1
-        securityContext: {runAsNonRoot: true}
       - name: backup
         image: backup:1
         securityContext: {runAsUser: 1000, runAsNonRoot: false}
 ---
-# Not reported: a non-zero container `runAsUser` overrides a pod-level `0`.
+# Reported: a pod-level `runAsUser: 0` that every container overrides.
 apiVersion: v1
 kind: Pod
 metadata:
@@ -167,8 +198,9 @@ spec:
     image: app:1.0
     securityContext:
       runAsUser: 1000
+      runAsNonRoot: true
 ---
-# Not reported: a container `runAsNonRoot: true` overrides the pod's `false`.
+# Reported: a pod `runAsNonRoot: false` that a container overrides with `true`.
 apiVersion: v1
 kind: Pod
 metadata:
@@ -212,12 +244,14 @@ spec:
     image: app:1.0
     securityContext:
       runAsUser: "0"
+      runAsNonRoot: true
   - name: b
     image: app:1.0
     securityContext:
       runAsNonRoot: "false"
 ---
-# Not reported: a Windows pod.
+# Reported: a Windows pod without `runAsNonRoot: true` (the server rejects `runAsUser` and
+# `hostUsers` there, so this is the only way to satisfy restricted).
 apiVersion: v1
 kind: Pod
 metadata:
@@ -228,6 +262,85 @@ spec:
   containers:
   - name: app
     image: app:1.0
+---
+# Not reported: a Windows pod with `runAsNonRoot: true`.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: windows-ok
+spec:
+  os:
+    name: windows
+  securityContext:
+    runAsNonRoot: true
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Not reported: `hostUsers: false` accepts any user, so `runAsUser: 0`, `runAsNonRoot: false`
+# and unset values all pass (restricted accepts this from 1.35).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: userns
+spec:
+  selector:
+    matchLabels: {app: userns}
+  template:
+    metadata:
+      labels: {app: userns}
+    spec:
+      hostUsers: false
+      securityContext:
+        runAsNonRoot: false
+      containers:
+      - name: a
+        image: app:1.0
+      - name: b
+        image: app:1.0
+        securityContext: {runAsUser: 0}
+---
+# Reported: `hostUsers: true` is no relaxation.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: host-users
+spec:
+  hostUsers: true
+  containers:
+  - name: app
+    image: app:1.0
+---
+# Reported: an init container that sets nothing next to a container that sets `true`.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init
+spec:
+  initContainers:
+  - name: setup
+    image: busybox:1.36
+  containers:
+  - name: app
+    image: app:1.0
+    securityContext: {runAsNonRoot: true}
+---
+# Not reported: a pod and its containers that set `true`, with null values falling back.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: all-true
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+  initContainers:
+  - name: setup
+    image: busybox:1.36
+  containers:
+  - name: app
+    image: app:1.0
+    securityContext: {runAsNonRoot: ~, runAsUser: ~}
 ---
 # Not reported: a custom resource with a pod-like shape.
 apiVersion: example.com/v1
@@ -248,3 +361,19 @@ metadata:
   name: config
 data:
   runAsUser: "0"
+---
+# Reported: `runAsUser` spelled as a float zero, which the API server reads as 0.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: float-zero
+spec:
+  securityContext:
+    runAsNonRoot: true
+  containers:
+  - name: a
+    image: app:1.0
+    securityContext: {runAsUser: 0.0}
+  - name: b
+    image: app:1.0
+    securityContext: {runAsUser: 0e0}
