@@ -1,0 +1,12 @@
+é: &base {a: base, b: base}
+mid: &mid
+  <<: *base
+  b: mid
+top:
+  <<: *mid
+  c: top
+inner:
+  <<:
+    k:
+      <<: *base
+      a: inner

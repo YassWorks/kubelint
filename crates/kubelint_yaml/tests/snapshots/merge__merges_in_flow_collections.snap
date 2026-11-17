@@ -1,0 +1,34 @@
+---
+source: crates/kubelint_yaml/tests/merge.rs
+expression: "dump(include_str!(\"fixtures/merge/flow.yaml\"))"
+---
+document 0..68
+  mapping 0..68
+    entry
+      scalar Plain "é" 0..2
+      mapping 7..18
+        entry
+          scalar Plain "m" 8..9
+          scalar Plain "merged" 11..17
+    entry
+      scalar Plain "flow" 19..23
+      mapping 25..45
+        entry
+          scalar Plain "k" 26..27
+          scalar Plain "v" 29..30
+        entry
+          scalar Plain "m" 8..9
+          scalar Plain "merged" 11..17
+        entry
+          scalar Plain "n" 40..41
+          scalar Plain "1" 43..44
+    entry
+      scalar Plain "list" 46..50
+      sequence 52..68
+        mapping 53..67
+          entry
+            scalar Plain "m" 8..9
+            scalar Plain "merged" 11..17
+          entry
+            scalar Plain "k" 62..63
+            scalar Plain "v" 65..66

@@ -8,6 +8,7 @@
 mod builder;
 mod comments;
 mod limits;
+mod merge;
 mod nav;
 mod quoted;
 mod resolve;

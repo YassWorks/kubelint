@@ -3,7 +3,9 @@
 Reports a YAML syntax error, such as a bad indentation, an unclosed bracket or quote, or
 a tab used for indentation. It also reports a document that is valid YAML but over a limit
 kubectl enforces: aliases that expand to far more nodes than the file holds, or
-collections nested more than 10,000 levels deep. This rule cannot be disabled.
+collections nested more than 10,000 levels deep. A merge key (`<<`) whose value is not a
+mapping or a list of mappings is reported too, because kubectl refuses it. This rule
+cannot be disabled.
 
 ## Why it matters
 

@@ -121,4 +121,11 @@ error[KL1010]: label key `bad label` is invalid: its name part must contain only
     |       ^^^^^^^^^
   = help: write the key as an optional lowercase DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `bad-label`
 
-17 finding(s) in 11 object(s)
+error[KL1010]: label key `bad label` is invalid: its name part must contain only letters, digits, `-`, `_` and `.`, and start and end with a letter or digit
+   --> correctness/KL1010.yaml:184:17
+    |
+184 |   labels: {<<: {bad label: x}}
+    |                 ^^^^^^^^^
+  = help: write the key as an optional lowercase DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `bad-label`
+
+18 finding(s) in 13 object(s)

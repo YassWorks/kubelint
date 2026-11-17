@@ -1,0 +1,51 @@
+---
+source: crates/kubelint_yaml/tests/merge.rs
+expression: "dump(include_str!(\"fixtures/merge/overrides.yaml\"))"
+---
+document 0..172
+  mapping 0..172
+    entry
+      scalar Plain "é" 0..2
+      mapping 7..29
+        entry
+          scalar Plain "a" 8..9
+          scalar Plain "merged" 11..17
+        entry
+          scalar Plain "b" 19..20
+          scalar Plain "merged" 22..28
+    entry
+      scalar Plain "before" 30..36
+      mapping 40..72
+        entry
+          scalar Plain "a" 8..9
+          scalar Plain "merged" 11..17
+        entry
+          scalar Plain "b" 19..20
+          scalar Plain "merged" 22..28
+        entry
+          scalar Plain "c" 61..62
+          scalar Plain "explicit" 64..72
+    entry
+      scalar Plain "after" 73..78
+      mapping 82..102
+        entry
+          scalar Plain "b" 19..20
+          scalar Plain "merged" 22..28
+        entry
+          scalar Plain "a" 91..92
+          scalar Plain "explicit" 94..102
+    entry
+      scalar Plain "twice" 103..108
+      mapping 112..145
+        entry
+          scalar Plain "a" 112..113
+          scalar Plain "one" 115..118
+        entry
+          scalar Plain "a" 139..140
+          scalar Plain "two" 142..145
+    entry
+      scalar Plain "inline" 146..152
+      mapping 156..172
+        entry
+          scalar Plain "é" 161..163
+          scalar Plain "inline" 165..171

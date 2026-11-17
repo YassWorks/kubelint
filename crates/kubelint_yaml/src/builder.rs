@@ -7,6 +7,7 @@ use saphyr_parser::{Event, Parser, ScalarStyle as SaphyrStyle, Span, Tag};
 
 use crate::comments::{self, Comment, inside_range, to_size};
 use crate::limits::{AliasBudget, MAX_DEPTH};
+use crate::merge;
 use crate::quoted;
 use crate::{Document, Entry, Node, NodeKind, Scalar, ScalarStyle};
 
@@ -207,13 +208,13 @@ fn parse_attempt(text: &str, offsets: &ByteOffsets, rewritten: &[usize]) -> Atte
         match item {
             Ok((event, span)) => match builder.event(event, span) {
                 Ok(doc) => out.documents.extend(doc),
-                Err((message, at)) => {
+                Err(stop) => {
                     out.errors.push(ParseError {
-                        message,
-                        range: TextRange::empty(at),
-                        limit: true,
+                        message: stop.message,
+                        range: TextRange::empty(stop.at),
+                        limit: stop.limit,
                     });
-                    limit = at;
+                    limit = stop.at;
                     break;
                 }
             },
@@ -272,15 +273,35 @@ impl ByteOffsets {
     }
 }
 
-/// The message and offset of the limit a document hit.
-type Over = (String, TextSize);
-
-fn at(offset: TextSize) -> impl Fn(&'static str) -> Over {
-    move |message| (message.to_owned(), offset)
+/// Why a document stopped: the message, the offset, and whether a limit caused it.
+struct Stop {
+    message: String,
+    at: TextSize,
+    limit: bool,
 }
 
-fn too_deep(offset: TextSize) -> Over {
-    (format!("nesting is deeper than {MAX_DEPTH} levels"), offset)
+fn at(offset: TextSize) -> impl Fn(&'static str) -> Stop {
+    move |message| Stop {
+        message: message.to_owned(),
+        at: offset,
+        limit: true,
+    }
+}
+
+fn too_deep(offset: TextSize) -> Stop {
+    Stop {
+        message: format!("nesting is deeper than {MAX_DEPTH} levels"),
+        at: offset,
+        limit: true,
+    }
+}
+
+fn bad_merge(offset: TextSize) -> Stop {
+    Stop {
+        message: "a merge key needs a mapping or a list of mappings".to_owned(),
+        at: offset,
+        limit: false,
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -298,6 +319,8 @@ enum Frame {
         start: TextSize,
         anchor: usize,
         items: Vec<Node>,
+        /// What the items cover where they were written.
+        written: Option<TextRange>,
     },
     Map {
         flow: bool,
@@ -307,6 +330,10 @@ enum Frame {
         key: Option<Node>,
         /// The pending key is `<<`, which `go-yaml` does not visit.
         merge: bool,
+        /// Indices in `entries` of the `<<` entries, each with where its value was written.
+        merges: Vec<(usize, TextRange)>,
+        /// What the keys and values cover where they were written.
+        written: Option<TextRange>,
     },
 }
 
@@ -351,8 +378,8 @@ impl<'a> Builder<'a> {
         }
     }
 
-    /// Feeds one event; returns a document when it ends, or the limit the document hit.
-    fn event(&mut self, event: Event<'_>, span: Span) -> Result<Option<Document>, Over> {
+    /// Feeds one event; returns a document when it ends, or why the document stopped.
+    fn event(&mut self, event: Event<'_>, span: Span) -> Result<Option<Document>, Stop> {
         let range = self.offsets.range(span);
         match event {
             Event::DocumentStart(_) => {
@@ -416,7 +443,8 @@ impl<'a> Builder<'a> {
                         range,
                     }
                 };
-                self.finish(node, anchor, self.budget.visits() - before, 0);
+                let written = node.range;
+                self.finish(node, anchor, self.budget.visits() - before, 0, written);
             }
             Event::Alias(id) => self.alias(id, range)?,
             Event::SequenceStart(anchor, tag) => {
@@ -427,6 +455,7 @@ impl<'a> Builder<'a> {
                     start: flow.unwrap_or(range.start()),
                     anchor,
                     items: Vec::new(),
+                    written: None,
                 });
             }
             Event::MappingStart(anchor, tag) => {
@@ -439,9 +468,11 @@ impl<'a> Builder<'a> {
                     entries: Vec::new(),
                     key: None,
                     merge: false,
+                    merges: Vec::new(),
+                    written: None,
                 });
             }
-            Event::SequenceEnd | Event::MappingEnd => self.close_collection(range.end()),
+            Event::SequenceEnd | Event::MappingEnd => self.close_collection(range.end())?,
             Event::StreamStart | Event::StreamEnd | Event::Nothing => {}
         }
         Ok(None)
@@ -449,7 +480,7 @@ impl<'a> Builder<'a> {
 
     /// Expands an alias after checking it against the limits, so an expansion that is too
     /// big or too deep is never cloned.
-    fn alias(&mut self, id: usize, range: TextRange) -> Result<(), Over> {
+    fn alias(&mut self, id: usize, range: TextRange) -> Result<(), Stop> {
         let (offset, merged) = (range.start(), self.in_merge());
         let before = self.budget.visits();
         self.budget.visit().map_err(at(offset))?;
@@ -467,23 +498,24 @@ impl<'a> Builder<'a> {
             },
             |a| a.node.clone(),
         );
-        self.finish(node, 0, self.budget.visits() - before, height);
+        self.finish(node, 0, self.budget.visits() - before, height, range);
         Ok(())
     }
 
-    fn close_collection(&mut self, end: TextSize) {
+    fn close_collection(&mut self, end: TextSize) -> Result<(), Stop> {
         if let (Some(frame), Some(counted)) = (self.stack.pop(), self.counted.pop()) {
-            let (node, anchor) = close(frame, end);
+            let (node, anchor, written) = close(frame, end)?;
             let weight = self.budget.visits() - counted.from;
             let level = usize::from(!counted.merged);
             self.depth -= level;
-            self.finish(node, anchor, weight, counted.height + level);
+            self.finish(node, anchor, weight, counted.height + level, written);
         }
+        Ok(())
     }
 
     /// Counts a collection's visit and nesting. `skipped` is a `<<` sequence: `go-yaml`
     /// merges its items and does not visit it.
-    fn open(&mut self, offset: TextSize, skipped: bool) -> Result<(), Over> {
+    fn open(&mut self, offset: TextSize, skipped: bool) -> Result<(), Stop> {
         let (from, merged) = (self.budget.visits(), self.in_merge());
         if !skipped {
             self.budget.visit().map_err(at(offset))?;
@@ -507,7 +539,7 @@ impl<'a> Builder<'a> {
     fn take_merge_key(&mut self, style: SaphyrStyle, value: &str, tag: Option<&Tag>) -> bool {
         let merge = match tag {
             None => style == SaphyrStyle::Plain,
-            Some(tag) => tag.suffix == "merge",
+            Some(tag) => is_merge_tag(tag),
         };
         match self.stack.last_mut() {
             Some(Frame::Map {
@@ -566,8 +598,16 @@ impl<'a> Builder<'a> {
         TextSize::new(u32::try_from(pos).unwrap_or(u32::MAX))
     }
 
-    /// Attaches a finished node to its parent (or makes it the document root).
-    fn finish(&mut self, node: Node, anchor: usize, weight: u64, height: usize) {
+    /// Attaches a finished node to its parent (or makes it the document root). `written` is
+    /// where the node stands in the text: an alias stands at its `*name`.
+    fn finish(
+        &mut self,
+        node: Node,
+        anchor: usize,
+        weight: u64,
+        height: usize,
+        written: TextRange,
+    ) {
         if anchor != 0 {
             let node = node.clone();
             let anchored = Anchored {
@@ -586,48 +626,78 @@ impl<'a> Builder<'a> {
                 let empty = matches!(node.kind, NodeKind::Null);
                 self.root = (!empty).then_some(node);
             }
-            Some(Frame::Seq { items, .. }) => items.push(node),
+            Some(Frame::Seq {
+                items,
+                written: cover,
+                ..
+            }) => {
+                *cover = Some(cover.map_or(written, |c| c.cover(written)));
+                items.push(node);
+            }
             Some(Frame::Map {
                 entries,
                 key,
                 merge,
+                merges,
+                written: cover,
                 ..
-            }) => match key.take() {
-                None => *key = Some(node),
-                Some(key) => {
-                    *merge = false;
-                    entries.push(Entry { key, value: node });
+            }) => {
+                *cover = Some(cover.map_or(written, |c| c.cover(written)));
+                match key.take() {
+                    None => *key = Some(node),
+                    Some(key) => {
+                        if std::mem::take(merge) {
+                            merges.push((entries.len(), written));
+                        }
+                        entries.push(Entry {
+                            key,
+                            value: node,
+                            origin: 0,
+                        });
+                    }
                 }
-            },
+            }
         }
     }
 }
 
 /// Flow collections span `[`..`]`; block collections span their children, because the
-/// parser reports empty spans for block starts and ends.
-fn close(frame: Frame, end_marker: TextSize) -> (Node, usize) {
-    let (flow, start, anchor, kind, child_range) = match frame {
+/// parser reports empty spans for block starts and ends. The third value is where the
+/// collection was written: a mapping's range counts a `<<` value there, so a merge from an
+/// earlier anchor does not widen it.
+fn close(frame: Frame, end_marker: TextSize) -> Result<(Node, usize, TextRange), Stop> {
+    let (flow, start, anchor, kind, child_range, written) = match frame {
         Frame::Seq {
             flow,
             start,
             anchor,
             items,
+            written,
         } => {
             let r = items.iter().map(|n| n.range).reduce(TextRange::cover);
-            (flow, start, anchor, NodeKind::Sequence(items), r)
+            (flow, start, anchor, NodeKind::Sequence(items), r, written)
         }
         Frame::Map {
             flow,
             start,
             anchor,
             entries,
+            merges,
+            written,
             ..
         } => {
             let r = entries
                 .iter()
-                .flat_map(|e| [e.key.range, e.value.range])
+                .enumerate()
+                .flat_map(|(i, e)| {
+                    let value = merges
+                        .binary_search_by_key(&i, |&(at, _)| at)
+                        .map_or(e.value.range, |at| merges[at].1);
+                    [e.key.range, value]
+                })
                 .reduce(TextRange::cover);
-            (flow, start, anchor, NodeKind::Mapping(entries), r)
+            let entries = merge::expand(entries, &merges).map_err(bad_merge)?;
+            (flow, start, anchor, NodeKind::Mapping(entries), r, written)
         }
     };
     let range = if flow {
@@ -635,7 +705,19 @@ fn close(frame: Frame, end_marker: TextSize) -> (Node, usize) {
     } else {
         child_range.unwrap_or_else(|| TextRange::empty(start))
     };
-    (Node { kind, range }, anchor)
+    let written = if flow {
+        range
+    } else {
+        written.unwrap_or_else(|| TextRange::empty(start))
+    };
+    Ok((Node { kind, range }, anchor, written))
+}
+
+/// `!!merge` and the verbatim `!<tag:yaml.org,2002:merge>`, not a local `!merge`.
+fn is_merge_tag(tag: &Tag) -> bool {
+    const YAML: &str = "tag:yaml.org,2002:";
+    (tag.handle == YAML && tag.suffix == "merge")
+        || (tag.handle.is_empty() && tag.suffix.strip_prefix(YAML) == Some("merge"))
 }
 
 fn convert_style(style: SaphyrStyle) -> ScalarStyle {
