@@ -209,12 +209,8 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   reports values that are file paths (`GOOGLE_APPLICATION_CREDENTIALS`) and misses the
   suffixes `PASS`, `PWD` and `PASSPHRASE`. KL2005 never reports a runtime socket, even
   when KL2007 is off.
-- Several explanations state facts that do not hold: what kubectl applies from a file
-  with a broken document (KL0001 to KL1003), what it does with a duplicate key (KL0002),
-  the KL1009 error text, the alternatives KL2001 and KL2007 suggest, how the scheduler
-  uses limits (KL3001), the eviction order (KL3002) and a rollout with one replica
-  (KL3005). Some examples are not complete objects. An explanation is right only once
-  its examples ran against the API server or in a container.
+- Some rule explanation examples are not complete objects. An explanation is right only
+  once its examples ran against the API server or in a container.
 
 ### CLI and output
 

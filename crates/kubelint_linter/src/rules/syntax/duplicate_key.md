@@ -8,10 +8,10 @@ later key or a merge replaces are not checked, because Kubernetes never reads th
 
 ## Why it matters
 
-Kubernetes cannot keep both values. Depending on the tool and its settings, the object
-is rejected (`kubectl apply` with strict field validation reports "duplicate field") or
-the last value silently wins. Either way, one of the two values is not what runs, and a
-reader of the file cannot tell which one was meant.
+Kubernetes cannot keep both values. `kubectl` uses the last one and says nothing, in
+every mode it has, so the earlier value is dropped without a warning. Only a raw API
+request with strict field validation rejects the duplicate. A reader of the file cannot
+tell which value was meant.
 
 ## Example
 

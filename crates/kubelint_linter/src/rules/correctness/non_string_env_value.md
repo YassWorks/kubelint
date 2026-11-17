@@ -8,8 +8,9 @@ or `off`.
 
 Environment variable values are strings in the Kubernetes API. Kubernetes reads YAML
 with YAML 1.1 rules, where unquoted `8080` is a number and `yes`, `on` and `off` are
-booleans, and it refuses to turn them into strings: the object fails with "cannot
-unmarshal number into Go struct field EnvVar.value of type string". Tools that do
+booleans, and it refuses to turn them into strings: the API server rejects the
+object with a `json: cannot unmarshal` error that names the `value` field of an env var
+and says it found a number or a bool where a string belongs. Tools that do
 convert can change the value on the way, for example `1.10` to `1.1` or `0755` to `493`.
 
 ## Example
