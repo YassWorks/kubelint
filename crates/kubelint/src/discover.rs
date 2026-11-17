@@ -41,7 +41,10 @@ pub struct SkippedChart {
 /// - A file is linted whatever its extension: naming it is a clear request.
 /// - A directory is searched recursively for `*.yaml` and `*.yml` files, skipping hidden
 ///   files and whatever `.gitignore`, `.ignore` and global git excludes list (also outside
-///   a git repository). The files of one directory are sorted by path.
+///   a git repository). The files of one directory are sorted by path. When the search
+///   finds no YAML file and the `.gitignore` and `.ignore` files above the directory (and
+///   the repository's `.git/info/exclude`) ignore a YAML file placed directly in it, it is
+///   searched again without them.
 /// - Helm chart files are skipped, even when named: a chart's `Chart.yaml` and everything
 ///   under its `templates/` directory. Templates are not valid YAML until `helm template`
 ///   renders them, and `Chart.yaml` is not a Kubernetes object.
@@ -86,8 +89,54 @@ pub fn inputs(paths: &[PathBuf], exclude: Option<&Exclude>) -> anyhow::Result<Di
 }
 
 fn yaml_files(dir: &Path) -> anyhow::Result<Vec<PathBuf>> {
+    let files = walk(dir, true)?;
+    if files.is_empty() && parents_hide_a_file_in(dir) {
+        return walk(dir, false);
+    }
+    Ok(files)
+}
+
+/// Whether the ignore files above `dir` ignore a YAML file placed directly in it.
+///
+/// Mirrors the search: `.gitignore` and `.ignore` of every ancestor and the
+/// `.git/info/exclude` of a repository root, the nearest file deciding.
+fn parents_hide_a_file_in(dir: &Path) -> bool {
+    let Ok(dir) = dir.canonicalize() else {
+        return false;
+    };
+    let probe = dir.join("kubelint-probe.yaml");
+    let mut ignored = false;
+    for ancestor in dir
+        .ancestors()
+        .skip(1)
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+    {
+        let files = [".git/info/exclude", ".gitignore", ".ignore"];
+        for file in files.map(|file| ancestor.join(file)) {
+            let mut builder = ignore::gitignore::GitignoreBuilder::new(ancestor);
+            // A file with a bad line still contributes its other lines.
+            let _ = builder.add(file);
+            let Ok(matcher) = builder.build() else {
+                continue;
+            };
+            let verdict = matcher.matched_path_or_any_parents(&probe, false);
+            if !verdict.is_none() {
+                ignored = verdict.is_ignore();
+            }
+        }
+    }
+    ignored
+}
+
+fn walk(dir: &Path, parents: bool) -> anyhow::Result<Vec<PathBuf>> {
     let mut files = Vec::new();
-    for entry in ignore::WalkBuilder::new(dir).require_git(false).build() {
+    let walker = ignore::WalkBuilder::new(dir)
+        .require_git(false)
+        .parents(parents)
+        .build();
+    for entry in walker {
         let entry = entry.with_context(|| format!("cannot search {}", dir.display()))?;
         let is_file = entry.file_type().is_some_and(|t| t.is_file());
         if is_file && is_yaml(entry.path()) {

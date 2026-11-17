@@ -1,0 +1,15 @@
+---
+source: crates/kubelint_yaml/tests/merge.rs
+expression: seen
+---
+[
+    "é:0",
+    "b:1",
+    "a:2",
+    "a:2",
+    "a:0",
+    "c:0",
+    "c:0",
+    "d:3",
+    "e:4",
+]

@@ -81,3 +81,133 @@ apiVersion: v1
 kind: ConfigMap
 data: {a: "1"}
 data: {b: "2"}
+---
+# Reported: an explicit key given twice stays a duplicate when a merge key is in the mapping.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: café
+  labels:
+    <<: {tier: front}
+    app: a
+    app: b
+---
+# Not reported: a merge repeats a key, and the explicit key after it overrides the merged one.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: merged
+  labels: &labels
+    app: web
+    team: "é"
+data:
+  <<: *labels
+  team: explicit
+  extra: "1"
+---
+# Not reported: an explicit key before a merge that repeats it, and two merged sources that
+# share a key.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sources
+data:
+  app: before
+  <<: [{app: first, one: "1"}, {app: second, one: "2"}]
+---
+# Not reported: a quoted `"<<"` is an ordinary key once.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quoted
+data:
+  "<<": literal
+---
+# Reported: a quoted `"<<"` is an ordinary key, so it can be a duplicate.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: quoted-twice
+data:
+  "<<": a
+  "<<": b
+---
+# Reported: a key repeated inside an inline merge source.
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: inline-source}
+data:
+  <<: {a: "1", a: "2"}
+---
+# Reported: a key repeated inside an inline source of a sequence.
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: sequence-source}
+data:
+  <<: [{a: "1", a: "2"}]
+---
+# Reported: a key repeated inside an anchored merge source, at the anchor.
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: anchored-source}
+x-source: &source
+  a: "1"
+  a: "2"
+data:
+  <<: *source
+---
+# Reported: two written keys before a merge that repeats the key.
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: before-merge}
+data:
+  a: "1"
+  a: "2"
+  <<: {a: "3"}
+---
+# Reported: two written keys around a merge that repeats the key.
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: around-merge}
+data:
+  a: one
+  <<: {a: merged}
+  a: two
+---
+# Reported: two written keys after a merge that repeats the key.
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: after-merge}
+data:
+  <<: {a: "3"}
+  a: "1"
+  a: "2"
+---
+# Not reported: a written key before a merge that repeats it, and one after another merge.
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: written-and-merged}
+data:
+  a: before
+  <<: {a: merged, b: merged}
+  b: after
+---
+# Not reported: a merge source that merges, and a written key that overrides the merged one.
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: nested-source}
+x-source: &source
+  a: "1"
+  <<: {a: "2"}
+data:
+  <<: *source
+  a: "3"
+---
+# Not reported: the key that holds the repeat is overridden by the merge, so the server
+# never reads it.
+apiVersion: v1
+kind: ConfigMap
+metadata: {name: overridden-value}
+x:
+  a: {k: 1, k: 2}
+  <<: {a: {}}

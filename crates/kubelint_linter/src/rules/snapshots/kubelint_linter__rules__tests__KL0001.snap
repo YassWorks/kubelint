@@ -30,4 +30,11 @@ error[KL0001]: invalid YAML: while parsing a quoted scalar, found unknown escape
    |             ^
   = help: fix the YAML syntax; kubelint skips this document until it parses
 
-4 finding(s) in 4 object(s)
+error[KL0001]: invalid YAML: aliases expand to too many nodes
+  --> syntax/KL0001.yaml:50:22
+   |
+50 |   a3: &a3 [*a2, *a2, *a2, *a2, *a2, *a2, *a2, *a2, *a2, *a2]
+   |                      ^
+  = help: use fewer aliases or less nesting; kubelint skips this document until it is within the limit
+
+5 finding(s) in 4 object(s)

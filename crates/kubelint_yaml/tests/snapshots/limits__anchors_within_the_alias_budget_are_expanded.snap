@@ -1,0 +1,97 @@
+---
+source: crates/kubelint_yaml/tests/limits.rs
+expression: "parse.documents.iter().map(Document::dump).collect::<String>()"
+---
+document 0..407
+  mapping 0..407
+    entry
+      scalar Plain "apiVersion" 0..10
+      scalar Plain "apps/v1" 12..19
+    entry
+      scalar Plain "kind" 20..24
+      scalar Plain "Deployment" 26..36
+    entry
+      scalar Plain "metadata" 37..45
+      mapping 49..110
+        entry
+          scalar Plain "name" 49..53
+          scalar Plain "café" 55..60
+        entry
+          scalar Plain "labels" 63..69
+          mapping 83..110
+            entry
+              scalar Plain "app" 83..86
+              scalar Plain "web" 88..91
+            entry
+              scalar Plain "tier" 96..100
+              scalar Plain "frontend" 102..110
+    entry
+      scalar Plain "spec" 111..115
+      mapping 83..407
+        entry
+          scalar Plain "selector" 119..127
+          mapping 83..144
+            entry
+              scalar Plain "matchLabels" 133..144
+              mapping 83..110
+                entry
+                  scalar Plain "app" 83..86
+                  scalar Plain "web" 88..91
+                entry
+                  scalar Plain "tier" 96..100
+                  scalar Plain "frontend" 102..110
+        entry
+          scalar Plain "template" 156..164
+          mapping 83..407
+            entry
+              scalar Plain "metadata" 170..178
+              mapping 83..192
+                entry
+                  scalar Plain "labels" 186..192
+                  mapping 83..110
+                    entry
+                      scalar Plain "app" 83..86
+                      scalar Plain "web" 88..91
+                    entry
+                      scalar Plain "tier" 96..100
+                      scalar Plain "frontend" 102..110
+            entry
+              scalar Plain "spec" 206..210
+              mapping 218..407
+                entry
+                  scalar Plain "containers" 218..228
+                  sequence 255..407
+                    mapping 255..350
+                      entry
+                        scalar Plain "name" 255..259
+                        scalar Plain "web" 261..264
+                      entry
+                        scalar Plain "image" 275..280
+                        scalar Plain "nginx:1.27" 282..292
+                      entry
+                        scalar Plain "env" 303..306
+                        sequence 327..350
+                          mapping 327..350
+                            entry
+                              scalar Plain "name" 328..332
+                              scalar Plain "LANG" 334..338
+                            entry
+                              scalar Plain "value" 340..345
+                              scalar Plain "é" 347..349
+                    mapping 327..407
+                      entry
+                        scalar Plain "image" 275..280
+                        scalar Plain "nginx:1.27" 282..292
+                      entry
+                        scalar Plain "name" 380..384
+                        scalar Plain "sidecar" 386..393
+                      entry
+                        scalar Plain "env" 404..407
+                        sequence 327..350
+                          mapping 327..350
+                            entry
+                              scalar Plain "name" 328..332
+                              scalar Plain "LANG" 334..338
+                            entry
+                              scalar Plain "value" 340..345
+                              scalar Plain "é" 347..349

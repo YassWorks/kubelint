@@ -17,8 +17,9 @@ printed on standard error in the human format.
 ## `human`
 
 Code snippets pointing at the exact line and column, with help and the rule name, then a
-summary line. `--color auto|always|never` controls colors. The layout is for people and
-may change between versions; do not parse it.
+summary line. `--color auto|always|never` controls colors. Columns count characters
+(Unicode code points). The layout is for people and may change between versions; do not
+parse it.
 
 ## `json`
 
@@ -147,9 +148,8 @@ only the message next to the code.
   used here.
 - Listing only the rules that ran or fired. Rule indexes would change with
   configuration.
-- Columns in Unicode code points. The `github` format and editors speaking LSP count
-  UTF-16 code units, so every machine-readable format agrees on a column. SARIF has no
-  default unit.
+- Columns in Unicode code points. SARIF has no default unit, and the `github` format and
+  editors speaking LSP count UTF-16 code units, so SARIF states UTF-16.
 
 ### Uploading to GitHub code scanning
 
@@ -239,7 +239,7 @@ added; renaming or removing one is a breaking change.
 | `category` | string | `"syntax"` |
 | `default_enabled` | boolean | `true` |
 | `default_severity` | string | `"error"` |
-| `summary` | string | `"The file is not valid YAML."` |
+| `summary` | string | `"The file is not valid YAML or is over a limit kubectl enforces."` |
 
 `kubelint rule <CODE|NAME>` prints the rule's documentation as Markdown: a heading with
 the code and name, the summary, a line with the category, severity and default state,

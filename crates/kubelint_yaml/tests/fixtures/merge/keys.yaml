@@ -1,0 +1,17 @@
+é: &a {m: merged}
+quoted:
+  "<<": literal
+  'k': v
+tagged:
+  !!merge <<: *a
+  k: v
+quoted_tagged:
+  !!merge "<<": *a
+other_tag:
+  !!str <<: literal
+verbatim_tag:
+  !<tag:yaml.org,2002:merge> <<: *a
+  k: v
+local_tag:
+  !merge <<: *a
+  k: v

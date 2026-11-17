@@ -137,7 +137,8 @@ Principles:
   tree keeps the raw text and style, and offers `resolve_kubernetes()` helpers. This is
   what makes rules like KL1009 (`value: yes` in an env var) possible.
 - **Aliases are resolved** to the anchored node, keeping the anchor's range. Manifests
-  rarely use anchors, so this is simple and good enough until proven otherwise.
+  rarely use anchors, so this is simple and good enough until proven otherwise. An alias
+  is expanded only within the limits below.
 - **Comments are extracted separately.** The parser does not emit comments. A `#` that
   starts a line or follows whitespace, and is not inside any scalar's range, starts a
   comment to the end of the line. Suppression comments are read from that list.
@@ -165,16 +166,74 @@ Principles:
 - **Tabs after a mapping's `:` separate the value,** as YAML 1.2 says and kubectl
   accepts (`name:<tab>web`). `saphyr-parser` rejects tabs alone before a value that
   starts with an ASCII letter, a digit, `-` or `_`, so when it reports that error, the
-  builder rewrites every such run of tabs from there on to spaces, one byte each, and
-  parses again. A run inside a quoted or block scalar after the first one becomes spaces
-  too; no rule reads such text.
+  builder rewrites the rejected run to spaces, one byte each, and parses again. To avoid
+  one parse per run, it also parses a probe copy with every later candidate run rewritten
+  and rewrites, in the real text, the candidates that lie before the probe's first error
+  and outside every scalar and comment of the probe. A tab after a `:` inside a quoted or
+  block scalar, a quoted key, a comment or a later document keeps its tab.
 
   **Why:** kubectl accepts these files, so KL0001 there is a false positive that also
-  drops the document from every other rule.
+  drops the document from every other rule. The text of a scalar is read by rules and
+  echoed in messages, so it must stay as written.
 
-  **Rejected:** rewriting every such run before parsing (it would change the text of
-  scalars in files that parse fine); rewriting one run per parse (one reparse of the
+  **Rejected:** rewriting every such run from the error on (it changes the text of
+  scalars, keys and later documents); rewriting one run per parse (one reparse of the
   file per run, quadratic in a file that uses tabs throughout).
+- **A document stops at the alias and nesting limits kubectl enforces.** The builder
+  counts, per document, the nodes the decoder of `go-yaml` v2 (what Kubernetes 1.34 to
+  1.37 use) visits, including every node of each alias expansion. Each finished node
+  stores that count and its nesting, so an alias is checked before the anchored subtree is
+  cloned. The document is over the budget under the same rule as `decode.go`: more than
+  100 alias visits, more than 1,000 visits in all, and an alias share above a ratio that
+  falls from 0.99 (up to 400,000 visits) to 0.10 (from 4,000,000). A `<<` key is not
+  counted, as in `go-yaml`, and a merge adds no nesting level, as in the JSON. The
+  document is also over the limit when its collections nest deeper than 10,000 levels,
+  an alias expansion included, which is what the JSON decoder kubectl runs next refuses.
+  In both cases the builder reports a KL0001 error at the
+  alias or collection that crossed the limit, drops the document and resumes at the next
+  document marker.
+
+  **Why:** kubectl refuses these files ("excessive aliasing", "exceeded max depth"), so
+  they cannot be applied anyway, and a few hundred bytes of nested aliases or a 100 KB
+  line of `- ` otherwise exhaust memory or the stack and abort the whole run, every other
+  file included. The same numbers as kubectl mean kubelint neither reports a manifest
+  kubectl accepts nor accepts one it refuses.
+
+  **Rejected:** a fixed node count unrelated to kubectl (it would refuse or accept
+  different files than kubectl); a time limit (it depends on the machine and cannot stop
+  the memory growth before it happens); counting the nodes of an expansion by walking it
+  (that is the cost the limit exists to avoid).
+- **Merge keys (`<<`) are expanded when their mapping closes,** with the precedence
+  `go-yaml` v2 gives them, which is what `kubectl` and the API server use. Only a plain
+  `<<`, one tagged `!!merge` or one tagged with the verbatim `!<tag:yaml.org,2002:merge>`
+  is a merge key; a quoted `"<<"` or a local `!merge <<` is an ordinary key. The entries
+  are written in document order and the last write of a key wins, so the builder replaces
+  each `<<` entry in place by the entries of its source mapping (they keep the source's
+  ranges, as an alias does). A key written before a `<<` that repeats it is overridden by
+  the merge, and a key written after it overrides the merged one. In a sequence of
+  sources the earlier source wins, so the builder lists the sources backwards. It then
+  drops each entry that a later entry of another source overrides, so rules that read a
+  key see the value the server gets, unless its own source repeats the key. Every entry
+  has an `origin`: 0 when it is written in its mapping, otherwise a number shared by the
+  entries of one merge source. KL0002 compares keys only within an origin, so it reports
+  every key written twice (inside an inline source too, and around a merge) and never a
+  key that only a merge repeats. A duplicate inside the value of an entry that a merge or
+  a later key overrides is not reported, because the server never reads it. A mapping's
+  range covers what it writes: the merged entries and a `<<` value written as an alias do
+  not widen it. A `<<` value that is not a mapping or a sequence of mappings is refused
+  by `kubectl`, so the builder reports a KL0001 error at the `<<` and drops the document.
+
+  **Why:** every rule reads the tree as the server reads the object. Without the
+  expansion, rules miss merged fields (a selector that `<<: *labels` fills) and report the
+  `<<` key itself (KL1010) on files the server accepts.
+
+  **Rejected:** the YAML 1.1 merge specification, where an explicit key always beats a
+  merged one (`kubectl` lets a `<<` override a key written before it, so the tree would
+  differ from what the server gets); keeping the `<<` entry and resolving it in each rule
+  (every rule would repeat the precedence); expanding in `kubelint_k8s` views (KL0002 and
+  the tree dump would still see `<<`); reporting duplicates on the expanded mapping alone
+  (it cannot tell a key written twice from a key a merge repeats); keeping every
+  overridden entry (rules would check values the server never reads).
 - **Edits apply to the original text.** Autofix (M5) changes the file by byte range,
   never by re-serializing the tree, so formatting and comments survive.
 
@@ -312,6 +371,42 @@ lives:
 - `crates/kubelint/src/exclude.rs` normalizes paths lexically (no symlink resolution)
   before matching. Excluded directories are still walked and their files filtered
   afterwards.
+
+### File discovery
+
+`crates/kubelint/src/discover.rs` searches each directory named on the command line with
+the `ignore` crate: `.gitignore`, `.ignore`, `.git/info/exclude`, the global git excludes
+(also outside a git repository) and hidden-file skipping apply, and so do the ignore files
+in parent directories. If that search finds no YAML file and the parent rules would ignore
+a YAML file placed directly in the directory (`gen/*`, `gen/**`, `/gen/*`, a root
+`*.yaml`), it is searched again without the parent rules: the `.gitignore` and `.ignore`
+files above it and the repository's `.git/info/exclude`. The ignore files inside the
+directory, the global git excludes, hidden-file skipping, `[files] exclude` and Helm
+chart skipping still apply. The test is a probe path in the directory matched against the
+parent ignore files, so a directory whose only YAML sits under an ignored subdirectory
+(`node_modules/` above `app/node_modules/pkg/x.yaml`) is not searched again. A directory
+with at least one visible YAML file is searched once with every rule, so hidden files
+next to visible ones stay skipped.
+
+**Why:** a root `.gitignore` with `gen/*` hides `gen/a.yaml`, yet `kubelint check gen`
+after `helm template > gen/all.yaml` is a request to lint that directory. Without the
+exception it checked 0 files and exited 0, so a CI step could pass while checking
+nothing. The probe keeps the other parent rules working: `kubelint check .` inside a
+subdirectory still skips the `node_modules/` the repository root ignores, and a root
+`*.tmp.yaml` still hides one file among others. The probe reads the parent files itself
+because the `ignore` crate offers no way to ask whether its parent rules hide a path.
+
+**Rejected:**
+
+- Never applying parent ignore files. `kubelint check .` inside a subdirectory would lint
+  a `node_modules/` that the root ignores.
+- Searching again whenever the first search finds nothing. A directory whose only YAML is
+  under an ignored subdirectory would then lint that subdirectory.
+- An error when a named directory yields no file. It fails CI for a legitimately empty
+  directory and still lints nothing.
+- Keeping the behavior. A CI step can pass while checking nothing.
+- Keeping `.git/info/exclude` in the second search. The `ignore` crate loads it together
+  with the parent ignore files, so it cannot be separated from them.
 
 ### Output formats
 
