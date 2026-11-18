@@ -384,6 +384,22 @@ Traps earlier runs fell into. Add new ones as you find them.
   written (it does not: the `nginx` image needs root).
 - `git push origin --delete` on a `claude/` branch is refused with a 403. Merged
   branches are deleted by GitHub; leave any other stale branch as it is.
+- `xtask` builds `kubelint_schema`, which embeds every version listed in `embed!`
+  (`crates/kubelint_schema/src/embedded.rs`) with `include_str!`. Deleting a listed
+  `schemas/<version>.json` breaks the build of every `cargo xtask` task, including the
+  `import-schemas` that would write it again. To import again, overwrite the files in
+  place; to add a version, import it before listing it in `embed!`.
+- Keep an untouched copy of a generated file before editing it to show a failure (for
+  example setting `"format":0` to make `committed_schemas_have_the_current_format`
+  fail). On 2026-11-18 a corrupted copy was saved aside and nearly committed as the real
+  import; `every_embedded_schema_loads_once` (`crates/kubelint_schema/tests/embedded.rs`)
+  caught it.
+- `git add -N` (to include new files in `git diff`) only records an intent to add the
+  file. A commit after `git add <other paths>` leaves that file out without a word.
+  Stage it with `git add` before committing, and check `git show --stat HEAD`.
+- The self-review subagent runs the end to end commands in the same working tree. Tell
+  it which generated files it may touch and that it must restore them, then check
+  `git status` before committing.
 
 ## Keeping this playbook healthy
 
