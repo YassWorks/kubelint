@@ -1,18 +1,24 @@
+use std::error::Error;
 use std::path::{Path, PathBuf};
-use std::process::ExitCode;
+use std::process::{Command, ExitCode};
 
-const USAGE: &str = "usage: cargo xtask gen-rule-docs | gen-corpus [--objects <N>] [<DIR>]";
+use xtask::schemas;
+
+const USAGE: &str = "usage: cargo xtask gen-rule-docs | gen-corpus [--objects <N>] [<DIR>] \
+                     | import-schemas <KUBERNETES_CHECKOUT>";
 const CORPUS_OBJECTS: usize = 10_000;
 const CORPUS_DIR: &str = "target/bench-corpus";
+const OPENAPI_DIR: &str = "api/openapi-spec/v3";
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    let result = match args.split_first() {
-        Some((task, [])) if task == "gen-rule-docs" => gen_rule_docs(),
+    let result: Result<(), Box<dyn Error>> = match args.split_first() {
+        Some((task, [])) if task == "gen-rule-docs" => gen_rule_docs().map_err(Into::into),
         Some((task, rest)) if task == "gen-corpus" => match corpus_args(rest) {
-            Some((objects, dir)) => gen_corpus(objects, &dir),
+            Some((objects, dir)) => gen_corpus(objects, &dir).map_err(Into::into),
             None => return usage(),
         },
+        Some((task, [checkout])) if task == "import-schemas" => import_schemas(Path::new(checkout)),
         _ => return usage(),
     };
     if let Err(error) = result {
@@ -75,4 +81,56 @@ fn gen_corpus(objects: usize, dir: &Path) -> std::io::Result<()> {
         dir.display()
     );
     Ok(())
+}
+
+/// Reads `api/openapi-spec/v3` of a Kubernetes checkout at a release tag and writes the
+/// schema of that tag's minor version, replacing an earlier import of the same one.
+fn import_schemas(checkout: &Path) -> Result<(), Box<dyn Error>> {
+    let tag = git(checkout, &["describe", "--tags", "--exact-match", "HEAD"])?;
+    let version = schemas::minor_version(&tag)
+        .ok_or_else(|| format!("`{tag}` is not a release tag such as `v1.37.2`"))?
+        .to_owned();
+    let changes = git(checkout, &["status", "--porcelain", "--", OPENAPI_DIR])?;
+    if !changes.is_empty() {
+        return Err(format!("{OPENAPI_DIR} differs from {tag}:\n{changes}").into());
+    }
+    let commit = git(checkout, &["rev-parse", "HEAD"])?;
+    let input = checkout.join(OPENAPI_DIR);
+    let read = |path: &Path| {
+        std::fs::read_to_string(path).map_err(|error| format!("{}: {error}", path.display()))
+    };
+    let mut documents = Vec::new();
+    for path in schemas::json_files(&input)
+        .map_err(|error| format!("cannot read {}: {error}", input.display()))?
+    {
+        let name = path
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .into_owned();
+        documents.push((name, read(&path)?));
+    }
+    let text = schemas::import(&documents)?;
+    let output = xtask::repository_root().join(schemas::SCHEMAS_DIR);
+    let sources_path = output.join("sources.toml");
+    let mut sources = schemas::read_sources(&read(&sources_path)?)
+        .map_err(|error| format!("{}: {error}", sources_path.display()))?;
+    println!(
+        "imported {tag} from {} files into {version}.json ({} bytes)",
+        documents.len(),
+        text.len()
+    );
+    std::fs::write(output.join(format!("{version}.json")), &text)?;
+    sources.insert(version, schemas::Source { tag, commit });
+    std::fs::write(&sources_path, schemas::write_sources(&sources))?;
+    Ok(())
+}
+
+fn git(dir: &Path, args: &[&str]) -> Result<String, Box<dyn Error>> {
+    let output = Command::new("git").arg("-C").arg(dir).args(args).output()?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("`git {}` failed: {}", args.join(" "), stderr.trim()).into());
+    }
+    Ok(String::from_utf8(output.stdout)?.trim().to_owned())
 }

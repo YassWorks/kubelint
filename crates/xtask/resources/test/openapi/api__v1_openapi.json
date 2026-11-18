@@ -1,0 +1,76 @@
+{
+  "openapi": "3.0.0",
+  "info": {"title": "Kubernetes", "version": "test"},
+  "paths": {},
+  "components": {
+    "schemas": {
+      "io.k8s.api.core.v1.ConfigMap": {
+        "description": "ConfigMap holds configuration data for pods to consume.",
+        "type": "object",
+        "properties": {
+          "apiVersion": {"description": "APIVersion defines the versioned schema.", "type": "string"},
+          "kind": {"type": "string"},
+          "metadata": {
+            "allOf": [{"$ref": "#/components/schemas/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"}],
+            "default": {},
+            "description": "Standard object's metadata."
+          },
+          "data": {"type": "object", "additionalProperties": {"type": "string", "default": ""}},
+          "binaryData": {"type": "object", "additionalProperties": {"type": "string", "format": "byte"}},
+          "immutable": {"type": "boolean"}
+        },
+        "x-kubernetes-group-version-kind": [{"group": "", "kind": "ConfigMap", "version": "v1"}]
+      },
+      "io.k8s.api.core.v1.ResourceRequirements": {
+        "type": "object",
+        "properties": {
+          "limits": {
+            "type": "object",
+            "additionalProperties": {"$ref": "#/components/schemas/io.k8s.apimachinery.pkg.api.resource.Quantity"}
+          }
+        }
+      },
+      "io.k8s.apimachinery.pkg.api.resource.Quantity": {
+        "description": "Quantity is a fixed-point representation of a number.",
+        "oneOf": [{"type": "string"}, {"type": "number"}]
+      },
+      "io.k8s.apimachinery.pkg.apis.meta.v1.DeleteOptions": {
+        "type": "object",
+        "properties": {
+          "gracePeriodSeconds": {"type": "integer", "format": "int64"},
+          "dryRun": {"type": "array", "items": {"type": "string", "default": ""}, "x-kubernetes-list-type": "atomic"}
+        },
+        "x-kubernetes-group-version-kind": [{"group": "", "kind": "DeleteOptions", "version": "v1"}]
+      },
+      "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "labels": {"type": "object", "additionalProperties": {"type": "string", "default": ""}},
+          "ownerReferences": {
+            "type": "array",
+            "items": {"allOf": [{"$ref": "#/components/schemas/io.k8s.apimachinery.pkg.apis.meta.v1.OwnerReference"}], "default": {}},
+            "x-kubernetes-list-map-keys": ["uid"],
+            "x-kubernetes-list-type": "map",
+            "x-kubernetes-patch-merge-key": "uid",
+            "x-kubernetes-patch-strategy": "merge"
+          }
+        }
+      },
+      "io.k8s.apimachinery.pkg.apis.meta.v1.OwnerReference": {
+        "type": "object",
+        "properties": {
+          "apiVersion": {"type": "string", "default": ""},
+          "kind": {"type": "string", "default": ""},
+          "uid": {"type": "string", "default": ""}
+        },
+        "required": ["apiVersion", "kind", "uid"],
+        "x-kubernetes-map-type": "atomic"
+      },
+      "io.k8s.apimachinery.pkg.runtime.RawExtension": {
+        "description": "RawExtension is used to hold extensions in external versions.",
+        "type": "object"
+      }
+    }
+  }
+}
