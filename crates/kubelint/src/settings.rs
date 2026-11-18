@@ -8,6 +8,7 @@ use kubelint_config::{Config, Level, Spanned};
 use kubelint_diagnostics::Severity;
 use kubelint_linter::{EnabledRule, RuleSelection, SelectionError, SelectorList};
 use kubelint_output::HumanRenderer;
+use kubelint_schema::{KubernetesVersion, VERSIONS};
 use kubelint_source::{SourceFile, TextRange};
 
 use crate::exclude::Exclude;
@@ -29,6 +30,7 @@ pub struct Overrides {
     pub select: Option<Vec<String>>,
     pub ignore: Option<Vec<String>>,
     pub fail_on: Option<Severity>,
+    pub kubernetes_version: Option<String>,
 }
 
 #[derive(Debug)]
@@ -36,6 +38,7 @@ pub struct Settings {
     pub rules: Vec<EnabledRule>,
     pub fail_on: Severity,
     pub exclude: Option<Exclude>,
+    pub kubernetes_version: KubernetesVersion,
 }
 
 #[derive(Debug)]
@@ -76,12 +79,14 @@ pub fn load(
     let invalid = |message: &str, range: Option<TextRange>| {
         SettingsError::Invalid(match (&file, range) {
             (Some(file), Some(range)) => human.render_error(file, message, Some(range)),
-            // The selector was given on the command line.
+            // The value was given on the command line.
             _ => format!("error: {message}\n"),
         })
     };
-    let mut settings =
-        resolve(&config, overrides).map_err(|(err, range)| invalid(&err.to_string(), range))?;
+    let version =
+        kubernetes_version(&config, overrides).map_err(|(err, range)| invalid(&err, range))?;
+    let mut settings = resolve(&config, overrides, version)
+        .map_err(|(err, range)| invalid(&err.to_string(), range))?;
     let patterns = &config.files.exclude;
     if let (Some(dir), false) = (dir, patterns.is_empty()) {
         let exclude = Exclude::new(&dir, cwd, patterns)
@@ -96,6 +101,7 @@ pub fn load(
 fn resolve(
     config: &Config,
     overrides: &Overrides,
+    kubernetes_version: KubernetesVersion,
 ) -> Result<Settings, (SelectionError, Option<TextRange>)> {
     let lint = &config.lint;
     let file_select = lint.select.as_deref();
@@ -132,6 +138,37 @@ fn resolve(
         rules,
         fail_on,
         exclude: None,
+        kubernetes_version,
+    })
+}
+
+/// The flag's version, else the file's, else the latest; an error's range is in the file.
+fn kubernetes_version(
+    config: &Config,
+    overrides: &Overrides,
+) -> Result<KubernetesVersion, (String, Option<TextRange>)> {
+    let (text, range) = match (
+        &overrides.kubernetes_version,
+        &config.lint.kubernetes_version,
+    ) {
+        (Some(flag), _) => (flag.as_str(), None),
+        (None, Some(key)) => (key.value.as_str(), Some(key.range)),
+        (None, None) => return Ok(KubernetesVersion::LATEST),
+    };
+    KubernetesVersion::parse(text).ok_or_else(|| {
+        let (latest, older) = VERSIONS
+            .split_last()
+            .expect("at least one version is embedded");
+        let supported = format!("kubelint supports {} and {latest}", older.join(", "));
+        let message = if text.is_empty() {
+            format!("the Kubernetes version is empty: {supported}")
+        } else {
+            format!(
+                "unsupported Kubernetes version `{}`: {supported}",
+                text.escape_debug()
+            )
+        };
+        (message, range)
     })
 }
 

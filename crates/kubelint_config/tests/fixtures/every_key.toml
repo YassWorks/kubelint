@@ -2,6 +2,7 @@
 select = ["correctness", "KL3001"]
 ignore = ["KL2004"]
 fail-on = "info"
+kubernetes-version = "v1.36"
 
 [lint.severity]
 KL3003 = "error"

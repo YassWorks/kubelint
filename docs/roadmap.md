@@ -53,7 +53,7 @@ enum values, and removed or deprecated API versions.
   files are not vendored (about 12 MB per version)
 - [x] Import every version of the window and embed it in the binary; record the binary
   size
-- [ ] `--kubernetes-version` flag and `kubernetes-version` config key, defaulting to the
+- [x] `--kubernetes-version` flag and `kubernetes-version` config key, defaulting to the
   latest supported version
 - [ ] End to end CI job: split every rule fixture into objects, create every namespace
   they use, and check each case against a real API server
@@ -136,6 +136,13 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 
 - The nightly release workflow treats every change under `crates/` as code, so a change
   that touches only `crates/xtask` publishes a release with an unchanged binary.
+
+- The OpenAPI documents of a release list alpha and beta group versions that its API
+  server serves only when they are enabled: the 1.34 schema has
+  `certificates.k8s.io/v1alpha1` and `v1beta1` `ClusterTrustBundle`, and a default 1.34
+  server serves no alpha or beta group version at all (`kubectl` reports `no matches for
+  kind`). The schema validator will check such objects as known kinds. Deciding how to
+  treat them belongs to the validator item.
 
 ### YAML layer
 

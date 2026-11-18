@@ -1,5 +1,6 @@
 use kubelint_diagnostics::Severity;
 use kubelint_linter::{Category, EnabledRule, Linter, ObjectContext, Rule, RuleMeta, RunContext};
+use kubelint_schema::KubernetesVersion;
 use kubelint_source::SourceFile;
 
 /// Reports every object at its `kind` value.
@@ -195,4 +196,15 @@ fn default_rules_are_the_default_enabled_built_ins() {
         .filter(|r| r.meta().default_enabled)
         .count();
     assert_eq!(linter.rules().len(), expected);
+}
+
+#[test]
+fn checks_the_latest_kubernetes_version_unless_told_otherwise() {
+    let linter = Linter::new(Vec::new());
+    assert_eq!(linter.kubernetes_version(), KubernetesVersion::LATEST);
+    let first = KubernetesVersion::parse(kubelint_schema::VERSIONS[0]).expect("listed");
+    assert_eq!(
+        linter.with_kubernetes_version(first).kubernetes_version(),
+        first
+    );
 }

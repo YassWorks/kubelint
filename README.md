@@ -118,8 +118,8 @@ A few more things worth knowing:
   exclude = ["vendor/**"]               # globs, relative to this file's directory
   ```
 
-  `--select`, `--ignore` and `--fail-on` replace the file's values for one run,
-  `--config <path>` picks another file and `--isolated` ignores it.
+  `--select`, `--ignore`, `--fail-on` and `--kubernetes-version` replace the file's
+  values for one run, `--config <path>` picks another file and `--isolated` ignores it.
 - **Suppressions:** silence one finding with a comment naming the rule's code or name,
   and say why after `--`:
 
