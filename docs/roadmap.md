@@ -46,7 +46,7 @@ enum values, and removed or deprecated API versions.
 - [x] `kubelint_schema` crate: the in-memory schema model (object properties, required
   fields, scalar types, `oneOf`, lists and maps) and a lookup by `apiVersion` and
   `kind`, tested with small hand-written schemas
-- [ ] `cargo xtask import-schemas`: turn the OpenAPI v3 files of one Kubernetes version,
+- [x] `cargo xtask import-schemas`: turn the OpenAPI v3 files of one Kubernetes version,
   read from a local sparse checkout of its release tag, into
   `crates/kubelint_schema/schemas/<version>.json` and `schemas/sources.toml`, and a
   test that fails when a committed file was written by an older importer. The upstream

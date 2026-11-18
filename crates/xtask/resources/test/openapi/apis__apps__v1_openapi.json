@@ -1,0 +1,70 @@
+{
+  "openapi": "3.0.0",
+  "info": {"title": "Kubernetes", "version": "test"},
+  "paths": {},
+  "components": {
+    "schemas": {
+      "io.k8s.api.apps.v1.Deployment": {
+        "type": "object",
+        "properties": {
+          "apiVersion": {"type": "string"},
+          "kind": {"type": "string"},
+          "metadata": {"allOf": [{"$ref": "#/components/schemas/io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"}], "default": {}},
+          "spec": {"allOf": [{"$ref": "#/components/schemas/io.k8s.api.apps.v1.DeploymentSpec"}], "default": {}}
+        },
+        "x-kubernetes-group-version-kind": [{"group": "apps", "kind": "Deployment", "version": "v1"}]
+      },
+      "io.k8s.api.apps.v1.DeploymentSpec": {
+        "type": "object",
+        "properties": {
+          "replicas": {"type": "integer", "format": "int32"},
+          "maxSurge": {"format": "int-or-string", "oneOf": [{"type": "integer"}, {"type": "string"}]},
+          "template": {"$ref": "#/components/schemas/io.k8s.apimachinery.pkg.runtime.RawExtension"},
+          "selector": {"type": "object", "x-kubernetes-unions": [{"discriminator": "type"}]}
+        },
+        "required": ["template"]
+      },
+      "io.k8s.apimachinery.pkg.apis.meta.v1.DeleteOptions": {
+        "type": "object",
+        "properties": {
+          "gracePeriodSeconds": {"type": "integer", "format": "int64"},
+          "dryRun": {"type": "array", "items": {"type": "string", "default": ""}, "x-kubernetes-list-type": "atomic"}
+        },
+        "x-kubernetes-group-version-kind": [
+          {"group": "", "kind": "DeleteOptions", "version": "v1"},
+          {"group": "apps", "kind": "DeleteOptions", "version": "v1"},
+          {"group": "apps", "kind": "DeleteOptions", "version": "v1beta2"}
+        ]
+      },
+      "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "labels": {"type": "object", "additionalProperties": {"type": "string", "default": ""}},
+          "ownerReferences": {
+            "type": "array",
+            "items": {"allOf": [{"$ref": "#/components/schemas/io.k8s.apimachinery.pkg.apis.meta.v1.OwnerReference"}], "default": {}},
+            "x-kubernetes-list-map-keys": ["uid"],
+            "x-kubernetes-list-type": "map",
+            "x-kubernetes-patch-merge-key": "uid",
+            "x-kubernetes-patch-strategy": "merge"
+          }
+        }
+      },
+      "io.k8s.apimachinery.pkg.apis.meta.v1.OwnerReference": {
+        "type": "object",
+        "properties": {
+          "apiVersion": {"type": "string", "default": ""},
+          "kind": {"type": "string", "default": ""},
+          "uid": {"type": "string", "default": ""}
+        },
+        "required": ["apiVersion", "kind", "uid"],
+        "x-kubernetes-map-type": "atomic"
+      },
+      "io.k8s.apimachinery.pkg.runtime.RawExtension": {
+        "description": "RawExtension is used to hold extensions in external versions.",
+        "type": "object"
+      }
+    }
+  }
+}

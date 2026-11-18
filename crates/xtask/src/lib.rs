@@ -2,6 +2,10 @@
 //!
 //! `gen-rule-docs` writes files into the repository, and a test fails when its committed
 //! output is stale. `gen-corpus` writes a benchmark corpus that is never committed.
+//! `import-schemas` writes the schema of one Kubernetes version from a checkout of its
+//! release tag, and a test fails when a committed schema has an older format.
+
+pub mod schemas;
 
 use std::path::{Path, PathBuf};
 

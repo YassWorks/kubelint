@@ -1,0 +1,14 @@
+{
+  "openapi": "3.0.0",
+  "info": {"title": "Kubernetes", "version": "test"},
+  "paths": {},
+  "components": {
+    "schemas": {
+      "io.k8s.apimachinery.pkg.version.Info": {
+        "type": "object",
+        "properties": {"major": {"type": "string", "enum": ["1"]}},
+        "required": ["major"]
+      }
+    }
+  }
+}

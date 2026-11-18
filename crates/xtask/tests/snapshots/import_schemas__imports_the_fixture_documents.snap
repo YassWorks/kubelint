@@ -1,0 +1,23 @@
+---
+source: crates/xtask/tests/import_schemas.rs
+expression: text
+---
+{"format":1,
+"definitions":{
+"io.k8s.api.apps.v1.Deployment":{"properties":{"apiVersion":{"type":"string"},"kind":{"type":"string"},"metadata":{"$ref":"io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"},"spec":{"$ref":"io.k8s.api.apps.v1.DeploymentSpec"}},"type":"object"},
+"io.k8s.api.apps.v1.DeploymentSpec":{"properties":{"maxSurge":{"oneOf":[{"type":"integer"},{"type":"string"}]},"replicas":{"type":"integer"},"selector":{"type":"object"},"template":{"$ref":"io.k8s.apimachinery.pkg.runtime.RawExtension"}},"required":["template"],"type":"object"},
+"io.k8s.api.core.v1.ConfigMap":{"properties":{"apiVersion":{"type":"string"},"binaryData":{"additionalProperties":{"type":"string"},"type":"object"},"data":{"additionalProperties":{"type":"string"},"type":"object"},"immutable":{"type":"boolean"},"kind":{"type":"string"},"metadata":{"$ref":"io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"}},"type":"object"},
+"io.k8s.api.core.v1.ResourceRequirements":{"properties":{"limits":{"additionalProperties":{"$ref":"io.k8s.apimachinery.pkg.api.resource.Quantity"},"type":"object"}},"type":"object"},
+"io.k8s.apimachinery.pkg.api.resource.Quantity":{"oneOf":[{"type":"string"},{"type":"number"}]},
+"io.k8s.apimachinery.pkg.apis.meta.v1.DeleteOptions":{"properties":{"dryRun":{"items":{"type":"string"},"type":"array"},"gracePeriodSeconds":{"type":"integer"}},"type":"object"},
+"io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta":{"properties":{"labels":{"additionalProperties":{"type":"string"},"type":"object"},"name":{"type":"string"},"ownerReferences":{"items":{"$ref":"io.k8s.apimachinery.pkg.apis.meta.v1.OwnerReference"},"type":"array"}},"type":"object"},
+"io.k8s.apimachinery.pkg.apis.meta.v1.OwnerReference":{"properties":{"apiVersion":{"type":"string"},"kind":{"type":"string"},"uid":{"type":"string"}},"required":["apiVersion","kind","uid"],"type":"object"},
+"io.k8s.apimachinery.pkg.runtime.RawExtension":{"type":"object"}
+},
+"kinds":[
+{"group":"","version":"v1","kind":"ConfigMap","definition":"io.k8s.api.core.v1.ConfigMap"},
+{"group":"","version":"v1","kind":"DeleteOptions","definition":"io.k8s.apimachinery.pkg.apis.meta.v1.DeleteOptions"},
+{"group":"apps","version":"v1","kind":"DeleteOptions","definition":"io.k8s.apimachinery.pkg.apis.meta.v1.DeleteOptions"},
+{"group":"apps","version":"v1","kind":"Deployment","definition":"io.k8s.api.apps.v1.Deployment"},
+{"group":"apps","version":"v1beta2","kind":"DeleteOptions","definition":"io.k8s.apimachinery.pkg.apis.meta.v1.DeleteOptions"}
+]}
