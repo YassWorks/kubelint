@@ -1,0 +1,2 @@
+[lint]
+kubernetes-version = "1.29"

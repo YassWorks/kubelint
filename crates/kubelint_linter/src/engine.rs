@@ -1,6 +1,7 @@
 //! The lint engine: parse files, find objects, run rules, sort the findings.
 
 use kubelint_diagnostics::{Diagnostic, Severity};
+use kubelint_schema::KubernetesVersion;
 use kubelint_source::{FileId, SourceFile};
 use kubelint_yaml::Parse;
 use rayon::prelude::*;
@@ -49,11 +50,28 @@ pub struct LintResult {
 #[derive(Debug, Clone)]
 pub struct Linter {
     rules: Vec<EnabledRule>,
+    kubernetes_version: KubernetesVersion,
 }
 
 impl Linter {
+    /// A linter that checks against the latest supported Kubernetes version.
     pub fn new(rules: Vec<EnabledRule>) -> Self {
-        Self { rules }
+        Self {
+            rules,
+            kubernetes_version: KubernetesVersion::LATEST,
+        }
+    }
+
+    #[must_use]
+    pub fn with_kubernetes_version(self, version: KubernetesVersion) -> Self {
+        Self {
+            kubernetes_version: version,
+            ..self
+        }
+    }
+
+    pub fn kubernetes_version(&self) -> KubernetesVersion {
+        self.kubernetes_version
     }
 
     /// A linter running every built-in rule that is enabled by default, at its default

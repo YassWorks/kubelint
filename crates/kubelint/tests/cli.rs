@@ -390,3 +390,37 @@ fn sarif_format_lists_every_rule_and_each_finding() {
 fn github_format_prints_workflow_commands() {
     insta::assert_snapshot!(run(&["check", "--format", "github"], None));
 }
+
+#[test]
+fn a_supported_kubernetes_version_is_accepted() {
+    for version in ["1.34", "v1.36", "1.37.2"] {
+        let out = run(
+            &["check", "deploy/web.yaml", "--kubernetes-version", version],
+            None,
+        );
+        assert!(out.starts_with("exit: 0\n"), "{version}: {out}");
+    }
+}
+
+#[test]
+fn unsupported_kubernetes_version_in_a_flag_exits_two() {
+    insta::assert_snapshot!(run(
+        &["check", "deploy/web.yaml", "--kubernetes-version", "1.20"],
+        None
+    ));
+}
+
+#[test]
+fn unsupported_kubernetes_version_in_the_config_is_shown_in_the_file() {
+    insta::assert_snapshot!(run_in(
+        configured(),
+        &[
+            "check",
+            "--config",
+            "bad/unsupported-version.toml",
+            "--color",
+            "never"
+        ],
+        None
+    ));
+}

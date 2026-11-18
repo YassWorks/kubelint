@@ -47,6 +47,14 @@ fn every_key_with_its_position() {
         severity,
         [("KL3003", Level::Error), ("missing-kind", Level::Warning)]
     );
+    let version = config
+        .lint
+        .kubernetes_version
+        .expect("kubernetes-version is set");
+    assert_eq!(
+        (version.value.as_str(), at(text, version.range)),
+        ("v1.36", "\"v1.36\"")
+    );
     assert_eq!(at(text, config.files.exclude[0].range), "\"vendor/**\"");
 }
 
@@ -73,6 +81,9 @@ fn unknown_keys_are_errors() {
 
 #[test]
 fn wrong_values_are_errors() {
+    let (message, at) = error("[lint]\nkubernetes-version = 1.30\n");
+    assert!(message.contains("expected a string"), "{message}");
+    assert_eq!(at, "1.30");
     let (message, at) = error("[lint]\nfail-on = \"warn\"\n");
     assert!(message.starts_with("unknown variant `warn`"), "{message}");
     assert_eq!(at, "\"warn\"");

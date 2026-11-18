@@ -21,6 +21,8 @@ pub struct LintConfig {
     pub ignore: Vec<Spanned<String>>,
     /// `fail-on`: the lowest severity that fails the run.
     pub fail_on: Option<Spanned<Level>>,
+    /// `kubernetes-version`: the Kubernetes version to check against, as written.
+    pub kubernetes_version: Option<Spanned<String>>,
     /// `[lint.severity]`: severity overrides, keyed by rule code or name, sorted by key.
     pub severity: Vec<(Spanned<String>, Level)>,
 }
@@ -87,6 +89,7 @@ pub fn parse(text: &str) -> Result<Config, ConfigError> {
             select: lint.select.map(spanned_all),
             ignore: spanned_all(lint.ignore.unwrap_or_default()),
             fail_on: lint.fail_on.map(spanned),
+            kubernetes_version: lint.kubernetes_version.map(spanned),
             severity: lint
                 .severity
                 .unwrap_or_default()
@@ -113,6 +116,7 @@ struct RawLint {
     select: Option<Vec<toml::Spanned<String>>>,
     ignore: Option<Vec<toml::Spanned<String>>>,
     fail_on: Option<toml::Spanned<Level>>,
+    kubernetes_version: Option<toml::Spanned<String>>,
     severity: Option<BTreeMap<toml::Spanned<String>, Level>>,
 }
 

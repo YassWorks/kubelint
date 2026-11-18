@@ -344,6 +344,7 @@ dependencies = [
  "kubelint_diagnostics",
  "kubelint_linter",
  "kubelint_output",
+ "kubelint_schema",
  "kubelint_source",
  "serde_json",
 ]
@@ -380,6 +381,7 @@ dependencies = [
  "insta",
  "kubelint_diagnostics",
  "kubelint_k8s",
+ "kubelint_schema",
  "kubelint_source",
  "kubelint_yaml",
  "rayon",

@@ -10,7 +10,7 @@
 mod embedded;
 mod model;
 
-pub use embedded::{LATEST_VERSION, VERSIONS};
+pub use embedded::{KubernetesVersion, VERSIONS};
 pub use model::{
     Definition, DefinitionId, FORMAT_VERSION, Object, Scalar, Schema, SchemaError, Shape,
 };

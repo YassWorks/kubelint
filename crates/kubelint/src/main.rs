@@ -93,6 +93,12 @@ struct CheckArgs {
     /// configuration's `fail-on`. Defaults to `warning`.
     #[arg(long, value_enum, value_name = "SEVERITY")]
     fail_on: Option<FailOn>,
+
+    /// The Kubernetes version to check against (`1.37` or `v1.37`; a patch number is
+    /// ignored), replacing the configuration's `kubernetes-version`. Defaults to the
+    /// latest supported version.
+    #[arg(long, value_name = "VERSION")]
+    kubernetes_version: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -197,6 +203,7 @@ fn check(args: CheckArgs) -> anyhow::Result<ExitCode> {
         select: args.select,
         ignore: args.ignore,
         fail_on: args.fail_on.map(Severity::from),
+        kubernetes_version: args.kubernetes_version,
     };
     let settings = match settings::load(source, &overrides, &cwd, color) {
         Ok(settings) => settings,
@@ -211,7 +218,9 @@ fn check(args: CheckArgs) -> anyhow::Result<ExitCode> {
         eprintln!("{note}");
     }
     let files = read_inputs(&discovery.inputs)?;
-    let result = Linter::new(settings.rules).lint(&files);
+    let result = Linter::new(settings.rules)
+        .with_kubernetes_version(settings.kubernetes_version)
+        .lint(&files);
     let summary = Summary {
         files_checked: files.len(),
         objects_checked: result.objects_checked,
