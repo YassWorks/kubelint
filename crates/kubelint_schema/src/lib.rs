@@ -7,8 +7,10 @@
 //! Allowed internal dependencies: `kubelint_source`, `kubelint_yaml`, `kubelint_k8s`.
 //! See `docs/architecture.md`.
 
+mod embedded;
 mod model;
 
+pub use embedded::{LATEST_VERSION, VERSIONS};
 pub use model::{
     Definition, DefinitionId, FORMAT_VERSION, Object, Scalar, Schema, SchemaError, Shape,
 };

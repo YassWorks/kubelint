@@ -482,11 +482,12 @@ file has an older one. `xtask` depends on `kubelint_schema` for it.
 **Why:** about 12 MB per version is too much to vendor in Git for 4 versions and every
 future release, while the stripped form is a fraction of that and its diffs show what
 changed in the API between versions. JSON reuses `serde_json`, which the workspace
-already has. Parsing one version at startup should cost a few milliseconds against the
-[performance budget](#performance-budget), a guess until the embedding item measures
-it. Without the upstream files in Git, CI cannot regenerate the output, so the test
-checks the format version, which catches an importer change that was not followed by
-a new import.
+already has. Parsing one version takes 3 to 5 ms against the
+[performance budget](#performance-budget), and the four versions 1.34 to 1.37 (1.1 MB
+of JSON) grow the release binary from 3.4 MB to 4.6 MB once the CLI calls
+`Schema::embedded` (both measured on Linux x86-64). Without the upstream files in
+Git, CI cannot regenerate the output, so the test checks the format version, which
+catches an importer change that was not followed by a new import.
 
 **Rejected:** vendoring the upstream files so CI can regenerate the output (repository
 size); generated Rust tables (slow builds and huge source files); a binary format such
@@ -526,6 +527,17 @@ came from.
 
 **Rejected:** dropping every unknown keyword (silent drift); passing the version and
 commit as arguments (they can disagree with the checkout).
+
+`kubelint_schema` lists the embedded versions once, in the `embed!` call of
+`src/embedded.rs`. Because `xtask` builds `kubelint_schema`, a listed file must exist
+before the importer can run: import a new version first, then add it to `embed!`, and
+remove a dropped version from `embed!` before deleting its file and its `sources.toml`
+entry.
+
+**Why:** the list stays visible in code and the crate needs no build script.
+
+**Rejected:** a `build.rs` that generates the list from `schemas/` or `sources.toml`
+(one more build step, for a list that changes once per Kubernetes release).
 
 **Validator: our own, span-aware, in `kubelint_schema`.** It walks the `kubelint_yaml`
 tree of an object against the definition of its group version kind and reports each
