@@ -4,6 +4,16 @@ Every release of kubelint, newest first. The nightly release workflow writes thi
 
 Older releases are listed on the [releases page](https://github.com/YassWorks/kubelint/releases).
 
+## [0.21.0] - 2026-11-18
+
+### Features
+
+- add kubelint self update (#135)
+
+### Other changes
+
+- publish a Homebrew formula (#137)
+
 ## [0.20.3] - 2026-11-17
 
 ### Other changes
