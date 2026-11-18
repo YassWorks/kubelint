@@ -15,7 +15,9 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  CODE_PATHS: crates Cargo.toml Cargo.lock rust-toolchain.toml dist-workspace.toml
+  CODE_PATHS: >-
+    crates Cargo.toml Cargo.lock rust-toolchain.toml dist-workspace.toml .github/docker
+    .github/scripts/publish-ghcr.sh .github/workflows/publish-ghcr.yml
 
 jobs:
   nightly:

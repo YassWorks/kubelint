@@ -247,6 +247,11 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 - `CONTRIBUTING.md` step 5 runs only the linter tests, and nothing ties the catalog in
   `docs/rules/README.md` to the registry.
 - `e2e-apiserver.sh` reports a network failure as an unknown version.
+- The container image `ghcr.io/yassworks/kubelint` has no user docs. Once
+  `docker pull ghcr.io/yassworks/kubelint:<version>` works without logging in, show it
+  in `README.md`, `docs/user/getting-started.md` and `docs/user/ci-integration.md` (a
+  `docker run` example and a GitLab CI job with `entrypoint: [""]`), pinned to that
+  version.
 
 ## Rule ideas
 

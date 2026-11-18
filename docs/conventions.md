@@ -186,7 +186,9 @@ and snapshot double as documentation of its behavior.
 
 - Every night at 00:17 UTC, `.github/workflows/nightly.yml` releases what was merged
   since the last tag, if it changed code (`crates/`, `Cargo.toml`, `Cargo.lock`,
-  `rust-toolchain.toml`, `dist-workspace.toml`). Docs-only changes release nothing.
+  `rust-toolchain.toml`, `dist-workspace.toml`, and the container image's files:
+  `.github/docker/`, `.github/scripts/publish-ghcr.sh`,
+  `.github/workflows/publish-ghcr.yml`). Docs-only changes release nothing.
 - The version comes from the commit titles since the last tag: a breaking change (`!`)
   or a `feat` bumps the minor version, anything else the patch version. Before 1.0, a
   breaking change never bumps the major version.
@@ -200,7 +202,11 @@ and snapshot double as documentation of its behavior.
   checksums, and publishes a GitHub Release with the tag's `CHANGELOG.md` section as
   notes. Then it commits the formula to the `YassWorks/homebrew-tap` repository with
   the `HOMEBREW_TAP_TOKEN` secret, a maintainer's token that can push there: the
-  default token reaches only this repository.
+  default token reaches only this repository. It also runs
+  `.github/workflows/publish-ghcr.yml`, which puts the release's two Linux binaries in
+  the image `ghcr.io/yassworks/kubelint` (`.github/docker/Dockerfile`, for x86-64 and
+  ARM64) and pushes it tagged with the version without its `v` (`0.21.0`) and
+  `latest`.
 - dist generates `release.yml` from `dist-workspace.toml`. Never edit `release.yml` by
   hand: its `plan` job, which also runs on every PR, fails when the file does not match
   the config. To change it, edit `dist-workspace.toml`, run `dist generate` with the
@@ -219,6 +225,9 @@ change, with the day's notes in one place. With the real version on `main`, sour
 builds report it too. dist builds the archives, installers and checksums from one config
 file, and its installers write a receipt that records how kubelint was installed. A tap
 of our own lets Homebrew users install and update kubelint with no review by Homebrew.
+The image runs kubelint where CI jobs run in containers, and its Alpine base gives
+GitLab CI the shell it runs a job's `script` with (the job sets `entrypoint: [""]`).
+ghcr.io takes the push with the workflow's own token.
 
 **Rejected:**
 
@@ -233,6 +242,13 @@ of our own lets Homebrew users install and update kubelint with no review by Hom
 - Publishing the formula to homebrew-core. It takes only formulas that build from
   source, not dist's prebuilt binaries, and only projects with at least 75 stars, 30
   forks or 30 watchers (225, 90 or 90 when the owner submits it).
+- Docker Hub for the image. It needs an account and a token.
+- A `scratch` or distroless base. It has no shell, so GitLab CI cannot run a `script`
+  in it.
+- A separate workflow on `release: published`. The release is created with the default
+  token, whose events start no workflows.
+- Building kubelint inside the image. It compiles again what the release already built,
+  and the image would hold another binary than the archives.
 
 ## Workflows and scripts
 
