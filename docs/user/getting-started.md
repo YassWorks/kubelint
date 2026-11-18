@@ -85,6 +85,17 @@ On macOS or Linux with [Homebrew](https://brew.sh):
 brew install yassworks/tap/kubelint
 ```
 
+### With Docker
+
+The image `ghcr.io/yassworks/kubelint` holds the Linux binary, for x86-64 and ARM64.
+Each release is tagged with its version without the `v`, such as `0.21.1`, and the
+newest is also `latest`. Mount the folder to lint at `/src`, the image's working
+directory:
+
+```bash
+docker run --rm -v "${PWD}:/src" ghcr.io/yassworks/kubelint check .
+```
+
 ### From a release archive
 
 Every release on the [releases page](https://github.com/YassWorks/kubelint/releases)
@@ -136,8 +147,9 @@ shell profiles and `PATH` alone. It needs `curl` or `wget` (Windows 10 and 11 in
 download folder under `%TEMP%` (step 5 of [Uninstall](#uninstall) deletes them).
 
 Installed another way, `kubelint self update` changes nothing and exits with code 2.
-With Homebrew, run `brew upgrade kubelint`. From a release archive, download the new one
-as above. From source, run the `cargo install` command again.
+With Homebrew, run `brew upgrade kubelint`. With Docker, use a newer tag, or run
+`docker pull ghcr.io/yassworks/kubelint` to update `latest`. From a release archive,
+download the new one as above. From source, run the `cargo install` command again.
 
 ### Uninstall
 
@@ -177,6 +189,11 @@ Installed with the installer on Windows, in PowerShell:
 
 Installed with Homebrew: `brew uninstall kubelint`, then `brew untap yassworks/tap` if
 you use no other formula from it.
+
+With Docker: `docker image rm ghcr.io/yassworks/kubelint:<tag>` for each tag you pulled
+(`docker image ls ghcr.io/yassworks/kubelint` lists them). A `docker pull` that updated
+`latest` leaves the older image untagged: `docker image prune` removes it, with every
+other untagged image.
 
 Built from source: `cargo uninstall kubelint`.
 

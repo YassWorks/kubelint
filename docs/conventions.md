@@ -205,7 +205,7 @@ and snapshot double as documentation of its behavior.
   default token reaches only this repository. It also runs
   `.github/workflows/publish-ghcr.yml`, which puts the release's two Linux binaries in
   the image `ghcr.io/yassworks/kubelint` (`.github/docker/Dockerfile`, for x86-64 and
-  ARM64) and pushes it tagged with the version without its `v` (`0.21.0`) and
+  ARM64) and pushes it tagged with the version without its `v` (`0.21.1`) and
   `latest`.
 - dist generates `release.yml` from `dist-workspace.toml`. Never edit `release.yml` by
   hand: its `plan` job, which also runs on every PR, fails when the file does not match
