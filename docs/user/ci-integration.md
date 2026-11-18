@@ -12,8 +12,8 @@ ready-made setups for GitHub Actions, GitLab CI and pre-commit.
   in the [configuration file](configuration.md), or `--fail-on` for one run. Findings
   below it are still printed.
 - **Pin the version.** kubelint releases often and anything may change before 1.0.
-  Download a fixed version so a new release never turns a green pipeline red by
-  itself.
+  Download a fixed version, or use a fixed image tag, so a new release never turns a
+  green pipeline red by itself.
 - **Rendered YAML only.** Lint the output of `helm template` or `kustomize build` with
   `kubelint check -` (see [getting started](getting-started.md#helm-charts-and-kustomize)).
 
@@ -31,6 +31,13 @@ curl -fsSL "https://github.com/YassWorks/kubelint/releases/download/$VERSION/kub
 
 For another platform, set `TARGET` to the part after `kubelint-` in its archive name,
 listed in [getting started](getting-started.md#from-a-release-archive).
+
+Where a job can run a container, use the image instead, pinned to a version without the
+`v` (available from 0.21.1):
+
+```bash
+docker run --rm -v "${PWD}:/src" ghcr.io/yassworks/kubelint:0.21.1 check .
+```
 
 ## GitHub Actions
 
@@ -90,18 +97,18 @@ works on every runner operating system.
 ```yaml
 # .gitlab-ci.yml
 kubelint:
-  image: alpine:3
-  variables:
-    VERSION: v0.20.3
-    TARGET: x86_64-unknown-linux-musl
+  image:
+    name: ghcr.io/yassworks/kubelint:0.21.1
+    entrypoint: [""]
   script:
-    - apk add --no-cache curl
-    - curl -fsSL "https://github.com/YassWorks/kubelint/releases/download/$VERSION/kubelint-$TARGET.tar.gz"
-      | tar -xz --strip-components=1 "kubelint-$TARGET/kubelint"
-    - ./kubelint check .
+    - kubelint check .
 ```
 
-The Linux binary is static, so it runs on Alpine and any other image.
+GitLab starts the job image with a shell command, which the image's `kubelint`
+entrypoint would take as its arguments, so `entrypoint: [""]` clears it. To use another
+image, download the release archive in the `script` as shown in
+[installing in CI](#installing-in-ci). The Linux binary is static and runs on any image
+with `curl` and `tar` (on Alpine, add `apk add --no-cache curl` first).
 
 ## Machine-readable output
 

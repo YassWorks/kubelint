@@ -38,6 +38,12 @@ Or install with [Homebrew](https://brew.sh) on macOS or Linux, and update with
 brew install yassworks/tap/kubelint
 ```
 
+Or run it with Docker, from the folder to lint:
+
+```bash
+docker run --rm -v "${PWD}:/src" ghcr.io/yassworks/kubelint check .
+```
+
 [Getting started](docs/user/getting-started.md#install) covers the release archives,
 building from source, and how to uninstall.
 
