@@ -51,7 +51,7 @@ enum values, and removed or deprecated API versions.
   `crates/kubelint_schema/schemas/<version>.json` and `schemas/sources.toml`, and a
   test that fails when a committed file was written by an older importer. The upstream
   files are not vendored (about 12 MB per version)
-- [ ] Import every version of the window and embed it in the binary; record the binary
+- [x] Import every version of the window and embed it in the binary; record the binary
   size
 - [ ] `--kubernetes-version` flag and `kubernetes-version` config key, defaulting to the
   latest supported version

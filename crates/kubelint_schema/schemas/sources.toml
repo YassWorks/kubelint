@@ -1,1 +1,16 @@
 # Written by `cargo xtask import-schemas`. Do not edit.
+["1.34"]
+tag = "v1.34.13"
+commit = "5bafe0f04b114c29e7bda3bd2d08919a8457b8d7"
+
+["1.35"]
+tag = "v1.35.10"
+commit = "ae6fece6fea92ecfcccd13af7d5f2ea8cb9b33fe"
+
+["1.36"]
+tag = "v1.36.6"
+commit = "1b2171b110bb2a2542e1322035c6583ec86eb976"
+
+["1.37"]
+tag = "v1.37.2"
+commit = "c50e5395f1ae2d4a2c05f28fdcc38c0916cc1a32"
