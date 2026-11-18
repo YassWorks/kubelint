@@ -4,6 +4,12 @@ Every release of kubelint, newest first. The nightly release workflow writes thi
 
 Older releases are listed on the [releases page](https://github.com/YassWorks/kubelint/releases).
 
+## [0.21.1] - 2026-11-18
+
+### Other changes
+
+- publish a container image to ghcr.io (#138)
+
 ## [0.21.0] - 2026-11-18
 
 ### Features
