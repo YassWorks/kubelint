@@ -406,6 +406,14 @@ Traps earlier runs fell into. Add new ones as you find them.
 - Claude Code refuses an `rm` whose target it cannot resolve, such as `rm -f *` after a
   `cd`, and the whole command does not run. Write scratch output to a new directory
   under the scratchpad, with absolute paths, and leave it there.
+- Under `set -e`, `eval "$(cmd)"` goes on when `cmd` fails, because `eval` ignores the
+  substitution's exit status and runs whatever `cmd` printed (empty text returns 0).
+  Assign first with a plain assignment, not `local` or `export` (`exports="$(cmd)"`,
+  then `eval "$exports"`), so the script stops at the real error.
+- Downloads in CI, such as GitHub release assets, can get HTTP 429. Use
+  `curl -fsSL --retry 5`: it retries a 429 (and 408, 500, 502, 503, 504 or a timeout)
+  with backoff and fails only if the error persists after five retries, about 30
+  seconds. Without `-f`, curl exits 0 and saves the error page as the download.
 - The self-review subagent runs the end to end commands in the same working tree. Tell
   it which generated files it may touch and that it must restore them, then check
   `git status` before committing.
