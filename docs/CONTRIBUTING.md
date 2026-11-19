@@ -61,7 +61,9 @@ small example to copy.
    `<category>` is `syntax`, `correctness`, `security` or `reliability`. Put each case in
    its own YAML document (`---`) with a comment above it saying `Reported: ...` or
    `Not reported: ...` and why. Include cases that must be reported and cases that must
-   not.
+   not. The CI job `e2e` applies the cases of the rules it knows to a real API server
+   ([the fixture check](architecture.md#the-fixture-check)); a case the server cannot
+   judge needs a `# e2e-skip: <reason>` line in its comment.
 3. **Write the rule** in `crates/kubelint_linter/src/rules/<category>/<rule_name>.rs`
    (the name in snake case): a unit struct implementing `Rule`, with a `static META:
    RuleMeta` (code, name, category, default severity, default enabled, summary,

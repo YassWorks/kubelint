@@ -35,6 +35,7 @@ spec:
 ---
 # Reported: set to true (also as a YAML 1.1 boolean), in init and ephemeral
 # containers, and containers without a name (the second is reported at its first key).
+# e2e-skip: the server rejects the container names and ephemeral containers first
 apiVersion: v1
 kind: Pod
 metadata:
@@ -118,6 +119,7 @@ spec:
 ---
 # Reported: a pod-level securityContext does not set it for the containers, and a
 # Linux pod is checked.
+# e2e-skip: an unknown field, which the server rejects while decoding
 apiVersion: v1
 kind: Pod
 metadata:
@@ -147,6 +149,7 @@ spec:
     securityContext: {allowPrivilegeEscalation: no}
 ---
 # Not reported: a privileged container (KL2001 reports it).
+# e2e-skip: `restricted` names it, but a privileged container cannot set `false`
 apiVersion: v1
 kind: Pod
 metadata:
@@ -159,6 +162,7 @@ spec:
       privileged: true
 ---
 # Not reported: a container that adds `CAP_SYS_ADMIN`, where Kubernetes rejects `false`.
+# e2e-skip: `restricted` names it, but `CAP_SYS_ADMIN` cannot have `false`
 apiVersion: v1
 kind: Pod
 metadata:
@@ -184,6 +188,7 @@ spec:
         add: ["SYS_ADMIN"]
 ---
 # Not reported: quoted strings and a number (schema problems).
+# e2e-skip: a schema problem, which the server rejects while decoding
 apiVersion: v1
 kind: Pod
 metadata:
@@ -220,6 +225,7 @@ spec:
     image: app:1.0
 ---
 # Not reported: a custom resource with a pod-like shape, and a ConfigMap.
+# e2e-skip: a custom resource, unknown to the server
 apiVersion: example.com/v1
 kind: Deployment
 metadata:

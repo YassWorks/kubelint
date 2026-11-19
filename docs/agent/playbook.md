@@ -373,10 +373,11 @@ Traps earlier runs fell into. Add new ones as you find them.
   first nightly tag after a code change. Pin a version in `docs/user/ci-integration.md`
   (`rev: v0.18.6`, `@v0.18.7`) only once that tag exists and contains the file
   (`gh api "repos/YassWorks/kubelint/contents/<file>?ref=<tag>"`).
-- PR checks are the ten `ci.yml` jobs (including three `action (<os>)` jobs),
-  GitGuardian, and seven from `release.yml` (`plan`, plus `build-local-artifacts`,
-  `build-global-artifacts`, `host`, `publish-homebrew-formula`, `custom-publish-ghcr`
-  and `announce`, which show as skipped): eighteen check runs in all. A wait script
+- PR checks are the fourteen `ci.yml` jobs (including three `action (<os>)` jobs and
+  four `e2e (<version>)` jobs), GitGuardian, and seven from `release.yml` (`plan`, plus
+  `build-local-artifacts`, `build-global-artifacts`, `host`,
+  `publish-homebrew-formula`, `custom-publish-ghcr` and `announce`, which show as
+  skipped): twenty-two check runs in all. A wait script
   that counts check runs must expect all of them before it reports done.
 - Self-review is also a fact check (skill step 2 and the brief's Facts bullet). On
   2026-11-15 it found wrong claims in four of five PRs, for example that the published

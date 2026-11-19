@@ -24,44 +24,44 @@ warning[KL2004]: Pod `node-debug` shares the node's IPC namespace (`hostIPC`)
   = help: remove `hostIPC`; the containers of one pod already share an IPC namespace
 
 warning[KL2004]: DaemonSet `agent` shares the node's network namespace (`hostNetwork`)
-  --> security/KL2004.yaml:26:7
+  --> security/KL2004.yaml:27:7
    |
-26 |       hostNetwork: yes
+27 |       hostNetwork: yes
    |       ^^^^^^^^^^^^^^^^
   = help: remove `hostNetwork` and reach the pod through a Service
 
 warning[KL2004]: CronJob `report` shares the node's process namespace (`hostPID`)
-  --> security/KL2004.yaml:41:16
+  --> security/KL2004.yaml:42:16
    |
-41 |         spec: {hostPID: True, restartPolicy: OnFailure, containers: [{name: report, image: report:2}]}
+42 |         spec: {hostPID: True, restartPolicy: OnFailure, containers: [{name: report, image: report:2}]}
    |                ^^^^^^^^^^^^^
   = help: remove `hostPID`; to share processes between the containers of one pod, set `shareProcessNamespace: true`
 
 warning[KL2004]: Deployment `web` shares the node's IPC namespace (`hostIPC`)
-  --> security/KL2004.yaml:55:7
+  --> security/KL2004.yaml:56:7
    |
-55 |       hostIPC: true
+56 |       hostIPC: true
    |       ^^^^^^^^^^^^^
   = help: remove `hostIPC`; the containers of one pod already share an IPC namespace
 
 warning[KL2004]: StatefulSet `db` shares the node's network namespace (`hostNetwork`)
-  --> security/KL2004.yaml:73:7
+  --> security/KL2004.yaml:74:7
    |
-73 |       hostNetwork: true
+74 |       hostNetwork: true
    |       ^^^^^^^^^^^^^^^^^
   = help: remove `hostNetwork` and reach the pod through a Service
 
 warning[KL2004]: Job `migrate` shares the node's process namespace (`hostPID`)
-  --> security/KL2004.yaml:85:7
+  --> security/KL2004.yaml:86:7
    |
-85 |       hostPID: true
+86 |       hostPID: true
    |       ^^^^^^^^^^^^^
   = help: remove `hostPID`; to share processes between the containers of one pod, set `shareProcessNamespace: true`
 
 warning[KL2004]: the Deployment shares the node's network namespace (`hostNetwork`)
-   --> security/KL2004.yaml:166:7
+   --> security/KL2004.yaml:172:7
     |
-166 |       hostNetwork: true
+172 |       hostNetwork: true
     |       ^^^^^^^^^^^^^^^^^
   = help: remove `hostNetwork` and reach the pod through a Service
 

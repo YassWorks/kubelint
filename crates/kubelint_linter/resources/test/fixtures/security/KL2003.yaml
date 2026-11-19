@@ -49,6 +49,7 @@ spec:
 # Reported: a pod `runAsNonRoot: false` is reported on the pod, once, whether a container
 # leaves it unset, sets it to null or sets `true`. An ephemeral container that sets
 # `false` is reported too.
+# e2e-skip: the server rejects the ephemeral container first
 apiVersion: v1
 kind: Pod
 metadata:
@@ -72,6 +73,7 @@ spec:
       runAsNonRoot: false
 ---
 # Reported: `runAsNonRoot: no` in a container without a name overrides the pod's `true`.
+# e2e-skip: the server rejects the unnamed container first
 apiVersion: v1
 kind: Pod
 metadata:
@@ -115,6 +117,7 @@ spec:
           - {name: report, image: report:2}
 ---
 # Reported: a Job whose container has no name (reported at its first key).
+# e2e-skip: the server rejects the unnamed container first
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -234,6 +237,7 @@ spec:
       runAsUser:
 ---
 # Not reported: values of the wrong type (schema problems).
+# e2e-skip: a schema problem, which the server rejects while decoding
 apiVersion: v1
 kind: Pod
 metadata:
@@ -279,6 +283,7 @@ spec:
 ---
 # Not reported: `hostUsers: false` accepts any user, so `runAsUser: 0`, `runAsNonRoot: false`
 # and unset values all pass (restricted accepts this from 1.35).
+# e2e-skip 1.34: `restricted` names it on 1.34, where KL2003 ignores the version
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -343,6 +348,7 @@ spec:
     securityContext: {runAsNonRoot: ~, runAsUser: ~}
 ---
 # Not reported: a custom resource with a pod-like shape.
+# e2e-skip: a custom resource, unknown to the server
 apiVersion: example.com/v1
 kind: Deployment
 metadata:

@@ -661,6 +661,41 @@ against the kubelet source instead.
 /proc/self/oom_score_adj: Permission denied", tested on 2026-11-15); a managed cluster
 (an account and a secret, and network calls from CI to a shared cluster).
 
+#### The fixture check
+
+`cargo xtask e2e [<CODE>...]` checks rule fixtures against the API server that
+`KUBECONFIG` names, at the server's own version. The CI job `e2e` runs it through
+`.github/scripts/e2e.sh` on every version kubelint has a schema for, and any
+disagreement fails CI.
+
+- It splits a fixture at its `---` lines into cases, each with the comment above it, and
+  lints the whole file with only that rule, at the server's version. A case is reported
+  when a finding starts inside it.
+- It creates every namespace the cases use and applies each case alone with
+  `kubectl apply --dry-run=server`.
+- A Pod Security rule (`POD_SECURITY` in `crates/xtask/src/e2e.rs`: KL2001 to KL2007)
+  runs in namespaces that enforce its level (`baseline` or `restricted`). A case agrees
+  when the rule reports it exactly when the server names one of the rule's checks
+  (`privileged`, `runAsNonRoot != true`...), in a rejection for a Pod and a warning for
+  a workload. A case the server rejects before Pod Security runs (decoding and
+  validation come first) is a disagreement too, because it proves nothing.
+- A case the server cannot judge carries a marker comment with the reason:
+  `# e2e-skip: <reason>` on every version, `# e2e-skip 1.34: <reason>` on one. Typical
+  reasons are custom resources, schema problems, invalid names and fields that are
+  rejected first, and deliberate differences between the rule and Pod Security. The
+  run prints every skipped case with its reason.
+
+**Why:** the fixtures already hold every case a rule decides, each with its intended
+verdict, so checking them needs no second set of examples. Markers live in the fixture
+next to the case they explain, so a new case is checked by default and leaving it out
+takes a written reason. Judging by the check's name, not by acceptance, keeps the
+`restricted` rules testable: a `restricted` namespace flags several checks at once.
+
+**Rejected:** a separate set of end to end examples (it drifts from the fixtures); a
+list of skipped cases outside the fixtures (line numbers move with every edit); running
+only the newest version (Pod Security changed between 1.34 and 1.35, and KL1008 knows
+version dependent names).
+
 ## Performance budget
 
 - Lint 10,000 objects in under 1 second on a laptop, release build.

@@ -22,6 +22,7 @@ spec:
 ---
 # Reported: `ALL` in lower case, a `CAP_` prefix, flow style, init and ephemeral
 # containers, and a container without a name.
+# e2e-skip: the server rejects the container names and ephemeral containers first
 apiVersion: v1
 kind: Pod
 metadata:
@@ -147,6 +148,7 @@ spec:
 ---
 # Not reported: items that are not strings, and `add` that is not a sequence (schema
 # problems).
+# e2e-skip: a schema problem, which the server rejects while decoding
 apiVersion: v1
 kind: Pod
 metadata:
@@ -165,6 +167,7 @@ spec:
         add: SYS_ADMIN
 ---
 # Not reported: capabilities at the pod level are not a Kubernetes field.
+# e2e-skip: an unknown field, which the server rejects while decoding
 apiVersion: v1
 kind: Pod
 metadata:
@@ -178,6 +181,7 @@ spec:
     image: app:1.0
 ---
 # Not reported: a custom resource with a pod-like shape.
+# e2e-skip: a custom resource, unknown to the server
 apiVersion: example.com/v1
 kind: Deployment
 metadata:

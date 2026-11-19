@@ -814,6 +814,7 @@ dependencies = [
  "kubelint_linter",
  "kubelint_schema",
  "kubelint_source",
+ "kubelint_yaml",
  "serde",
  "serde_json",
  "toml",
