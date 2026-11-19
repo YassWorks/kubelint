@@ -100,7 +100,8 @@ spec:
     env:
     - {name: MODE, value: a}
 ---
-# Not reported: missing, empty or non-string names (schema problems).
+# Not reported: missing, empty or blank names (schema problems).
+# e2e-skip: the server rejects the missing and empty names, so it sends no warning
 apiVersion: v1
 kind: Pod
 metadata:
@@ -114,8 +115,32 @@ spec:
     - value: a
     - {name: "", value: a}
     - {name: "", value: a}
+---
+# Not reported: a repeated name made of spaces.
+# e2e-skip: the server warns about the repeated blank name
+apiVersion: v1
+kind: Pod
+metadata:
+  name: blank
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    env:
     - {name: " ", value: a}
     - {name: " ", value: a}
+---
+# Not reported: non-string names (schema problems).
+# e2e-skip: a schema problem, which the server rejects while decoding
+apiVersion: v1
+kind: Pod
+metadata:
+  name: list-names
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    env:
     - {name: [a], value: a}
     - {name: [a], value: a}
 ---
@@ -134,6 +159,7 @@ spec:
     - {name: MODE, value: a}
 ---
 # Reported: a container without a name, named by "container" only.
+# e2e-skip: the server rejects the unnamed container, so it sends no warning
 apiVersion: v1
 kind: Pod
 metadata:

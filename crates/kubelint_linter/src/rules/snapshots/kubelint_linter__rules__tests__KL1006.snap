@@ -57,4 +57,4 @@ error[KL1006]: container name `report` is already used in `containers`
    |                   ------ first used here
   = help: give each container in the pod a unique name
 
-5 finding(s) in 7 object(s)
+5 finding(s) in 8 object(s)

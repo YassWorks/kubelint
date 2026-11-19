@@ -46,6 +46,7 @@ spec:
         memory: 2x
 ---
 # Reported: pod-level resources, overhead, emptyDir size limit, and a non-finite float.
+# e2e-skip: `kubectl` refuses `.inf` before it sends the object
 apiVersion: v1
 kind: Pod
 metadata:
@@ -153,6 +154,7 @@ spec:
         other: +.5e-3
 ---
 # Not reported: mappings and lists are schema problems, not quantity syntax.
+# e2e-skip: the server rejects a mapping or a list as a bad quantity
 apiVersion: v1
 kind: Pod
 metadata:
@@ -168,6 +170,7 @@ spec:
 ---
 # Not reported: a custom resource that happens to be called ResourceQuota, and a
 # ConfigMap whose data looks like resources.
+# e2e-skip: a custom resource, unknown to the server
 apiVersion: example.com/v1
 kind: ResourceQuota
 metadata:

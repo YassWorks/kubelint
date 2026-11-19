@@ -138,7 +138,7 @@ fn git(dir: &Path, args: &[&str]) -> Result<String, Box<dyn Error>> {
     Ok(String::from_utf8(output.stdout)?.trim().to_owned())
 }
 
-/// Applies every case of the Pod Security rules (or of `codes`) to the API server that
+/// Applies every case of the checked rules (or of `codes`) to the API server that
 /// `.github/scripts/e2e-apiserver.sh` started and fails when one disagrees with kubelint.
 /// It labels namespaces, so it refuses any other `KUBECONFIG`.
 fn run_e2e(codes: &[String]) -> Result<(), Box<dyn Error>> {
@@ -152,7 +152,7 @@ fn run_e2e(codes: &[String]) -> Result<(), Box<dyn Error>> {
     let version = server_version()?;
     let dir = root.join("target/e2e/cases");
     std::fs::create_dir_all(&dir)?;
-    let selected: Vec<_> = e2e::POD_SECURITY
+    let selected: Vec<_> = e2e::CHECKS
         .iter()
         .filter(|rule| codes.is_empty() || codes.iter().any(|code| code == rule.code))
         .collect();
@@ -176,7 +176,12 @@ fn run_e2e(codes: &[String]) -> Result<(), Box<dyn Error>> {
                 "kind": "Namespace",
                 "metadata": {
                     "name": namespace,
-                    "labels": {"pod-security.kubernetes.io/enforce": check.level.as_str()},
+                    "labels": match check.stage {
+                        e2e::Stage::PodSecurity(level) => serde_json::json!({
+                            "pod-security.kubernetes.io/enforce": level.as_str(),
+                        }),
+                        _ => serde_json::json!({}),
+                    },
                 },
             });
             let outcome = kubectl(&["apply", "-f", "-"], Some(&manifest.to_string()))?;
@@ -196,7 +201,7 @@ fn run_e2e(codes: &[String]) -> Result<(), Box<dyn Error>> {
             std::fs::write(&file, &case.text)?;
             let file = file.to_string_lossy();
             let outcome = kubectl(&["apply", "--dry-run=server", "-f", &file], None)?;
-            match e2e::pod_security_mismatch(check, case, &outcome) {
+            match e2e::mismatch(check, case, &outcome) {
                 None => println!("ok       {place}"),
                 Some(reason) => {
                     mismatches += 1;

@@ -26,7 +26,7 @@ esac
 
 fetch() {
   local url=$1 target=$2
-  if ! curl -fsSLo "$target.part" "$url"; then
+  if ! curl -fsSL --retry 5 -o "$target.part" "$url"; then
     rm -f "$target.part"
     return 1
   fi
@@ -67,7 +67,7 @@ else
   if [ ! -x "$etcd_bin" ]; then
     mkdir -p "$(dirname "$etcd_bin")"
     name="etcd-$etcd_version-linux-$arch"
-    curl -fsSL "https://github.com/etcd-io/etcd/releases/download/$etcd_version/$name.tar.gz" \
+    curl -fsSL --retry 5 "https://github.com/etcd-io/etcd/releases/download/$etcd_version/$name.tar.gz" \
       | tar xz -C "$(dirname "$etcd_bin")" --strip-components=1 "$name/etcd"
   fi
 fi

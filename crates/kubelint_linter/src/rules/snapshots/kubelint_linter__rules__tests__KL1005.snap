@@ -91,57 +91,57 @@ error[KL1005]: `ReplicationController` selector requires `app: legacy`, but the 
   = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
 
 error[KL1005]: `Deployment` selector requires `app: web`, but the pod template has `app: other`
-   --> correctness/KL1005.yaml:190:7
+   --> correctness/KL1005.yaml:193:7
     |
-190 |       app: web
+193 |       app: web
     |       ^^^^^^^^
-   --> correctness/KL1005.yaml:195:9
+   --> correctness/KL1005.yaml:198:9
     |
-195 |         app: other
+198 |         app: other
     |         ---------- pod template label
   = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
 
 error[KL1005]: `Deployment` selector requires `k: "null"`, but the pod template has `k: null`
-   --> correctness/KL1005.yaml:208:7
+   --> correctness/KL1005.yaml:211:7
     |
-208 |       k: "null"
+211 |       k: "null"
     |       ^^^^^^^^^
-   --> correctness/KL1005.yaml:213:9
+   --> correctness/KL1005.yaml:216:9
     |
-213 |         k: null
+216 |         k: null
     |         ------- pod template label
   = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
 
 error[KL1005]: `StatefulSet` selector requires `k: x`, but the pod template has `k: ~`
-   --> correctness/KL1005.yaml:227:7
+   --> correctness/KL1005.yaml:230:7
     |
-227 |       k: x
+230 |       k: x
     |       ^^^^
-   --> correctness/KL1005.yaml:232:9
+   --> correctness/KL1005.yaml:235:9
     |
-232 |         k: ~
+235 |         k: ~
     |         ---- pod template label
   = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
 
 error[KL1005]: `ReplicaSet` selector requires `k` in [""], but the pod template has `k: x`
-   --> correctness/KL1005.yaml:245:7
+   --> correctness/KL1005.yaml:248:7
     |
-245 |     - {key: k, operator: In, values: [null]}
+248 |     - {key: k, operator: In, values: [null]}
     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   --> correctness/KL1005.yaml:250:9
+   --> correctness/KL1005.yaml:253:9
     |
-250 |         k: x
+253 |         k: x
     |         ---- pod template label
   = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
 
 error[KL1005]: `ReplicationController` selector requires `k: x`, but the pod template has `k: null`
-   --> correctness/KL1005.yaml:262:5
+   --> correctness/KL1005.yaml:265:5
     |
-262 |     k: x
+265 |     k: x
     |     ^^^^
-   --> correctness/KL1005.yaml:267:9
+   --> correctness/KL1005.yaml:270:9
     |
-267 |         k: null
+270 |         k: null
     |         ------- pod template label
   = help: make `spec.selector` and `spec.template.metadata.labels` agree, usually by adding the label to the template
 

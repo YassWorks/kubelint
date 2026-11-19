@@ -60,11 +60,13 @@ enum values, and removed or deprecated API versions.
   kubelint's; the `e2e` CI job runs it on every version of the window. It checks the
   Pod Security rules (KL2001 to KL2007) by the check the server names, and cases the
   server cannot judge carry an `# e2e-skip` marker with the reason
-- [ ] End to end check of the correctness rules, judged on the rule's own field: a
-  reported case is rejected with an error naming that field (KL1011 is accepted with a
-  warning, KL1001 and KL1002 are rejected by `kubectl` itself, KL1004 needs both
-  objects in one request), and a case the rule passes is accepted. Split or mark the
-  fixtures listed under Known gaps (Rules) first
+- [x] End to end check of the correctness rules KL1005, KL1006, KL1007, KL1009 and
+  KL1011, each by the answer the server gives for its field and the stage that gives
+  it (decoding, validation or a warning)
+- [ ] End to end check of the other correctness rules: KL1003, KL1008 and KL1010 (an
+  error naming the field), KL1001 and KL1002 (rejected by `kubectl` itself) and KL1004
+  (both objects in one request). Split or mark the fixtures listed under Known gaps
+  (Rules) first
 - [ ] End to end check of the remaining rules (syntax, KL2008, KL2009, reliability): a
   case the rule passes is accepted, and a case it reports is accepted too unless the
   rule says the server rejects it
@@ -184,14 +186,17 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   rules check only part of `baseline`.
 - Some rule fixtures encode a verdict the API server gives differently, so the end to
   end CI item must mark or split them first. KL1001 and KL1002 pass a mapping that is
-  not an object, which kubectl refuses (`apiVersion not set`). KL1005 passes a
-  Deployment without a selector (`spec.selector: Required value`). KL1006 passes
-  repeated empty or missing container names (`Duplicate value: ""`). KL1007 and KL1009
-  pass a mapping or a list where a quantity or an env value goes, which the server
-  rejects on that field as it rejects a bad value. The server never names the
+  not an object, which kubectl refuses (`apiVersion not set`). KL1006 passes repeated
+  empty or missing container names, which the server also reports as duplicates
+  (`Duplicate value: ""`), marked in the end to end check. The server never names the
   ReplicationController selector case of KL1010. It accepts the CronJob
   `jobTemplate.metadata.labels` case of KL1010, but the CronJob controller copies those
   labels into each Job, which the server rejects.
+- KL1005 passes a selector that `kubectl apply` and `kubectl create` both reject, for
+  different expressions: `Exists` and `DoesNotExist` on template labels set to null
+  (apply drops them, create keeps them as `""`).
+- KL1007 passes a mapping or a list where a quantity goes, which the server rejects as a
+  bad quantity. KL1102 `invalid-field-type` should report it.
 - KL2003 does not use `--kubernetes-version`: it passes a `hostUsers: false` workload
   that runs as root, which `restricted` accepts from 1.35 but flags on 1.34.
 - The end to end check skips reported cases that also test input the server rejects
@@ -203,7 +208,7 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   has a checked case with init containers, and none can have ephemeral containers,
   which the server refuses on create.
 - KL1011 passes a repeated env name made of spaces (`" "`), which the server warns about
-  (`hides previous definition`).
+  (`hides previous definition`), marked in the end to end check.
 - KL1010 checks workload and Service selectors only. PodDisruptionBudget, NetworkPolicy
   and PersistentVolumeClaim selectors, `matchExpressions`, `nodeSelector` and topology
   spread selectors are not checked, although the server rejects bad values there.

@@ -58,14 +58,14 @@ warning[KL1011]: container `report` sets env var `GREETING` again
   = help: remove one of the entries; only the last one takes effect
 
 warning[KL1011]: container sets env var `LEVEL` again
-   --> correctness/KL1011.yaml:147:13
+   --> correctness/KL1011.yaml:173:13
     |
-147 |     - name: LEVEL
+173 |     - name: LEVEL
     |             ^^^^^
-   --> correctness/KL1011.yaml:145:13
+   --> correctness/KL1011.yaml:171:13
     |
-145 |     - name: LEVEL
+171 |     - name: LEVEL
     |             ----- first set here
   = help: remove one of the entries; only the last one takes effect
 
-6 finding(s) in 8 object(s)
+6 finding(s) in 10 object(s)

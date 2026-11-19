@@ -50,7 +50,7 @@ spec:
               value: 1e3
 ---
 # Not reported: quoted values, strings that only look special to YAML 1.2, null,
-# block scalars, valueFrom and schema problems.
+# block scalars and valueFrom.
 apiVersion: v1
 kind: Pod
 metadata:
@@ -74,6 +74,18 @@ spec:
     - name: SECRET
       valueFrom:
         secretKeyRef: {name: db, key: password}
+---
+# Not reported: a list is a schema problem.
+# e2e-skip: a schema problem, which the server rejects while decoding
+apiVersion: v1
+kind: Pod
+metadata:
+  name: list
+spec:
+  containers:
+  - name: app
+    image: app:1.0
+    env:
     - name: LIST
       value: [1, 2]
 ---
