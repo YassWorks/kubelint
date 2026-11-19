@@ -76,7 +76,8 @@ spec:
   - name: App
     image: app:1.0
 ---
-# Not reported: missing, empty or non-string names (schema problems).
+# Not reported: missing or empty names (schema problems).
+# e2e-skip: the server reports repeated empty names as duplicates
 apiVersion: v1
 kind: Pod
 metadata:
@@ -87,6 +88,15 @@ spec:
   - image: app:1.0
   - name: ""
   - name: ""
+---
+# Not reported: non-string names (schema problems).
+# e2e-skip: a schema problem, which the server rejects while decoding
+apiVersion: v1
+kind: Pod
+metadata:
+  name: list-names
+spec:
+  containers:
   - name: [a]
   - name: [a]
 ---

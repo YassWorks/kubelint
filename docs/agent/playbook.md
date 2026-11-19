@@ -398,8 +398,8 @@ Traps earlier runs fell into. Add new ones as you find them.
 - `git add -N` (to include new files in `git diff`) only records an intent to add the
   file. A commit after `git add <other paths>` leaves that file out without a word.
   Stage it with `git add` before committing, and check `git show --stat HEAD`.
-- A new or changed case in a fixture of KL2001 to KL2007 (`POD_SECURITY` in
-  `crates/xtask/src/e2e.rs`) is applied to the API server in CI. Before pushing, run
+- A new or changed case in the fixture of a rule in `CHECKS`
+  (`crates/xtask/src/e2e.rs`) is applied to the API server in CI. Before pushing, run
   `eval "$(bash .github/scripts/e2e-apiserver.sh)"`, which sets `KUBECONFIG` to
   `target/e2e/state/kubeconfig`, then `cargo xtask e2e <CODE>`. Give a case the server
   cannot judge an `# e2e-skip:` line with the reason.

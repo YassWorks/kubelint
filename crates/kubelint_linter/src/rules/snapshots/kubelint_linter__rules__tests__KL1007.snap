@@ -73,65 +73,65 @@ error[KL1007]: invalid quantity `2x` for `memory`: `x` is not a quantity suffix
   = help: write a number with an optional suffix, such as `500m`, `256Mi` or `1G` (`kubelint rule KL1007` lists the suffixes)
 
 error[KL1007]: invalid quantity `1Gb` for `memory`: `Gb` is not a quantity suffix
-  --> correctness/KL1007.yaml:56:15
+  --> correctness/KL1007.yaml:57:15
    |
-56 |       memory: 1Gb
+57 |       memory: 1Gb
    |               ^^^
   = help: write `1Gi` (powers of 1024) or `1G` (powers of 1000)
 
 error[KL1007]: invalid quantity `250mcores` for `cpu`: `mcores` is not a quantity suffix
-  --> correctness/KL1007.yaml:58:10
+  --> correctness/KL1007.yaml:59:10
    |
-58 |     cpu: 250mcores
+59 |     cpu: 250mcores
    |          ^^^^^^^^^
   = help: millicores are written with `m`: write `250m`
 
 error[KL1007]: invalid quantity `500MB` for `sizeLimit`: `MB` is not a quantity suffix
-  --> correctness/KL1007.yaml:62:18
+  --> correctness/KL1007.yaml:63:18
    |
-62 |       sizeLimit: 500MB
+63 |       sizeLimit: 500MB
    |                  ^^^^^
   = help: write `500Mi` (powers of 1024) or `500M` (powers of 1000)
 
 error[KL1007]: invalid quantity `.inf` for `cpu`: it is not a finite number
-  --> correctness/KL1007.yaml:68:14
+  --> correctness/KL1007.yaml:69:14
    |
-68 |         cpu: .inf
+69 |         cpu: .inf
    |              ^^^^
   = help: write a number with an optional suffix, such as `500m`, `256Mi` or `1G` (`kubelint rule KL1007` lists the suffixes)
 
 error[KL1007]: invalid quantity `10GB` for `storage`: `GB` is not a quantity suffix
-  --> correctness/KL1007.yaml:79:16
+  --> correctness/KL1007.yaml:80:16
    |
-79 |       storage: 10GB
+80 |       storage: 10GB
    |                ^^^^
   = help: write `10Gi` (powers of 1024) or `10G` (powers of 1000)
 
 error[KL1007]: invalid quantity `20 Gi` for `storage`: ` Gi` is not a quantity suffix
-   --> correctness/KL1007.yaml:103:20
+   --> correctness/KL1007.yaml:104:20
     |
-103 |           storage: 20 Gi
+104 |           storage: 20 Gi
     |                    ^^^^^
   = help: remove the space: write `20Gi`
 
 error[KL1007]: invalid quantity `10gb` for `requests.memory`: `gb` is not a quantity suffix
-   --> correctness/KL1007.yaml:112:22
+   --> correctness/KL1007.yaml:113:22
     |
-112 |     requests.memory: 10gb
+113 |     requests.memory: 10gb
     |                      ^^^^
   = help: write `10Gi` (powers of 1024) or `10G` (powers of 1000)
 
 error[KL1007]: invalid quantity `2Tb` for `memory`: `Tb` is not a quantity suffix
-   --> correctness/KL1007.yaml:123:15
+   --> correctness/KL1007.yaml:124:15
     |
-123 |       memory: 2Tb
+124 |       memory: 2Tb
     |               ^^^
   = help: write `2Ti` (powers of 1024) or `2T` (powers of 1000)
 
 error[KL1007]: invalid quantity `1core` for `cpu`: `core` is not a quantity suffix
-   --> correctness/KL1007.yaml:125:12
+   --> correctness/KL1007.yaml:126:12
     |
-125 |       cpu: 1core
+126 |       cpu: 1core
     |            ^^^^^
   = help: CPU is counted in cores without a unit: write `1` or `1000m`
 

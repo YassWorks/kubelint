@@ -11,13 +11,30 @@ use kubelint_source::{SourceFile, TextSize};
 /// for every version, `# e2e-skip 1.34: <reason>` for one.
 const SKIP_MARKER: &str = "# e2e-skip";
 
-/// A rule judged by Pod Security admission: a case is reported exactly when the server,
-/// in a namespace enforcing `level`, names one of `checks`.
+/// A rule and the server answers that mean the rule's field is wrong: a case is reported
+/// exactly when the server gives one of `needles`. A needle matches within one line of
+/// the server's output, with every list index written `[]`, and `*` matches any text.
 #[derive(Debug, Clone, Copy)]
-pub struct PodSecurity {
+pub struct Check {
     pub code: &'static str,
-    pub level: Level,
-    pub checks: &'static [&'static str],
+    pub stage: Stage,
+    pub needles: &'static [&'static str],
+}
+
+/// Where the server judges a rule's field. The server decodes an object, validates it and
+/// then runs admission, and a case it rejects before that stage proves nothing.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Stage {
+    /// Decoding reports one error, and a validation error shows that decoding passed.
+    Decoding,
+    /// Validation reports every invalid field, except that an invalid workload selector
+    /// skips the checks of the pod template.
+    Validation,
+    /// Validation warnings come only with an object that passed validation.
+    Warning,
+    /// Pod Security admission, in namespaces that enforce the level. The needles are check
+    /// names of `k8s.io/pod-security-admission/policy`.
+    PodSecurity(Level),
 }
 
 /// A Pod Security Standard that a namespace can enforce.
@@ -36,42 +53,72 @@ impl Level {
     }
 }
 
-/// The check names are those of `k8s.io/pod-security-admission/policy`.
-pub const POD_SECURITY: &[PodSecurity] = &[
-    PodSecurity {
+pub const CHECKS: &[Check] = &[
+    Check {
+        code: "KL1005",
+        stage: Stage::Validation,
+        needles: &["`selector` does not match template `labels`"],
+    },
+    Check {
+        code: "KL1006",
+        stage: Stage::Validation,
+        needles: &[
+            "containers[].name: Duplicate value",
+            "Containers[].name: Duplicate value",
+        ],
+    },
+    Check {
+        code: "KL1007",
+        stage: Stage::Decoding,
+        needles: &["quantities must match the regular expression"],
+    },
+    Check {
+        code: "KL1009",
+        stage: Stage::Decoding,
+        needles: &[
+            "cannot unmarshal number into Go struct field EnvVar.*.env.value of type string",
+            "cannot unmarshal bool into Go struct field EnvVar.*.env.value of type string",
+        ],
+    },
+    Check {
+        code: "KL1011",
+        stage: Stage::Warning,
+        needles: &["hides previous definition of"],
+    },
+    Check {
         code: "KL2001",
-        level: Level::Baseline,
-        checks: &["privileged"],
+        stage: Stage::PodSecurity(Level::Baseline),
+        needles: &["privileged"],
     },
-    PodSecurity {
+    Check {
         code: "KL2002",
-        level: Level::Restricted,
-        checks: &["allowPrivilegeEscalation != false"],
+        stage: Stage::PodSecurity(Level::Restricted),
+        needles: &["allowPrivilegeEscalation != false"],
     },
-    PodSecurity {
+    Check {
         code: "KL2003",
-        level: Level::Restricted,
-        checks: &["runAsNonRoot != true", "runAsUser=0"],
+        stage: Stage::PodSecurity(Level::Restricted),
+        needles: &["runAsNonRoot != true", "runAsUser=0"],
     },
-    PodSecurity {
+    Check {
         code: "KL2004",
-        level: Level::Baseline,
-        checks: &["host namespaces"],
+        stage: Stage::PodSecurity(Level::Baseline),
+        needles: &["host namespaces"],
     },
-    PodSecurity {
+    Check {
         code: "KL2005",
-        level: Level::Baseline,
-        checks: &["hostPath volumes"],
+        stage: Stage::PodSecurity(Level::Baseline),
+        needles: &["hostPath volumes"],
     },
-    PodSecurity {
+    Check {
         code: "KL2006",
-        level: Level::Baseline,
-        checks: &["non-default capabilities"],
+        stage: Stage::PodSecurity(Level::Baseline),
+        needles: &["non-default capabilities"],
     },
-    PodSecurity {
+    Check {
         code: "KL2007",
-        level: Level::Baseline,
-        checks: &["hostPath volumes"],
+        stage: Stage::PodSecurity(Level::Baseline),
+        needles: &["hostPath volumes"],
     },
 ];
 
@@ -195,25 +242,58 @@ fn case(
 }
 
 /// Why the server disagrees with kubelint on `case`, or `None` when it agrees.
-pub fn pod_security_mismatch(rule: &PodSecurity, case: &Case, outcome: &Outcome) -> Option<String> {
-    if !outcome.accepted && !outcome.output.contains("violates PodSecurity") {
-        return Some("the server rejected the case before Pod Security ran".to_owned());
-    }
-    let named = rule.checks.iter().any(|check| {
-        outcome.output.contains(&format!(": {check} ("))
-            || outcome.output.contains(&format!("), {check} ("))
+pub fn mismatch(check: &Check, case: &Case, outcome: &Outcome) -> Option<String> {
+    let output = without_indices(&outcome.output);
+    let named = check.needles.iter().any(|needle| match check.stage {
+        Stage::PodSecurity(_) => {
+            output.contains(&format!(": {needle} (")) || output.contains(&format!("), {needle} ("))
+        }
+        _ => output.lines().any(|line| matches(line, needle)),
     });
-    match (case.reported, named) {
-        (true, false) => Some(format!(
-            "reported, but Pod Security `{}` does not name {}",
-            rule.level.as_str(),
-            rule.checks.join(" or ")
-        )),
-        (false, true) => Some(format!(
-            "not reported, but Pod Security `{}` names {}",
-            rule.level.as_str(),
-            rule.checks.join(" or ")
-        )),
+    let validated = output.contains(" is invalid:");
+    let judged = outcome.accepted
+        || named
+        || match check.stage {
+            Stage::Decoding => validated,
+            Stage::Validation => validated && !output.contains("invalid label selector"),
+            Stage::PodSecurity(_) => output.contains("violates PodSecurity"),
+            Stage::Warning => false,
+        };
+    let needles = check.needles.join(" or ");
+    match (judged, case.reported, named) {
+        (false, ..) => {
+            Some("the server rejected the case before it checked the rule's field".to_owned())
+        }
+        (true, true, false) => Some(format!("reported, but the server does not say {needles}")),
+        (true, false, true) => Some(format!("not reported, but the server says {needles}")),
         _ => None,
     }
+}
+
+fn without_indices(output: &str) -> String {
+    let mut out = String::with_capacity(output.len());
+    let mut rest = output;
+    while let Some(open) = rest.find('[') {
+        let (before, after) = rest.split_at(open + 1);
+        out.push_str(before);
+        let digits = after.bytes().take_while(u8::is_ascii_digit).count();
+        rest = if digits > 0 && after[digits..].starts_with(']') {
+            &after[digits..]
+        } else {
+            after
+        };
+    }
+    out.push_str(rest);
+    out
+}
+
+fn matches(line: &str, needle: &str) -> bool {
+    let mut rest = line;
+    needle.split('*').all(|part| match rest.find(part) {
+        Some(at) => {
+            rest = &rest[at + part.len()..];
+            true
+        }
+        None => false,
+    })
 }

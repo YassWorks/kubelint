@@ -674,24 +674,37 @@ disagreement fails CI.
   when a finding starts inside it.
 - It creates every namespace the cases use and applies each case alone with
   `kubectl apply --dry-run=server`.
-- A Pod Security rule (`POD_SECURITY` in `crates/xtask/src/e2e.rs`: KL2001 to KL2007)
-  runs in namespaces that enforce its level (`baseline` or `restricted`). A case agrees
-  when the rule reports it exactly when the server names one of the rule's checks
-  (`privileged`, `runAsNonRoot != true`...), in a rejection for a Pod and a warning for
-  a workload. A case the server rejects before Pod Security runs (decoding and
-  validation come first) is a disagreement too, because it proves nothing.
+- Each checked rule (`CHECKS` in `crates/xtask/src/e2e.rs`) has the answers that mean
+  its field is wrong (its needles) and the stage where the server gives them. A needle
+  matches within one line, with list indices written `[]` and `*` for any text, so it
+  names the field and not only the error (`containers[].name: Duplicate value`, not a
+  duplicate volume name). A case agrees when the rule reports it exactly when the
+  server gives one of them.
+
+  | Stage | Rules | The server judged the case when |
+  | --- | --- | --- |
+  | Decoding | KL1007, KL1009 | it accepted the case, gave a needle, or reported a validation error (decoding reports one error, and validation runs only after it passed) |
+  | Validation | KL1005, KL1006 | it accepted the case, gave a needle, or reported validation errors other than `invalid label selector` (validation reports every invalid field, but an invalid workload selector skips the checks of the pod template) |
+  | Warning | KL1011 | it accepted the case (a validation error comes without warnings) |
+  | Pod Security | KL2001 to KL2007 | it accepted the case or named a Pod Security check, in namespaces that enforce the rule's level (`baseline` or `restricted`) |
+
+  A Pod Security needle is a check name (`privileged`, `runAsNonRoot != true`...),
+  given in a rejection for a Pod and in a warning for a workload. A case the server
+  rejects before the rule's stage is a disagreement too, because it proves nothing.
 - A case the server cannot judge carries a marker comment with the reason:
   `# e2e-skip: <reason>` on every version, `# e2e-skip 1.34: <reason>` on one (a marker
   with no reason or an unsupported version stops the run). Typical
   reasons are custom resources, schema problems, invalid names and fields that are
-  rejected first, and deliberate differences between the rule and Pod Security. The
+  rejected first, cases where `kubectl apply` and `kubectl create` disagree, and
+  deliberate differences between the rule and the server. The
   run prints every skipped case with its reason.
 
 **Why:** the fixtures already hold every case a rule decides, each with its intended
 verdict, so checking them needs no second set of examples. Markers live in the fixture
 next to the case they explain, so a new case is checked by default and leaving it out
-takes a written reason. Judging by the check's name, not by acceptance, keeps the
-`restricted` rules testable: a `restricted` namespace flags several checks at once.
+takes a written reason. Judging by the rule's own answer, not by acceptance, keeps cases
+testable that the server rejects for something else too: a `restricted` namespace flags
+several checks at once, and most fixture workloads have no containers.
 
 **Rejected:** a separate set of end to end examples (it drifts from the fixtures); a
 list of skipped cases outside the fixtures (line numbers move with every edit); running

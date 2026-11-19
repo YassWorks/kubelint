@@ -120,6 +120,7 @@ spec:
 ---
 # Not reported: no selector, an unknown operator, or values of the wrong type
 # (schema problems for other rules).
+# e2e-skip: the server reports a missing selector as a mismatch too
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -131,6 +132,7 @@ spec:
     spec:
       containers: []
 ---
+# e2e-skip: a schema problem, which the server rejects while decoding
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -149,6 +151,7 @@ spec:
       containers: []
 ---
 # Not reported: a custom resource named Deployment.
+# e2e-skip: a custom resource, unknown to the server
 apiVersion: example.com/v1
 kind: Deployment
 metadata:
@@ -364,6 +367,7 @@ spec:
       containers: []
 ---
 # Not reported: apply and create disagree on an empty string selector value against null.
+# e2e-skip: `kubectl create` accepts it, only `kubectl apply` drops the null label
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -382,6 +386,7 @@ spec:
       containers: []
 ---
 # Not reported: Exists and DoesNotExist on a null template value (apply and create disagree).
+# e2e-skip: `kubectl apply` and `create` both reject it, on different expressions
 apiVersion: apps/v1
 kind: Deployment
 metadata:
