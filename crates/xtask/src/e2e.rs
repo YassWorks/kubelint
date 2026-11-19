@@ -16,45 +16,61 @@ const SKIP_MARKER: &str = "# e2e-skip";
 #[derive(Debug, Clone, Copy)]
 pub struct PodSecurity {
     pub code: &'static str,
-    pub level: &'static str,
+    pub level: Level,
     pub checks: &'static [&'static str],
+}
+
+/// A Pod Security Standard that a namespace can enforce.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Level {
+    Baseline,
+    Restricted,
+}
+
+impl Level {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Baseline => "baseline",
+            Self::Restricted => "restricted",
+        }
+    }
 }
 
 /// The check names are those of `k8s.io/pod-security-admission/policy`.
 pub const POD_SECURITY: &[PodSecurity] = &[
     PodSecurity {
         code: "KL2001",
-        level: "baseline",
+        level: Level::Baseline,
         checks: &["privileged"],
     },
     PodSecurity {
         code: "KL2002",
-        level: "restricted",
+        level: Level::Restricted,
         checks: &["allowPrivilegeEscalation != false"],
     },
     PodSecurity {
         code: "KL2003",
-        level: "restricted",
+        level: Level::Restricted,
         checks: &["runAsNonRoot != true", "runAsUser=0"],
     },
     PodSecurity {
         code: "KL2004",
-        level: "baseline",
+        level: Level::Baseline,
         checks: &["host namespaces"],
     },
     PodSecurity {
         code: "KL2005",
-        level: "baseline",
+        level: Level::Baseline,
         checks: &["hostPath volumes"],
     },
     PodSecurity {
         code: "KL2006",
-        level: "baseline",
+        level: Level::Baseline,
         checks: &["non-default capabilities"],
     },
     PodSecurity {
         code: "KL2007",
-        level: "baseline",
+        level: Level::Baseline,
         checks: &["hostPath volumes"],
     },
 ];
@@ -98,8 +114,13 @@ pub fn fixture_path(rule: &dyn Rule) -> String {
 }
 
 /// Splits `text`, the fixture of `rule`, at its `---` lines and lints it whole with only
-/// `rule` enabled, so rules that compare objects see all of them.
-pub fn cases(rule: &'static dyn Rule, text: &str, version: KubernetesVersion) -> Vec<Case> {
+/// `rule` enabled, so rules that compare objects see all of them. Fails on a skip marker
+/// without a reason or with a version kubelint has no schema for.
+pub fn cases(
+    rule: &'static dyn Rule,
+    text: &str,
+    version: KubernetesVersion,
+) -> Result<Vec<Case>, String> {
     let file = SourceFile::new(fixture_path(rule), text);
     let findings: Vec<TextSize> = Linter::new(vec![EnabledRule::new(rule)])
         .with_kubernetes_version(version)
@@ -112,14 +133,14 @@ pub fn cases(rule: &'static dyn Rule, text: &str, version: KubernetesVersion) ->
     let (mut start, mut line, mut offset) = (0, 1, 0);
     for (index, piece) in text.split_inclusive('\n').enumerate() {
         if piece.trim_end() == "---" {
-            cases.push(case(text, start..offset, line, &findings, version));
+            cases.push(case(text, start..offset, line, &findings, version)?);
             start = offset + piece.len();
             line = index + 2;
         }
         offset += piece.len();
     }
-    cases.push(case(text, start..text.len(), line, &findings, version));
-    cases
+    cases.push(case(text, start..text.len(), line, &findings, version)?);
+    Ok(cases)
 }
 
 fn case(
@@ -128,19 +149,37 @@ fn case(
     line: usize,
     findings: &[TextSize],
     version: KubernetesVersion,
-) -> Case {
+) -> Result<Case, String> {
     let body = &text[range.clone()];
-    Case {
+    let mut skip = None;
+    for (index, marker) in body.lines().enumerate() {
+        let Some(rest) = marker.strip_prefix(SKIP_MARKER) else {
+            continue;
+        };
+        let place = line + index;
+        let (versions, reason) = rest
+            .split_once(':')
+            .filter(|(_, reason)| !reason.trim().is_empty())
+            .ok_or_else(|| format!("line {place}: write `{SKIP_MARKER}: <reason>`"))?;
+        let applies = match versions.trim() {
+            "" => true,
+            named => {
+                KubernetesVersion::parse(named)
+                    .ok_or_else(|| format!("line {place}: kubelint has no schema for {named}"))?
+                    == version
+            }
+        };
+        if applies {
+            skip = Some(reason.trim().to_owned());
+        }
+    }
+    Ok(Case {
         line,
         text: body.to_owned(),
         reported: findings
             .iter()
             .any(|&offset| range.contains(&usize::from(offset))),
-        skip: body.lines().find_map(|line| {
-            let (versions, reason) = line.strip_prefix(SKIP_MARKER)?.split_once(':')?;
-            let versions = versions.trim();
-            (versions.is_empty() || versions == version.as_str()).then(|| reason.trim().to_owned())
-        }),
+        skip,
         namespace: kubelint_yaml::parse(body)
             .documents
             .iter()
@@ -152,7 +191,7 @@ fn case(
                     .as_str()
             })
             .map(str::to_owned),
-    }
+    })
 }
 
 /// Why the server disagrees with kubelint on `case`, or `None` when it agrees.
@@ -167,12 +206,12 @@ pub fn pod_security_mismatch(rule: &PodSecurity, case: &Case, outcome: &Outcome)
     match (case.reported, named) {
         (true, false) => Some(format!(
             "reported, but Pod Security `{}` does not name {}",
-            rule.level,
+            rule.level.as_str(),
             rule.checks.join(" or ")
         )),
         (false, true) => Some(format!(
             "not reported, but Pod Security `{}` names {}",
-            rule.level,
+            rule.level.as_str(),
             rule.checks.join(" or ")
         )),
         _ => None,

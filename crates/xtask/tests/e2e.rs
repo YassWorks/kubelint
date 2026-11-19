@@ -9,7 +9,7 @@ fn version(text: &str) -> KubernetesVersion {
 
 fn cases(text: &str) -> Vec<Case> {
     let rule = e2e::rule("KL2001").expect("KL2001 exists");
-    e2e::cases(rule, FIXTURE, version(text))
+    e2e::cases(rule, FIXTURE, version(text)).expect("valid markers")
 }
 
 #[test]
@@ -49,6 +49,28 @@ fn a_version_marker_skips_only_that_version() {
 }
 
 #[test]
+fn rejects_markers_without_a_reason_or_with_an_unknown_version() {
+    let rule = e2e::rule("KL2001").expect("KL2001 exists");
+    let latest = KubernetesVersion::LATEST;
+    for (text, error) in [
+        (
+            "# e2e-skip 1.73: old\na: 1\n",
+            "line 1: kubelint has no schema for 1.73",
+        ),
+        (
+            "a: 1\n# e2e-skip no colon\n",
+            "line 2: write `# e2e-skip: <reason>`",
+        ),
+        (
+            "# e2e-skip:\na: 1\n",
+            "line 1: write `# e2e-skip: <reason>`",
+        ),
+    ] {
+        assert_eq!(e2e::cases(rule, text, latest).err().as_deref(), Some(error));
+    }
+}
+
+#[test]
 fn judges_pod_security_answers() {
     let rule = POD_SECURITY
         .iter()
@@ -77,6 +99,7 @@ fn judges_pod_security_answers() {
         true,
         r#"Warning: would violate PodSecurity "restricted:latest": seccompProfile (pod or container "a" must set securityContext.seccompProfile.type)"#,
     );
+    let plain = outcome(true, "pod/a created (server dry run)");
     let invalid = outcome(
         false,
         r#"The Pod "a" is invalid: spec.containers[0].name: Required value"#,
@@ -86,6 +109,8 @@ fn judges_pod_security_answers() {
         None
     );
     assert_eq!(e2e::pod_security_mismatch(rule, &case(true), &warned), None);
+    assert_eq!(e2e::pod_security_mismatch(rule, &case(false), &plain), None);
+    assert!(e2e::pod_security_mismatch(rule, &case(true), &plain).is_some());
     assert_eq!(
         e2e::pod_security_mismatch(rule, &case(false), &other_check),
         None

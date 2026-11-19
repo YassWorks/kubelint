@@ -139,10 +139,17 @@ fn git(dir: &Path, args: &[&str]) -> Result<String, Box<dyn Error>> {
 }
 
 /// Applies every case of the Pod Security rules (or of `codes`) to the API server that
-/// `KUBECONFIG` names and fails when one disagrees with kubelint.
+/// `.github/scripts/e2e-apiserver.sh` started and fails when one disagrees with kubelint.
+/// It labels namespaces, so it refuses any other `KUBECONFIG`.
 fn run_e2e(codes: &[String]) -> Result<(), Box<dyn Error>> {
-    let version = server_version()?;
     let root = xtask::repository_root();
+    let ours = root.join("target/e2e/state/kubeconfig").canonicalize().ok();
+    let theirs =
+        std::env::var_os("KUBECONFIG").and_then(|path| Path::new(&path).canonicalize().ok());
+    if ours.is_none() || ours != theirs {
+        return Err("KUBECONFIG must name the server of .github/scripts/e2e-apiserver.sh".into());
+    }
+    let version = server_version()?;
     let dir = root.join("target/e2e/cases");
     std::fs::create_dir_all(&dir)?;
     let selected: Vec<_> = e2e::POD_SECURITY
@@ -159,15 +166,20 @@ fn run_e2e(codes: &[String]) -> Result<(), Box<dyn Error>> {
     for check in selected {
         let rule = e2e::rule(check.code).ok_or_else(|| format!("no rule {}", check.code))?;
         let path = e2e::fixture_path(rule);
-        let cases = e2e::cases(rule, &std::fs::read_to_string(root.join(&path))?, version);
+        let cases = e2e::cases(rule, &std::fs::read_to_string(root.join(&path))?, version)
+            .map_err(|error| format!("{path}: {error}"))?;
         let mut namespaces = vec!["default"];
         namespaces.extend(cases.iter().filter_map(|case| case.namespace.as_deref()));
         for namespace in namespaces {
-            let manifest = format!(
-                r#"{{"apiVersion":"v1","kind":"Namespace","metadata":{{"name":"{namespace}","labels":{{"pod-security.kubernetes.io/enforce":"{}"}}}}}}"#,
-                check.level
-            );
-            let outcome = kubectl(&["apply", "-f", "-"], Some(&manifest))?;
+            let manifest = serde_json::json!({
+                "apiVersion": "v1",
+                "kind": "Namespace",
+                "metadata": {
+                    "name": namespace,
+                    "labels": {"pod-security.kubernetes.io/enforce": check.level.as_str()},
+                },
+            });
+            let outcome = kubectl(&["apply", "-f", "-"], Some(&manifest.to_string()))?;
             if !outcome.accepted {
                 return Err(
                     format!("cannot create namespace {namespace}: {}", outcome.output).into(),

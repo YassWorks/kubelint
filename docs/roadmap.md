@@ -194,10 +194,14 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   labels into each Job, which the server rejects.
 - KL2003 does not use `--kubernetes-version`: it passes a `hostUsers: false` workload
   that runs as root, which `restricted` accepts from 1.35 but flags on 1.34.
-- The end to end check skips the reported Pod cases of KL2001, KL2002, KL2003 and KL2006
-  that also test unnamed containers, non-ASCII names or ephemeral containers, because
-  the server rejects those first. Only KL2003 has a checked case with init containers,
-  and none can have ephemeral containers, which the server refuses on create.
+- The end to end check skips reported cases that also test input the server rejects
+  first: unnamed containers, non-ASCII names or ephemeral containers (KL2001, KL2002,
+  KL2003, KL2006), non-ASCII labels (KL2004, KL2007), a `hostPath` without a path or a
+  volume without a name (KL2005, KL2007). So the flow style and non-ASCII cases of
+  KL2004, KL2005 and KL2007 and the only reported Pod case of KL2005 are never checked.
+  Splitting each case into a valid part and an invalid one would check them. Only KL2003
+  has a checked case with init containers, and none can have ephemeral containers,
+  which the server refuses on create.
 - KL1011 passes a repeated env name made of spaces (`" "`), which the server warns about
   (`hides previous definition`).
 - KL1010 checks workload and Service selectors only. PodDisruptionBudget, NetworkPolicy

@@ -79,8 +79,8 @@ jobs:
       - run: test -s kubelint.sarif
         shell: bash
 
-  # Applies every case of the rule fixtures to a real API server of each version kubelint
-  # has a schema for. `crates/xtask/tests/e2e.rs` checks that the list matches.
+  # Applies the cases of the Pod Security rule fixtures to a real API server of each version
+  # kubelint has a schema for. `crates/xtask/tests/e2e.rs` checks that the list matches.
   e2e:
     name: e2e (${{ matrix.kubernetes }})
     runs-on: ubuntu-latest
