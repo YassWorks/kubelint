@@ -4,6 +4,14 @@ Every release of kubelint, newest first. The nightly release workflow writes thi
 
 Older releases are listed on the [releases page](https://github.com/YassWorks/kubelint/releases).
 
+## [0.22.0] - 2026-11-19
+
+### Features
+
+- add --kubernetes-version and the kubernetes-version key (#142)
+- embed the schemas of Kubernetes 1.34 to 1.37 (#141)
+- import a Kubernetes version's OpenAPI schemas (#140)
+
 ## [0.21.1] - 2026-11-18
 
 ### Other changes
