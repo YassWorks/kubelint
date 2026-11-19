@@ -361,8 +361,7 @@ Traps earlier runs fell into. Add new ones as you find them.
 - The container's clone can be far behind `origin/main`, and the health check's
   `git fetch` can fail (a 503 from the credential service). Never start an item until a
   fetch has succeeded. Then check that `git log -1 origin/main` matches the latest merged
-  PR on GitHub. On 2026-11-13 a failed fetch left `main` 30 commits behind, and three
-  rules were built again that `main` already had.
+  PR on GitHub. Otherwise a run builds again what `main` already has.
 - In a Python string literal (for example inside `python3 - <<'EOF'`), a `\` at the end
   of a line joins the two lines. A `\`-wrapped Rust string written that way loses its
   line break and keeps the next line's indentation as a run of spaces. Write Rust
@@ -379,10 +378,10 @@ Traps earlier runs fell into. Add new ones as you find them.
   `publish-homebrew-formula`, `custom-publish-ghcr` and `announce`, which show as
   skipped): twenty-two check runs in all. A wait script
   that counts check runs must expect all of them before it reports done.
-- Self-review is also a fact check (skill step 2 and the brief's Facts bullet). On
-  2026-11-15 it found wrong claims in four of five PRs, for example that the published
-  OpenAPI v3 documents mark enums (they do not) and that a fix example works as
-  written (it does not: the `nginx` image needs root).
+- Self-review is also a fact check (skill step 2 and the brief's Facts bullet). It often
+  finds wrong claims about what an upstream file contains or whether an example works
+  as written (the `nginx` image needs root, for example). Follow skill step 2 whenever
+  the diff states an upstream fact.
 - `git push origin --delete` on a `claude/` branch is refused with a 403. Merged
   branches are deleted by GitHub; leave any other stale branch as it is.
 - `xtask` builds `kubelint_schema`, which embeds every version listed in `embed!`
@@ -392,12 +391,21 @@ Traps earlier runs fell into. Add new ones as you find them.
   place; to add a version, import it before listing it in `embed!`.
 - Keep an untouched copy of a generated file before editing it to show a failure (for
   example setting `"format":0` to make `committed_schemas_have_the_current_format`
-  fail). On 2026-11-18 a corrupted copy was saved aside and nearly committed as the real
-  import; `every_embedded_schema_loads_once` (`crates/kubelint_schema/tests/embedded.rs`)
-  caught it.
+  fail). Save the copy before the first edit, and run `cargo test -p kubelint_schema`
+  after restoring and before committing: `every_embedded_schema_loads_once`
+  (`crates/kubelint_schema/tests/embedded.rs`) catches a schema that does not load or
+  lacks `Pod` or `Deployment`.
 - `git add -N` (to include new files in `git diff`) only records an intent to add the
   file. A commit after `git add <other paths>` leaves that file out without a word.
   Stage it with `git add` before committing, and check `git show --stat HEAD`.
+- A new or changed case in a fixture of KL2001 to KL2007 (`POD_SECURITY` in
+  `crates/xtask/src/e2e.rs`) is applied to the API server in CI. Before pushing, run
+  `eval "$(bash .github/scripts/e2e-apiserver.sh)"`, which sets `KUBECONFIG` to
+  `target/e2e/state/kubeconfig`, then `cargo xtask e2e <CODE>`. Give a case the server
+  cannot judge an `# e2e-skip:` line with the reason.
+- Claude Code refuses an `rm` whose target it cannot resolve, such as `rm -f *` after a
+  `cd`, and the whole command does not run. Write scratch output to a new directory
+  under the scratchpad, with absolute paths, and leave it there.
 - The self-review subagent runs the end to end commands in the same working tree. Tell
   it which generated files it may touch and that it must restore them, then check
   `git status` before committing.
