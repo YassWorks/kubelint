@@ -10,51 +10,51 @@ error[KL2001]: container `web` runs in privileged mode
   = help: remove `privileged` and add only the capabilities the container needs to `securityContext.capabilities.add`
 
 error[KL2001]: container `setup` runs in privileged mode
-  --> security/KL2001.yaml:29:23
+  --> security/KL2001.yaml:30:23
    |
-29 |     securityContext: {privileged: yes}
+30 |     securityContext: {privileged: yes}
    |                       ^^^^^^^^^^^^^^^
   = help: remove `privileged` and add only the capabilities the container needs to `securityContext.capabilities.add`
 
 error[KL2001]: container runs in privileged mode
-  --> security/KL2001.yaml:33:7
+  --> security/KL2001.yaml:34:7
    |
-33 |       privileged: True
+34 |       privileged: True
    |       ^^^^^^^^^^^^^^^^
   = help: remove `privileged` and add only the capabilities the container needs to `securityContext.capabilities.add`
 
 error[KL2001]: container `débogage` runs in privileged mode
-  --> security/KL2001.yaml:38:7
+  --> security/KL2001.yaml:39:7
    |
-38 |       privileged: true
+39 |       privileged: true
    |       ^^^^^^^^^^^^^^^^
   = help: remove `privileged` and add only the capabilities the container needs to `securityContext.capabilities.add`
 
 error[KL2001]: container `agent` runs in privileged mode
-  --> security/KL2001.yaml:56:11
+  --> security/KL2001.yaml:57:11
    |
-56 |           privileged: true
+57 |           privileged: true
    |           ^^^^^^^^^^^^^^^^
   = help: remove `privileged` and add only the capabilities the container needs to `securityContext.capabilities.add`
 
 error[KL2001]: container `report` runs in privileged mode
-  --> security/KL2001.yaml:74:15
+  --> security/KL2001.yaml:75:15
    |
-74 |               privileged: true
+75 |               privileged: true
    |               ^^^^^^^^^^^^^^^^
   = help: remove `privileged` and add only the capabilities the container needs to `securityContext.capabilities.add`
 
 error[KL2001]: container `db` runs in privileged mode
-  --> security/KL2001.yaml:90:58
+  --> security/KL2001.yaml:91:58
    |
-90 |       - {name: db, image: postgres:17, securityContext: {privileged: true}}
+91 |       - {name: db, image: postgres:17, securityContext: {privileged: true}}
    |                                                          ^^^^^^^^^^^^^^^^
   = help: remove `privileged` and add only the capabilities the container needs to `securityContext.capabilities.add`
 
 error[KL2001]: container `migrate` runs in privileged mode
-   --> security/KL2001.yaml:102:59
+   --> security/KL2001.yaml:103:59
     |
-102 |       - {name: migrate, image: app:1.0, securityContext: {privileged: true}}
+103 |       - {name: migrate, image: app:1.0, securityContext: {privileged: true}}
     |                                                           ^^^^^^^^^^^^^^^^
   = help: remove `privileged` and add only the capabilities the container needs to `securityContext.capabilities.add`
 

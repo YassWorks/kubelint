@@ -2,10 +2,12 @@ use std::error::Error;
 use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode};
 
+use kubelint_schema::KubernetesVersion;
+use xtask::e2e::{self, Outcome};
 use xtask::schemas;
 
 const USAGE: &str = "usage: cargo xtask gen-rule-docs | gen-corpus [--objects <N>] [<DIR>] \
-                     | import-schemas <KUBERNETES_CHECKOUT>";
+                     | import-schemas <KUBERNETES_CHECKOUT> | e2e [<CODE>...]";
 const CORPUS_OBJECTS: usize = 10_000;
 const CORPUS_DIR: &str = "target/bench-corpus";
 const OPENAPI_DIR: &str = "api/openapi-spec/v3";
@@ -19,6 +21,7 @@ fn main() -> ExitCode {
             None => return usage(),
         },
         Some((task, [checkout])) if task == "import-schemas" => import_schemas(Path::new(checkout)),
+        Some((task, codes)) if task == "e2e" => run_e2e(codes),
         _ => return usage(),
     };
     if let Err(error) = result {
@@ -133,4 +136,112 @@ fn git(dir: &Path, args: &[&str]) -> Result<String, Box<dyn Error>> {
         return Err(format!("`git {}` failed: {}", args.join(" "), stderr.trim()).into());
     }
     Ok(String::from_utf8(output.stdout)?.trim().to_owned())
+}
+
+/// Applies every case of the Pod Security rules (or of `codes`) to the API server that
+/// `.github/scripts/e2e-apiserver.sh` started and fails when one disagrees with kubelint.
+/// It labels namespaces, so it refuses any other `KUBECONFIG`.
+fn run_e2e(codes: &[String]) -> Result<(), Box<dyn Error>> {
+    let root = xtask::repository_root();
+    let ours = root.join("target/e2e/state/kubeconfig").canonicalize().ok();
+    let theirs =
+        std::env::var_os("KUBECONFIG").and_then(|path| Path::new(&path).canonicalize().ok());
+    if ours.is_none() || ours != theirs {
+        return Err("KUBECONFIG must name the server of .github/scripts/e2e-apiserver.sh".into());
+    }
+    let version = server_version()?;
+    let dir = root.join("target/e2e/cases");
+    std::fs::create_dir_all(&dir)?;
+    let selected: Vec<_> = e2e::POD_SECURITY
+        .iter()
+        .filter(|rule| codes.is_empty() || codes.iter().any(|code| code == rule.code))
+        .collect();
+    if let Some(code) = codes
+        .iter()
+        .find(|code| !selected.iter().any(|rule| rule.code == *code))
+    {
+        return Err(format!("{code} has no end to end check").into());
+    }
+    let mut mismatches = 0;
+    for check in selected {
+        let rule = e2e::rule(check.code).ok_or_else(|| format!("no rule {}", check.code))?;
+        let path = e2e::fixture_path(rule);
+        let cases = e2e::cases(rule, &std::fs::read_to_string(root.join(&path))?, version)
+            .map_err(|error| format!("{path}: {error}"))?;
+        let mut namespaces = vec!["default"];
+        namespaces.extend(cases.iter().filter_map(|case| case.namespace.as_deref()));
+        for namespace in namespaces {
+            let manifest = serde_json::json!({
+                "apiVersion": "v1",
+                "kind": "Namespace",
+                "metadata": {
+                    "name": namespace,
+                    "labels": {"pod-security.kubernetes.io/enforce": check.level.as_str()},
+                },
+            });
+            let outcome = kubectl(&["apply", "-f", "-"], Some(&manifest.to_string()))?;
+            if !outcome.accepted {
+                return Err(
+                    format!("cannot create namespace {namespace}: {}", outcome.output).into(),
+                );
+            }
+        }
+        for case in &cases {
+            let place = format!("{path}:{}", case.line);
+            if let Some(reason) = &case.skip {
+                println!("skip     {place}: {reason}");
+                continue;
+            }
+            let file = dir.join(format!("{}-{}.yaml", check.code, case.line));
+            std::fs::write(&file, &case.text)?;
+            let file = file.to_string_lossy();
+            let outcome = kubectl(&["apply", "--dry-run=server", "-f", &file], None)?;
+            match e2e::pod_security_mismatch(check, case, &outcome) {
+                None => println!("ok       {place}"),
+                Some(reason) => {
+                    mismatches += 1;
+                    println!("mismatch {place}: {reason}\n{}", outcome.output.trim_end());
+                }
+            }
+        }
+    }
+    if mismatches > 0 {
+        return Err(format!(
+            "{mismatches} case(s) disagree with the Kubernetes {version} API server"
+        )
+        .into());
+    }
+    Ok(())
+}
+
+fn server_version() -> Result<KubernetesVersion, Box<dyn Error>> {
+    let outcome = kubectl(&["get", "--raw", "/version"], None)?;
+    let reply: serde_json::Value = serde_json::from_str(&outcome.output)
+        .map_err(|_| format!("no API server answered: {}", outcome.output.trim()))?;
+    let git_version = reply["gitVersion"].as_str().unwrap_or_default();
+    KubernetesVersion::parse(git_version).ok_or_else(|| {
+        format!("kubelint has no schema for the server's version {git_version}").into()
+    })
+}
+
+fn kubectl(args: &[&str], input: Option<&str>) -> Result<Outcome, Box<dyn Error>> {
+    let mut child = Command::new("kubectl")
+        .args(args)
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|error| format!("cannot run kubectl: {error}"))?;
+    if let (Some(input), Some(mut stdin)) = (input, child.stdin.take()) {
+        std::io::Write::write_all(&mut stdin, input.as_bytes())?;
+    }
+    let output = child.wait_with_output()?;
+    Ok(Outcome {
+        accepted: output.status.success(),
+        output: format!(
+            "{}{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        ),
+    })
 }

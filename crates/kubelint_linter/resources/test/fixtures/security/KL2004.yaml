@@ -12,6 +12,7 @@ spec:
     image: busybox:1.36
 ---
 # Reported: a DaemonSet with `hostNetwork`, a YAML 1.1 boolean and non-ASCII text.
+# e2e-skip: the server rejects the non-ASCII labels first
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -103,6 +104,7 @@ spec:
 ---
 # Not reported: a quoted "true", a number and a null value (schema problems or the
 # default, false).
+# e2e-skip: a schema problem, which the server rejects while decoding
 apiVersion: v1
 kind: Pod
 metadata:
@@ -116,6 +118,7 @@ spec:
     image: app:1.0
 ---
 # Not reported: the fields inside a container are not Kubernetes fields.
+# e2e-skip: an unknown field, which the server rejects while decoding
 apiVersion: v1
 kind: Pod
 metadata:
@@ -129,6 +132,7 @@ spec:
       hostPID: true
 ---
 # Not reported: a custom resource with a pod-like shape.
+# e2e-skip: a custom resource, unknown to the server
 apiVersion: example.com/v1
 kind: Deployment
 metadata:
@@ -142,6 +146,7 @@ spec:
         image: app:1.0
 ---
 # Not reported: a ConfigMap is not a workload.
+# e2e-skip: a ConfigMap has no `spec`, which the server rejects while decoding
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -152,6 +157,7 @@ spec:
   hostNetwork: true
 ---
 # Reported: a Deployment with an empty name, named by its kind only.
+# e2e-skip: `kubectl` cannot apply an object with an empty name
 apiVersion: apps/v1
 kind: Deployment
 metadata:

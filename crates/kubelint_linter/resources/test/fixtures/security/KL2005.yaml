@@ -1,4 +1,5 @@
 # Reported: a hostPath volume in a Pod, and one without a `path`.
+# e2e-skip: the server rejects the `hostPath` without a path first
 apiVersion: v1
 kind: Pod
 metadata:
@@ -19,6 +20,7 @@ spec:
 ---
 # Reported: a DaemonSet with a read only mount, flow style, non-ASCII text and a
 # volume without a name.
+# e2e-skip: the server rejects the volume without a name first
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -118,6 +120,7 @@ spec:
   - {name: run, hostPath: {path: /var/run}}
 ---
 # Not reported: a container runtime socket (KL2007 reports it).
+# e2e-skip: Pod Security names every `hostPath`, KL2007 reports sockets instead
 apiVersion: v1
 kind: Pod
 metadata:
@@ -144,6 +147,7 @@ spec:
   - {name: data, persistentVolumeClaim: {claimName: data}}
 ---
 # Not reported: a hostPath that is not a mapping (a schema problem).
+# e2e-skip: a schema problem, which the server rejects while decoding
 apiVersion: v1
 kind: Pod
 metadata:
@@ -157,6 +161,7 @@ spec:
   - {name: b, hostPath:}
 ---
 # Not reported: a custom resource with a pod-like shape.
+# e2e-skip: a custom resource, unknown to the server
 apiVersion: example.com/v1
 kind: Deployment
 metadata:
@@ -171,6 +176,7 @@ spec:
       - {name: data, hostPath: {path: /srv}}
 ---
 # Not reported: a ConfigMap is not a workload.
+# e2e-skip: a ConfigMap has no `spec`, which the server rejects while decoding
 apiVersion: v1
 kind: ConfigMap
 metadata:

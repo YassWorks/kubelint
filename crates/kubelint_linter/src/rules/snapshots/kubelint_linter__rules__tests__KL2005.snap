@@ -3,65 +3,65 @@ source: crates/kubelint_linter/src/rules/tests.rs
 expression: check_fixture(rule)
 ---
 warning[KL2005]: volume `data` mounts `/srv/app-data` from the node
-  --> security/KL2005.yaml:15:7
+  --> security/KL2005.yaml:16:7
    |
-15 |       path: /srv/app-data
+16 |       path: /srv/app-data
    |       ^^^^^^^^^^^^^^^^^^^
   = help: use a `configMap`, `secret`, `emptyDir` or `persistentVolumeClaim` volume instead
 
 warning[KL2005]: volume `broken` mounts a path from the node
-  --> security/KL2005.yaml:18:5
+  --> security/KL2005.yaml:19:5
    |
-18 |     hostPath: {}
+19 |     hostPath: {}
    |     ^^^^^^^^
   = help: use a `configMap`, `secret`, `emptyDir` or `persistentVolumeClaim` volume instead
 
 warning[KL2005]: volume `varlog` mounts `/var/log` from the node
-  --> security/KL2005.yaml:39:35
+  --> security/KL2005.yaml:41:35
    |
-39 |       - {name: varlog, hostPath: {path: /var/log}}
+41 |       - {name: varlog, hostPath: {path: /var/log}}
    |                                   ^^^^^^^^^^^^^^
   = help: use a `configMap`, `secret`, `emptyDir` or `persistentVolumeClaim` volume instead
 
 warning[KL2005]: volume mounts `/données` from the node
-  --> security/KL2005.yaml:40:20
+  --> security/KL2005.yaml:42:20
    |
-40 |       - hostPath: {path: /données}
+42 |       - hostPath: {path: /données}
    |                    ^^^^^^^^^^^^^^
   = help: use a `configMap`, `secret`, `emptyDir` or `persistentVolumeClaim` volume instead
 
 warning[KL2005]: volume `etc` mounts `/etc` from the node
-  --> security/KL2005.yaml:57:32
+  --> security/KL2005.yaml:59:32
    |
-57 |       - {name: etc, hostPath: {path: /etc}}
+59 |       - {name: etc, hostPath: {path: /etc}}
    |                                ^^^^^^^^^^
   = help: use a `configMap`, `secret`, `emptyDir` or `persistentVolumeClaim` volume instead
 
 warning[KL2005]: volume `pgdata` mounts `/mnt/pg` from the node
-  --> security/KL2005.yaml:75:35
+  --> security/KL2005.yaml:77:35
    |
-75 |       - {name: pgdata, hostPath: {path: /mnt/pg}}
+77 |       - {name: pgdata, hostPath: {path: /mnt/pg}}
    |                                   ^^^^^^^^^^^^^
   = help: use a `configMap`, `secret`, `emptyDir` or `persistentVolumeClaim` volume instead
 
 warning[KL2005]: volume `root` mounts `/` from the node
-  --> security/KL2005.yaml:89:33
+  --> security/KL2005.yaml:91:33
    |
-89 |       - {name: root, hostPath: {path: /}}
+91 |       - {name: root, hostPath: {path: /}}
    |                                 ^^^^^^^
   = help: use a `configMap`, `secret`, `emptyDir` or `persistentVolumeClaim` volume instead
 
 warning[KL2005]: volume `out` mounts `/tmp/report` from the node
-   --> security/KL2005.yaml:106:36
+   --> security/KL2005.yaml:108:36
     |
-106 |           - {name: out, hostPath: {path: /tmp/report}}
+108 |           - {name: out, hostPath: {path: /tmp/report}}
     |                                    ^^^^^^^^^^^^^^^^^
   = help: use a `configMap`, `secret`, `emptyDir` or `persistentVolumeClaim` volume instead
 
 warning[KL2005]: volume `run` mounts `/var/run` from the node
-   --> security/KL2005.yaml:118:28
+   --> security/KL2005.yaml:120:28
     |
-118 |   - {name: run, hostPath: {path: /var/run}}
+120 |   - {name: run, hostPath: {path: /var/run}}
     |                            ^^^^^^^^^^^^^^
   = help: use a `configMap`, `secret`, `emptyDir` or `persistentVolumeClaim` volume instead
 

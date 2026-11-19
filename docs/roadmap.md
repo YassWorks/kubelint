@@ -55,20 +55,19 @@ enum values, and removed or deprecated API versions.
   size
 - [x] `--kubernetes-version` flag and `kubernetes-version` config key, defaulting to the
   latest supported version
-- [ ] End to end CI job: split every rule fixture into objects, create every namespace
-  they use, and check each case against a real API server
-  (`.github/scripts/e2e-apiserver.sh`, every version of the window), judged on the
-  rule's own field. A correctness finding is rejected with an error naming that field
-  (KL1011 is accepted with a warning, KL1001 and KL1002 are rejected by `kubectl`
-  itself, KL1004 needs both objects in one request). A Pod Security finding (`baseline`
-  for KL2001 and KL2004 to KL2007, `restricted` for KL2002 and KL2003, where KL2003
-  skips `hostUsers: false`, which 1.34 still rejects) names the check
-  the server reports in a namespace labeled with that level: a Pod is rejected, a
-  workload gets a warning. A case the rule passes does not trigger that check. Cases the
-  server cannot judge (template placeholders, custom resources, schema problems, files
-  of other tools that KL1001 and KL1002 pass) are marked in the fixture and skipped. A
-  mismatch fails CI. Placed before the schema rules so they are checked against the API
-  server from their first PR
+- [x] End to end CI job, first piece: `cargo xtask e2e` splits a rule fixture into
+  cases, applies each one to a real API server and compares its verdict with
+  kubelint's; the `e2e` CI job runs it on every version of the window. It checks the
+  Pod Security rules (KL2001 to KL2007) by the check the server names, and cases the
+  server cannot judge carry an `# e2e-skip` marker with the reason
+- [ ] End to end check of the correctness rules, judged on the rule's own field: a
+  reported case is rejected with an error naming that field (KL1011 is accepted with a
+  warning, KL1001 and KL1002 are rejected by `kubectl` itself, KL1004 needs both
+  objects in one request), and a case the rule passes is accepted. Split or mark the
+  fixtures listed under Known gaps (Rules) first
+- [ ] End to end check of the remaining rules (syntax, KL2008, KL2009, reliability): a
+  case the rule passes is accepted, and a case it reports is accepted too unless the
+  rule says the server rejects it
 - [ ] Span-aware validator that walks an object against its schema and stays silent on
   kinds it does not know (custom resources). User-provided CRD schemas come after M4
 - [ ] KL1101 `unknown-field`, with "did you mean" suggestions
@@ -192,8 +191,17 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   rejects on that field as it rejects a bad value. The server never names the
   ReplicationController selector case of KL1010. It accepts the CronJob
   `jobTemplate.metadata.labels` case of KL1010, but the CronJob controller copies those
-  labels into each Job, which the server rejects. KL2002 passes privileged and
-  `CAP_SYS_ADMIN` containers, which `restricted` flags for `allowPrivilegeEscalation`.
+  labels into each Job, which the server rejects.
+- KL2003 does not use `--kubernetes-version`: it passes a `hostUsers: false` workload
+  that runs as root, which `restricted` accepts from 1.35 but flags on 1.34.
+- The end to end check skips reported cases that also test input the server rejects
+  first: unnamed containers, non-ASCII names or ephemeral containers (KL2001, KL2002,
+  KL2003, KL2006), non-ASCII labels (KL2004, KL2007), a `hostPath` without a path or a
+  volume without a name (KL2005, KL2007). So the flow style and non-ASCII cases of
+  KL2004, KL2005 and KL2007 and the only reported Pod case of KL2005 are never checked.
+  Splitting each case into a valid part and an invalid one would check them. Only KL2003
+  has a checked case with init containers, and none can have ephemeral containers,
+  which the server refuses on create.
 - KL1011 passes a repeated env name made of spaces (`" "`), which the server warns about
   (`hides previous definition`).
 - KL1010 checks workload and Service selectors only. PodDisruptionBudget, NetworkPolicy

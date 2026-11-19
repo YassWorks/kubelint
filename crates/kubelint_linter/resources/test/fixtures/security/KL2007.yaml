@@ -17,6 +17,7 @@ spec:
 ---
 # Reported: containerd and CRI-O sockets in a DaemonSet, flow style, a trailing slash,
 # non-ASCII text and a volume without a name.
+# e2e-skip: the server rejects the labels and the unnamed volume first
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -102,6 +103,7 @@ spec:
 ---
 # Not reported: other hostPath volumes, a directory that holds a socket, a file name
 # that only contains a socket name, and other volume types.
+# e2e-skip: Pod Security names every `hostPath`, KL2005 reports these
 apiVersion: v1
 kind: Pod
 metadata:
@@ -118,6 +120,7 @@ spec:
 ---
 # Not reported: a non-string path, a hostPath without a path, a hostPath that is not
 # a mapping, and a socket path in `emptyDir`.
+# e2e-skip: a schema problem, which the server rejects while decoding
 apiVersion: v1
 kind: Pod
 metadata:
@@ -133,6 +136,7 @@ spec:
   - {name: c, emptyDir: {path: /var/run/docker.sock}}
 ---
 # Not reported: a custom resource with a pod-like shape.
+# e2e-skip: a custom resource, unknown to the server
 apiVersion: example.com/v1
 kind: Deployment
 metadata:
