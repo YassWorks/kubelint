@@ -4,6 +4,13 @@ Every release of kubelint, newest first. The nightly release workflow writes thi
 
 Older releases are listed on the [releases page](https://github.com/YassWorks/kubelint/releases).
 
+## [0.22.1] - 2026-11-20
+
+### Other changes
+
+- check KL1005, KL1006, KL1007, KL1009 and KL1011 against the API server (#146)
+- check the Pod Security rule fixtures against a real API server (#144)
+
 ## [0.22.0] - 2026-11-19
 
 ### Features
