@@ -21,10 +21,11 @@ One PR = one roadmap item = one concern. Keep every section short.
 
 <!-- Commands run locally and what they showed. Mention new tests and snapshots. -->
 
+- [ ] All with `RUSTFLAGS="-D warnings"`, as CI runs them
 - [ ] `cargo fmt --all --check`
 - [ ] `cargo clippy --workspace --all-targets --all-features --locked -- -D warnings`
 - [ ] `cargo test --workspace --all-features --locked`
-- [ ] `cargo doc --workspace --no-deps --all-features --locked`
+- [ ] `RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features --locked`
 - [ ] End to end: commands and output below (release binary, API server dry run,
   containers), or why this PR changes no behavior and states no fact (playbook 4.5)
 

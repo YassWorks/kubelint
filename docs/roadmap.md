@@ -269,8 +269,6 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 - The hook's `types: [yaml]` also matches `.clang-format` and similar files.
 - The SARIF upload snippet may need `actions: read` in private repositories, as
   GitHub's docs say (not run).
-- `CLAUDE.md` lists `cargo fmt --all` where CI runs it with `--check`, and CI runs the
-  tests with `RUSTFLAGS=-D warnings`.
 - `CONTRIBUTING.md` step 5 runs only the linter tests, and nothing ties the catalog in
   `docs/rules/README.md` to the registry.
 - `e2e-apiserver.sh` reports a network failure as an unknown version.

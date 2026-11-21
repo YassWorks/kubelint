@@ -14,10 +14,13 @@ project's memory.
 
 ## Commands
 
-CI runs exactly these. All must pass before a PR is opened.
+CI runs exactly these, with `RUSTFLAGS="-D warnings"` set in every job. All must pass
+before a PR is opened. Run `cargo fmt --all` first to apply the formatting that the
+first one checks.
 
 ```bash
-cargo fmt --all
+export RUSTFLAGS="-D warnings"
+cargo fmt --all --check
 cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 cargo test --workspace --all-features --locked
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps --all-features --locked
