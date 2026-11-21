@@ -69,7 +69,12 @@ enum values, and removed or deprecated API versions.
 - [x] End to end check of KL1001 and KL1002, by the error `kubectl` itself gives before
   it sends an object (`apiVersion not set`, `kind not set`, a kind it cannot look up),
   or the server's answer to an empty `apiVersion` on a core kind
-- [ ] End to end check of KL1004, with both objects in one request
+- [ ] End to end check of KL1004. A server dry run accepts both copies of a duplicate
+  (two identical ConfigMaps in one `kubectl create --dry-run=server` give two `created`
+  lines on 1.37). So the check sends real requests to the throwaway server: `kubectl
+  create` of the first object, then of the second, which gets `AlreadyExists`, then a
+  `kubectl delete -f` of the case before the next one, because without a controller
+  manager deleting a namespace never finishes
 - [ ] End to end check of the remaining rules (syntax, KL2008, KL2009, reliability): a
   case the rule passes is accepted, and a case it reports is accepted too unless the
   rule says the server rejects it

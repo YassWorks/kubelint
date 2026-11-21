@@ -417,6 +417,17 @@ Traps earlier runs fell into. Add new ones as you find them.
 - The self-review subagent runs the end to end commands in the same working tree. Tell
   it which generated files it may touch and that it must restore them, then check
   `git status` before committing.
+- An end to end needle with `*` matches any text, so `no matches for kind "*"` also
+  matches a misspelled kind or a missing CRD, which the rule does not report. Write the
+  exact answer for each case (`no matches for kind "  "` for a kind of two spaces), and
+  add a row to `crates/xtask/tests/e2e.rs` for an answer the rule must not claim (like
+  `UNKNOWN_KIND` for KL1002).
+- `kubectl` decodes `metadata` itself, so a non-string `metadata.name` or a list for
+  `metadata` fails in kubectl and never reaches the server, while a bad type in `spec`
+  is sent. Mark such a case with `# e2e-skip: a schema problem, which kubectl rejects
+  before it sends the object`.
+- `kubectl apply` sends nothing for an object without a `name`: use `Request::Create`
+  (see the end to end section of `docs/architecture.md`).
 
 ## Keeping this playbook healthy
 
