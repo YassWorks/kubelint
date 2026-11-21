@@ -19,6 +19,13 @@ kind: ConfigMap
 apiVersion: ""
 kind: Secret
 ---
+# Reported: an empty apiVersion on a kind outside the core group, and a blank one.
+apiVersion: ""
+kind: Deployment
+---
+apiVersion: "  "
+kind: Secret
+---
 # Reported: flow style.
 {kind: Pod, metadata: {name: inline}}
 ---
@@ -44,10 +51,12 @@ items:
 - kind: Service
 ---
 # Not reported: a Kustomize file has no apiVersion and no metadata.
+# e2e-skip: a configuration file, which kubectl refuses as an object
 kind: Kustomization
 resources:
 - deployment.yaml
 ---
+# e2e-skip: a configuration file, which kubectl refuses as an object
 kind: Component
 resources:
 - base
@@ -81,6 +90,6 @@ apiVersion: 1
 kind: Pod
 ---
 # Not reported: not a Kubernetes object.
+# e2e-skip: not a Kubernetes object, which kubectl refuses
 name: build
 on: push
----

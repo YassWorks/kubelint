@@ -66,9 +66,10 @@ enum values, and removed or deprecated API versions.
 - [x] End to end check of KL1003, KL1008 and KL1010, each by the validation error that
   names its field. KL1003 and KL1008 cases are sent with `kubectl create`, because
   `kubectl apply` refuses objects without a `name`
-- [ ] End to end check of the other correctness rules: KL1001 and KL1002 (rejected by
-  `kubectl` itself) and KL1004 (both objects in one request). Split or mark the fixtures
-  listed under Known gaps (Rules) first
+- [x] End to end check of KL1001 and KL1002, by the error `kubectl` itself gives before
+  it sends an object (`apiVersion not set`, `kind not set`, a kind it cannot look up),
+  or the server's answer to an empty `apiVersion` on a core kind
+- [ ] End to end check of KL1004, with both objects in one request
 - [ ] End to end check of the remaining rules (syntax, KL2008, KL2009, reliability): a
   case the rule passes is accepted, and a case it reports is accepted too unless the
   rule says the server rejects it
@@ -188,14 +189,17 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   `--kubernetes-version` flag.
 - No rule covers several `baseline` checks (see Rule ideas), so the default security
   rules check only part of `baseline`.
-- Some rule fixtures encode a verdict the API server gives differently, so the end to
-  end CI item must mark or split them first. KL1001 and KL1002 pass a mapping that is
-  not an object, which kubectl refuses (`apiVersion not set`). KL1006 passes repeated
-  empty or missing container names, which the server also reports as duplicates
-  (`Duplicate value: ""`), marked in the end to end check. The server never names the
-  ReplicationController selector case of KL1010, and it accepts the CronJob
-  `jobTemplate.metadata.labels` case, though the CronJob controller copies those labels
-  into each Job, which the server rejects. Both are marked in the end to end check.
+- Some rule fixtures encode a verdict the API server gives differently, each marked in
+  the end to end check. KL1001 and KL1002 pass configuration files and mappings that
+  are not objects, which kubectl refuses (`apiVersion not set`, `kind not set`). KL1006
+  passes repeated empty or missing container names, which the server also reports as
+  duplicates (`Duplicate value: ""`). The server never names the ReplicationController
+  selector case of KL1010, and it accepts the CronJob `jobTemplate.metadata.labels`
+  case, though the CronJob controller copies those labels into each Job, which the
+  server rejects.
+- KL1001 passes a malformed `apiVersion` such as `apps/`, which the server answers with
+  `the server could not find the requested resource`. The end to end check reads that
+  answer as KL1001's for an empty `apiVersion`, so such a case would need a marker.
 - KL1005 passes a selector that `kubectl apply` and `kubectl create` both reject, for
   different expressions: `Exists` and `DoesNotExist` on template labels set to null
   (apply drops them, create keeps them as `""`).
