@@ -94,6 +94,13 @@ const MISMATCH: &str = r#"The Deployment "a" is invalid: spec.template.metadata.
 const BAD_SELECTOR: &str = r#"The Deployment "a" is invalid: spec.selector: Invalid value: {"matchExpressions":[{"key":"k","operator":"In"}]}: invalid label selector"#;
 const HIDES: &str = r#"Warning: spec.containers[0].env[1]: hides previous definition of "A", which may be dropped when using apply"#;
 const CREATED: &str = "pod/a created (server dry run)";
+const NO_API_VERSION: &str = r#"error: error validating "a.yaml": error validating data: [apiVersion not set, kind not set]; if you choose to ignore these errors, turn validation off with --validate=false"#;
+const NO_KIND: &str = r#"error: error validating "a.yaml": error validating data: kind not set; if you choose to ignore these errors, turn validation off with --validate=false"#;
+const NO_RESOURCE: &str = r#"Error from server (NotFound): error when creating "a.yaml": the server could not find the requested resource"#;
+const NO_MAPPING: &str = r#"error: resource mapping not found for name: "" namespace: "" from "a.yaml": no matches for kind "  " in version "v1""#;
+const EMPTY_VERSION: &str = r#"error: resource mapping not found for name: "" namespace: "" from "a.yaml": no matches for kind "Deployment" in version """#;
+const UNKNOWN_KIND: &str = r#"error: resource mapping not found for name: "" namespace: "" from "a.yaml": no matches for kind "Foo" in version "v1""#;
+const EMPTY_KIND: &str = r#"error: unable to decode "a.yaml": Object 'Kind' is missing in '{"apiVersion":"v1","kind":""}'"#;
 const NO_NAME: &str = r#"The ConfigMap "" is invalid: metadata.name: Required value: name or generateName is required"#;
 const BAD_NAME: &str = r#"The ConfigMap "A_b" is invalid: metadata.name: Invalid value: "A_b": a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters"#;
 const NO_NAMESPACE: &str =
@@ -166,6 +173,35 @@ const ANSWERS: &[(&str, bool, bool, &str, Option<&str>)] = &[
     ("KL1009", true, false, ENV_NAME, BEFORE),
     ("KL1009", false, false, ENV_NAME, BEFORE),
     ("KL1006", false, false, ARRAY, BEFORE),
+    ("KL1001", true, false, NO_API_VERSION, None),
+    ("KL1001", true, false, NO_RESOURCE, None),
+    ("KL1001", false, false, NO_KIND, None),
+    ("KL1001", false, false, NO_NAME, None),
+    (
+        "KL1001",
+        false,
+        false,
+        NO_API_VERSION,
+        Some(
+            "not reported, but the server says apiVersion not set or in version \"\" or in version \"  \" or the server could not find the requested resource",
+        ),
+    ),
+    ("KL1001", false, false, NO_MAPPING, None),
+    ("KL1001", true, false, EMPTY_VERSION, None),
+    ("KL1002", false, false, UNKNOWN_KIND, None),
+    ("KL1002", true, false, EMPTY_KIND, None),
+    ("KL1002", true, false, NO_API_VERSION, None),
+    ("KL1002", true, false, NO_MAPPING, None),
+    ("KL1002", false, true, CREATED, None),
+    (
+        "KL1002",
+        true,
+        false,
+        NO_NAME,
+        Some(
+            "reported, but the server does not say kind not set or Object 'Kind' is missing or no matches for kind \"  \" in version",
+        ),
+    ),
     ("KL1003", true, false, NO_NAME, None),
     ("KL1003", false, false, BAD_NAME, None),
     (

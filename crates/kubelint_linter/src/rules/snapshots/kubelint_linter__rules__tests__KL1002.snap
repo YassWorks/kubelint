@@ -37,32 +37,39 @@ error[KL1002]: object has an empty `kind`
    | ^^^^^^^^^^
   = help: add the object's type, such as `kind: Deployment`
 
-error[KL1002]: object `inline` has no `kind`
-  --> correctness/KL1002.yaml:23:2
+error[KL1002]: object has an empty `kind`
+  --> correctness/KL1002.yaml:23:1
    |
-23 | {apiVersion: v1, metadata: {name: inline}}
+23 | kind: ""
+   | ^^^^^^^^
+  = help: add the object's type, such as `kind: Deployment`
+
+error[KL1002]: object `inline` has no `kind`
+  --> correctness/KL1002.yaml:26:2
+   |
+26 | {apiVersion: v1, metadata: {name: inline}}
    |  ^^^^^^^^^^^^^^
   = help: add the object's type, such as `kind: Deployment`
 
 error[KL1002]: object has no `kind`
-  --> correctness/KL1002.yaml:31:3
+  --> correctness/KL1002.yaml:34:3
    |
-31 | - apiVersion: v1
+34 | - apiVersion: v1
    |   ^^^^^^^^^^^^^^
   = help: add the object's type, such as `kind: Deployment`
 
 error[KL1002]: object `bare` has no `kind`
-  --> correctness/KL1002.yaml:32:3
+  --> correctness/KL1002.yaml:35:3
    |
-32 | - metadata:
+35 | - metadata:
    |   ^^^^^^^^
   = help: add the object's type, such as `kind: Deployment`
 
 error[KL1002]: object has an empty `kind`
-  --> correctness/KL1002.yaml:51:1
+  --> correctness/KL1002.yaml:56:1
    |
-51 | kind:
+56 | kind:
    | ^^^^
   = help: add the object's type, such as `kind: Deployment`
 
-9 finding(s) in 16 object(s)
+10 finding(s) in 17 object(s)

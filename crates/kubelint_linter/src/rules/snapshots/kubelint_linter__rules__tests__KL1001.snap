@@ -37,46 +37,60 @@ error[KL1001]: `Secret` object has an empty `apiVersion`
    | ^^^^^^^^^^^^^^
   = help: add `apiVersion: v1`
 
-error[KL1001]: `Pod` object has no `apiVersion`
-  --> correctness/KL1001.yaml:23:2
+error[KL1001]: `Deployment` object has an empty `apiVersion`
+  --> correctness/KL1001.yaml:23:1
    |
-23 | {kind: Pod, metadata: {name: inline}}
+23 | apiVersion: ""
+   | ^^^^^^^^^^^^^^
+  = help: add `apiVersion: apps/v1`
+
+error[KL1001]: `Secret` object has an empty `apiVersion`
+  --> correctness/KL1001.yaml:26:1
+   |
+26 | apiVersion: "  "
+   | ^^^^^^^^^^^^^^^^
+  = help: add `apiVersion: v1`
+
+error[KL1001]: `Pod` object has no `apiVersion`
+  --> correctness/KL1001.yaml:30:2
+   |
+30 | {kind: Pod, metadata: {name: inline}}
    |  ^^^^^^^^^
   = help: add `apiVersion: v1`
 
 error[KL1001]: `Pod` object has no `apiVersion`
-  --> correctness/KL1001.yaml:31:3
+  --> correctness/KL1001.yaml:38:3
    |
-31 | - kind: Pod
+38 | - kind: Pod
    |   ^^^^^^^^^
   = help: add `apiVersion: v1`
 
 error[KL1001]: object has no `apiVersion`
-  --> correctness/KL1001.yaml:32:3
+  --> correctness/KL1001.yaml:39:3
    |
-32 | - metadata:
+39 | - metadata:
    |   ^^^^^^^^
   = help: add `apiVersion` and `kind`, such as `apiVersion: apps/v1` and `kind: Deployment`
 
 error[KL1001]: `Deployment` object has no `apiVersion`
-  --> correctness/KL1001.yaml:36:1
+  --> correctness/KL1001.yaml:43:1
    |
-36 | kind: Deployment
+43 | kind: Deployment
    | ^^^^^^^^^^^^^^^^
   = help: add `apiVersion: apps/v1`
 
 error[KL1001]: `Service` object has no `apiVersion`
-  --> correctness/KL1001.yaml:44:3
+  --> correctness/KL1001.yaml:51:3
    |
-44 | - kind: Service
+51 | - kind: Service
    |   ^^^^^^^^^^^^^
   = help: add `apiVersion: v1`
 
 error[KL1001]: `Kustomization` object has an empty `apiVersion`
-  --> correctness/KL1001.yaml:69:1
+  --> correctness/KL1001.yaml:78:1
    |
-69 | apiVersion:
+78 | apiVersion:
    | ^^^^^^^^^^
   = help: add the `apiVersion` of this kind; `kubectl api-resources` lists them
 
-11 finding(s) in 19 object(s)
+13 finding(s) in 21 object(s)

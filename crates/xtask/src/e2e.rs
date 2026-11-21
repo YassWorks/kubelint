@@ -43,6 +43,9 @@ impl Request {
 /// then runs admission, and a case it rejects before that stage proves nothing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Stage {
+    /// `kubectl` checks that `apiVersion` and `kind` are set and then looks the kind up,
+    /// before it sends an object. A validation error shows that both steps passed.
+    Client,
     /// Decoding reports one error, and a validation error shows that decoding passed.
     Decoding,
     /// Validation reports every invalid field, except that an invalid workload selector
@@ -72,6 +75,27 @@ impl Level {
 }
 
 pub const CHECKS: &[Check] = &[
+    Check {
+        code: "KL1001",
+        request: Request::Create,
+        stage: Stage::Client,
+        needles: &[
+            "apiVersion not set",
+            "in version \"\"",
+            "in version \"  \"",
+            "the server could not find the requested resource",
+        ],
+    },
+    Check {
+        code: "KL1002",
+        request: Request::Create,
+        stage: Stage::Client,
+        needles: &[
+            "kind not set",
+            "Object 'Kind' is missing",
+            "no matches for kind \"  \" in version",
+        ],
+    },
     Check {
         code: "KL1003",
         request: Request::Create,
@@ -315,6 +339,12 @@ pub fn mismatch(check: &Check, case: &Case, outcome: &Outcome) -> Option<String>
     let judged = outcome.accepted
         || named
         || match check.stage {
+            Stage::Client => {
+                ["error validating data:", "resource mapping not found"]
+                    .iter()
+                    .any(|answer| output.contains(answer))
+                    || validated
+            }
             Stage::Decoding => validated,
             Stage::Validation => validated && !output.contains("invalid label selector"),
             Stage::PodSecurity(_) => output.contains("violates PodSecurity"),
