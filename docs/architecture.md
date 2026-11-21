@@ -672,8 +672,12 @@ disagreement fails CI.
 - It splits a fixture at its `---` lines into cases, each with the comment above it, and
   lints the whole file with only that rule, at the server's version. A case is reported
   when a finding starts inside it.
-- It creates every namespace the cases use and applies each case alone with
-  `kubectl apply --dry-run=server`.
+- It creates every namespace the cases use and sends each case alone as a dry run, with
+  the check's `kubectl` command: `apply --dry-run=server` by default, and
+  `create --dry-run=server` for KL1003 and KL1008, because `kubectl apply` refuses an
+  object without a `name`, including one with only a `generateName`, before it sends it. A
+  namespace whose name the server rejects is not created, so a case in it gets
+  `NotFound`, which is the answer a cluster gives for it.
 - Each checked rule (`CHECKS` in `crates/xtask/src/e2e.rs`) has the answers that mean
   its field is wrong (its needles) and the stage where the server gives them. A needle
   matches within one line, with list indices written `[]` and `*` for any text, so it
@@ -684,7 +688,7 @@ disagreement fails CI.
   | Stage | Rules | The server judged the case when |
   | --- | --- | --- |
   | Decoding | KL1007, KL1009 | it accepted the case, gave a needle, or reported a validation error (decoding reports one error, and validation runs only after it passed) |
-  | Validation | KL1005, KL1006 | it accepted the case, gave a needle, or reported validation errors other than `invalid label selector` (validation reports every invalid field, but an invalid workload selector skips the checks of the pod template) |
+  | Validation | KL1003, KL1005, KL1006, KL1008, KL1010 | it accepted the case, gave a needle, or reported validation errors other than `invalid label selector` (validation reports every invalid field, but an invalid workload selector skips the checks of the pod template) |
   | Warning | KL1011 | it accepted the case (a validation error comes without warnings) |
   | Pod Security | KL2001 to KL2007 | it accepted the case or named a Pod Security check, in namespaces that enforce the rule's level (`baseline` or `restricted`) |
 
@@ -704,12 +708,17 @@ verdict, so checking them needs no second set of examples. Markers live in the f
 next to the case they explain, so a new case is checked by default and leaving it out
 takes a written reason. Judging by the rule's own answer, not by acceptance, keeps cases
 testable that the server rejects for something else too: a `restricted` namespace flags
-several checks at once, and most fixture workloads have no containers.
+several checks at once, and most fixture workloads have no containers. `kubectl apply`
+stays the default because it is what users run, and `kubectl create` is used only where
+`apply` sends nothing.
 
 **Rejected:** a separate set of end to end examples (it drifts from the fixtures); a
 list of skipped cases outside the fixtures (line numbers move with every edit); running
 only the newest version (Pod Security changed between 1.34 and 1.35, and KL1008 knows
-version dependent names).
+version dependent names); `kubectl create` for every rule (it keeps the null labels that
+`apply` drops, so KL1005 cases would change verdict); skipping the KL1003 and KL1008 cases
+without a `name` (every case KL1003 reports, and every KL1008 case with a `generateName`
+and no `name`).
 
 ## Performance budget
 

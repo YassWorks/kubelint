@@ -17,8 +17,26 @@ const SKIP_MARKER: &str = "# e2e-skip";
 #[derive(Debug, Clone, Copy)]
 pub struct Check {
     pub code: &'static str,
+    pub request: Request,
     pub stage: Stage,
     pub needles: &'static [&'static str],
+}
+
+/// The `kubectl` command that sends a case to the server as a dry run.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Request {
+    Apply,
+    /// For cases without a `name`, which `kubectl apply` refuses before it sends them.
+    Create,
+}
+
+impl Request {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Apply => "apply",
+            Self::Create => "create",
+        }
+    }
 }
 
 /// Where the server judges a rule's field. The server decodes an object, validates it and
@@ -55,12 +73,20 @@ impl Level {
 
 pub const CHECKS: &[Check] = &[
     Check {
+        code: "KL1003",
+        request: Request::Create,
+        stage: Stage::Validation,
+        needles: &["metadata.name: Required value: name or generateName is required"],
+    },
+    Check {
         code: "KL1005",
+        request: Request::Apply,
         stage: Stage::Validation,
         needles: &["`selector` does not match template `labels`"],
     },
     Check {
         code: "KL1006",
+        request: Request::Apply,
         stage: Stage::Validation,
         needles: &[
             "containers[].name: Duplicate value",
@@ -69,11 +95,24 @@ pub const CHECKS: &[Check] = &[
     },
     Check {
         code: "KL1007",
+        request: Request::Apply,
         stage: Stage::Decoding,
         needles: &["quantities must match the regular expression"],
     },
     Check {
+        code: "KL1008",
+        request: Request::Create,
+        stage: Stage::Validation,
+        needles: &[
+            "metadata.name: Invalid value",
+            "metadata.generateName: Invalid value",
+            "namespaces \"*\" not found",
+            "spec.template.labels: Invalid value: \"*\": must be no more than 63",
+        ],
+    },
+    Check {
         code: "KL1009",
+        request: Request::Apply,
         stage: Stage::Decoding,
         needles: &[
             "cannot unmarshal number into Go struct field EnvVar.*.env.value of type string",
@@ -81,42 +120,60 @@ pub const CHECKS: &[Check] = &[
         ],
     },
     Check {
+        code: "KL1010",
+        request: Request::Apply,
+        stage: Stage::Validation,
+        needles: &[
+            "labels: Invalid value: \"",
+            "matchLabels: Invalid value: \"",
+            "selector: Invalid value: \"",
+        ],
+    },
+    Check {
         code: "KL1011",
+        request: Request::Apply,
         stage: Stage::Warning,
         needles: &["hides previous definition of"],
     },
     Check {
         code: "KL2001",
+        request: Request::Apply,
         stage: Stage::PodSecurity(Level::Baseline),
         needles: &["privileged"],
     },
     Check {
         code: "KL2002",
+        request: Request::Apply,
         stage: Stage::PodSecurity(Level::Restricted),
         needles: &["allowPrivilegeEscalation != false"],
     },
     Check {
         code: "KL2003",
+        request: Request::Apply,
         stage: Stage::PodSecurity(Level::Restricted),
         needles: &["runAsNonRoot != true", "runAsUser=0"],
     },
     Check {
         code: "KL2004",
+        request: Request::Apply,
         stage: Stage::PodSecurity(Level::Baseline),
         needles: &["host namespaces"],
     },
     Check {
         code: "KL2005",
+        request: Request::Apply,
         stage: Stage::PodSecurity(Level::Baseline),
         needles: &["hostPath volumes"],
     },
     Check {
         code: "KL2006",
+        request: Request::Apply,
         stage: Stage::PodSecurity(Level::Baseline),
         needles: &["non-default capabilities"],
     },
     Check {
         code: "KL2007",
+        request: Request::Apply,
         stage: Stage::PodSecurity(Level::Baseline),
         needles: &["hostPath volumes"],
     },
@@ -131,11 +188,12 @@ pub struct Case {
     /// Whether the rule reports anything in this case when it lints the whole fixture.
     pub reported: bool,
     pub skip: Option<String>,
-    /// The `metadata.namespace` the case sets, which must exist before it is applied.
-    pub namespace: Option<String>,
+    /// The `metadata.namespace` of the case and of its `kind: List` items, which must
+    /// exist before it is sent.
+    pub namespaces: Vec<String>,
 }
 
-/// What `kubectl apply --dry-run=server` did with a case.
+/// What the check's `kubectl` dry run did with a case.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Outcome {
     pub accepted: bool,
@@ -227,17 +285,20 @@ fn case(
             .iter()
             .any(|&offset| range.contains(&usize::from(offset))),
         skip,
-        namespace: kubelint_yaml::parse(body)
+        namespaces: kubelint_yaml::parse(body)
             .documents
             .iter()
-            .find_map(|document| {
-                document
-                    .root
-                    .as_ref()?
-                    .get_path(&["metadata", "namespace"])?
-                    .as_str()
+            .filter_map(|document| document.root.as_ref())
+            .flat_map(|root| {
+                std::iter::once(root).chain(
+                    root.get("items")
+                        .and_then(kubelint_yaml::Node::as_sequence)
+                        .unwrap_or_default(),
+                )
             })
-            .map(str::to_owned),
+            .filter_map(|object| object.get_path(&["metadata", "namespace"])?.as_str())
+            .map(str::to_owned)
+            .collect(),
     })
 }
 

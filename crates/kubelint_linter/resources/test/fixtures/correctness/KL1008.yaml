@@ -23,6 +23,8 @@ metadata:
 ---
 # Reported: a Service name starting with a digit (a DNS-1035 label), and one with a
 # space.
+# e2e-skip 1.36: KL1008 ignores the version, and 1.36 accepts a leading digit
+# e2e-skip 1.37: KL1008 ignores the version, and 1.37 accepts a leading digit
 apiVersion: v1
 kind: Service
 metadata:
@@ -40,6 +42,7 @@ metadata:
   name: team/reader
 ---
 # Reported: an invalid namespace on a custom resource.
+# e2e-skip: a custom resource, unknown to the server
 apiVersion: example.com/v1
 kind: Widget
 metadata:
@@ -98,12 +101,14 @@ metadata:
   name: system:controller:Reader
 ---
 # Not reported: custom resources and other API groups choose their own name rules.
+# e2e-skip: a custom resource, unknown to the server
 apiVersion: example.com/v1
 kind: Deployment
 metadata:
   name: My_Deployment
 ---
 # Not reported: non-string and empty names are schema problems or KL1003's.
+# e2e-skip: a schema problem, which kubectl rejects before it sends the object
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -115,17 +120,20 @@ metadata:
   name: ""
 ---
 # Not reported: placeholders of template tools in a name and a namespace.
+# e2e-skip: a template placeholder, which its tool replaces before the server sees it
 apiVersion: batch/v1
 kind: Job
 metadata:
   name: process-item-$ITEM
   namespace: ${NAMESPACE}
 ---
+# e2e-skip: a template placeholder, which its tool replaces before the server sees it
 apiVersion: v1
 kind: ReplicationController
 metadata:
   name: etcd-{{cell}}
 ---
+# e2e-skip: a template placeholder, which its tool replaces before the server sees it
 apiVersion: v1
 kind: Service
 metadata:
@@ -375,6 +383,8 @@ metadata:
 ---
 # Not reported: a Service prefix that starts with a digit is accepted from 1.36 only.
 # Reported: a Service prefix with an uppercase letter.
+# e2e-skip 1.34: KL1008 ignores the version, and 1.34 rejects a leading digit
+# e2e-skip 1.35: KL1008 ignores the version, and 1.35 rejects a leading digit
 apiVersion: v1
 kind: Service
 metadata:
@@ -386,11 +396,13 @@ metadata:
   generateName: Web-
 ---
 # Not reported: a placeholder in a generateName.
+# e2e-skip: a template placeholder, which its tool replaces before the server sees it
 apiVersion: v1
 kind: ConfigMap
 metadata:
   generateName: "{{ .Release.Name }}-"
 ---
+# e2e-skip: a template placeholder, which its tool replaces before the server sees it
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -418,6 +430,7 @@ metadata:
 ---
 # Not reported: a ReplicationController with a `name` and a bad prefix is accepted from 1.35
 # and rejected by 1.34.
+# e2e-skip 1.34: KL1008 ignores the version, and 1.34 rejects this prefix
 apiVersion: v1
 kind: ReplicationController
 metadata:

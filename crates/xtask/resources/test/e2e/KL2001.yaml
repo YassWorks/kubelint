@@ -24,3 +24,10 @@ metadata:
 spec:
   containers:
   - {name: app, image: app:1.0}
+---
+# Not reported: the namespace of a list item.
+apiVersion: v1
+kind: List
+items:
+- {apiVersion: v1, kind: ConfigMap, metadata: {name: a, namespace: team-b}}
+- {apiVersion: v1, kind: ConfigMap, metadata: {name: b}}
