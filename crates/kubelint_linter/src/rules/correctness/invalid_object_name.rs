@@ -7,6 +7,7 @@ use kubelint_k8s::{
     BuiltinKind, MAX_LABEL_LENGTH, MAX_SUBDOMAIN_LENGTH, Object, ValidationError, is_dns1035_label,
     is_dns1123_label, is_dns1123_subdomain,
 };
+use kubelint_schema::KubernetesVersion;
 use kubelint_yaml::{Node, NodeKind, ResolvedScalar};
 
 use super::{has_placeholder, shown};
@@ -18,12 +19,13 @@ use crate::{Category, ObjectContext, Rule, RuleMeta};
 /// Names are checked only for built-in kinds ([`BuiltinKind`], in their own API group),
 /// because a custom resource's name rules are up to its definition. Most kinds need a
 /// DNS-1123 subdomain, `Namespace` and `StatefulSet` a DNS-1123 label, `Service` a
-/// DNS-1035 label, and the RBAC kinds and `PodDisruptionBudget` only a valid path
-/// segment (so `system:controller:foo` is fine). A `CronJob` name has at most 52
-/// characters and a `Job` name at most 63, unless `spec.manualSelector` is `true`. A
-/// `generateName` is a prefix and may end with `-`. A namespace is not checked on a
-/// listed cluster-scoped kind, where the server ignores it. Values that are not strings
-/// are schema problems and are skipped, as are empty names (KL1003).
+/// DNS-1035 label before Kubernetes 1.36 and a DNS-1123 label from it, and the RBAC
+/// kinds and `PodDisruptionBudget` only a valid path segment (so `system:controller:foo`
+/// is fine). A `CronJob` name has at most 52 characters and a `Job` name at most 63,
+/// unless `spec.manualSelector` is `true`. A `generateName` is a prefix and may end with
+/// `-`. A namespace is not checked on a listed cluster-scoped kind, where the server
+/// ignores it. Values that are not strings are schema problems and are skipped, as are
+/// empty names (KL1003).
 pub struct InvalidObjectName;
 
 static META: RuleMeta = RuleMeta {
@@ -85,9 +87,12 @@ impl NameRule {
     }
 
     /// The rule for the `metadata.name` of `kind`.
-    fn name(kind: BuiltinKind, object: Object<'_>) -> Self {
+    fn name(kind: BuiltinKind, object: Object<'_>, version: KubernetesVersion) -> Self {
         let format = match kind {
             BuiltinKind::Namespace | BuiltinKind::StatefulSet => NameFormat::Label,
+            // `ValidateServiceCreate` checks a DNS-1123 label once the
+            // `RelaxedServiceNameValidation` gate is on by default, from 1.36.
+            BuiltinKind::Service if version.minor() >= 36 => NameFormat::Label,
             BuiltinKind::Service => NameFormat::Dns1035,
             BuiltinKind::Role
             | BuiltinKind::ClusterRole
@@ -112,24 +117,22 @@ impl NameRule {
         }
     }
 
-    /// The rule for the `metadata.generateName` of `kind`, or `None` when the server's
-    /// answer depends on its version.
-    fn generate_name(kind: BuiltinKind, object: Object<'_>) -> Option<Self> {
+    /// The rule for the `metadata.generateName` of `kind`, or `None` when the server
+    /// does not check it.
+    fn generate_name(
+        kind: BuiltinKind,
+        object: Object<'_>,
+        version: KubernetesVersion,
+    ) -> Option<Self> {
         let has_name = object
             .name()
             .and_then(Node::as_str)
             .is_some_and(|name| !name.trim().is_empty());
         // `ValidateReplicationController` skips `generateName` from 1.35 on.
-        if has_name && kind == BuiltinKind::ReplicationController {
+        if has_name && kind == BuiltinKind::ReplicationController && version.minor() >= 35 {
             return None;
         }
-        let name = Self::name(kind, object);
-        // A Service prefix is a DNS-1123 label: a leading digit is accepted from 1.36 only.
-        let format = if kind == BuiltinKind::Service {
-            NameFormat::Label
-        } else {
-            name.format
-        };
+        let name = Self::name(kind, object, version);
         // The generated name has at most 63 characters, so only a lower limit binds.
         let max_len = name
             .max_len
@@ -139,7 +142,7 @@ impl NameRule {
             prefix: true,
             generated: !has_name,
             max_len: max_len.filter(|_| !has_name),
-            ..Self::of(format)
+            ..Self::of(name.format)
         })
     }
 
@@ -176,7 +179,10 @@ impl NameRule {
             let stem = text.get(..GENERATED_STEM_LENGTH).unwrap_or(text);
             let generated = format!("{stem}{}", "a".repeat(RANDOM_LENGTH));
             if check(&generated, self.format).is_err() {
-                return Err("a part between dots cannot start with `-`".to_owned());
+                return Err(match self.format {
+                    NameFormat::Subdomain => "a part between dots cannot start with `-`".to_owned(),
+                    format => prefix_reason(format),
+                });
             }
         }
         match self.max_len {
@@ -202,12 +208,13 @@ impl Rule for InvalidObjectName {
         let Some(kind) = object.builtin_kind() else {
             return;
         };
+        let version = cx.kubernetes_version();
         if let Some(name) = object.name() {
             let what = format!("is not a valid `{}` name", kind.as_str());
-            check_node(cx, name, NameRule::name(kind, object), &what);
+            check_node(cx, name, NameRule::name(kind, object, version), &what);
         }
         if let Some(generate_name) = object.generate_name()
-            && let Some(rule) = NameRule::generate_name(kind, object)
+            && let Some(rule) = NameRule::generate_name(kind, object, version)
         {
             let what = format!(
                 "in `metadata.generateName` is not a valid `{}` name prefix",
@@ -280,6 +287,7 @@ fn allowed(format: NameFormat) -> &'static str {
 fn prefix_reason(format: NameFormat) -> String {
     let start = match format {
         NameFormat::Subdomain => "each part between dots must start with a letter or digit",
+        NameFormat::Dns1035 => "start with a letter",
         _ => "start with a letter or digit",
     };
     format!("must contain only {}, and {start}", allowed(format))

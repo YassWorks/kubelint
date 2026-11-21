@@ -118,8 +118,9 @@ rule") is the common command-line case.
 kubernetes-version = "1.36"
 ```
 
-- The Kubernetes version whose API schema the schema rules check against. No rule uses
-  it yet: the schema rules of [M4](../roadmap.md) will.
+- The Kubernetes version to check against. KL1008 uses it for the names whose rules
+  changed between releases, and the schema rules of [M4](../roadmap.md) will use it for
+  the API schema.
 - kubelint supports the latest four minor releases: 1.34, 1.35, 1.36 and 1.37. The
   default is the latest.
 - Write the minor version, with or without a `v` (`1.36`, `v1.36`). A patch number is

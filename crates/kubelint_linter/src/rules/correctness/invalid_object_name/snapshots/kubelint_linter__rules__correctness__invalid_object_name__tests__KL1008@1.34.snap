@@ -1,0 +1,299 @@
+---
+source: crates/kubelint_linter/src/rules/correctness/invalid_object_name/tests.rs
+expression: "check_fixture_at(&InvalidObjectName, version)"
+---
+error[KL1008]: `My_App` is not a valid `Deployment` name: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start and end with a letter or digit
+ --> correctness/KL1008.yaml:5:9
+  |
+5 |   name: My_App
+  |         ^^^^^^
+  = help: use lowercase letters, digits, `-` and `.`, for example `my-app`
+
+error[KL1008]: `settings.` is not a valid `ConfigMap` name: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start and end with a letter or digit
+  --> correctness/KL1008.yaml:11:9
+   |
+11 |   name: settings.
+   |         ^^^^^^^^^
+  = help: use lowercase letters, digits, `-` and `.`, for example `settings`
+
+error[KL1008]: `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` is not a valid `Secret` name: must be no more than 253 characters
+  --> correctness/KL1008.yaml:16:9
+   |
+16 |   name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: shorten the name to at most 253 characters
+
+error[KL1008]: `team.payments` is not a valid `Namespace` name: must contain only lowercase letters, digits and `-`, and start and end with a letter or digit
+  --> correctness/KL1008.yaml:22:9
+   |
+22 |   name: team.payments
+   |         ^^^^^^^^^^^^^
+  = help: use lowercase letters, digits and `-`, for example `team-payments`
+
+error[KL1008]: `1-api` is not a valid `Service` name: must contain only lowercase letters, digits and `-`, start with a letter and end with a letter or digit
+  --> correctness/KL1008.yaml:29:9
+   |
+29 |   name: 1-api
+   |         ^^^^^
+  = help: use lowercase letters, digits and `-`, starting with a letter
+
+error[KL1008]: `web server` is not a valid `Service` name: must contain only lowercase letters, digits and `-`, start with a letter and end with a letter or digit
+  --> correctness/KL1008.yaml:35:9
+   |
+35 |   name: "web server"
+   |         ^^^^^^^^^^^^
+  = help: use lowercase letters, digits and `-`, for example `web-server`
+
+error[KL1008]: `team/reader` is not a valid `ClusterRole` name: may not contain '/'
+  --> correctness/KL1008.yaml:41:9
+   |
+41 |   name: team/reader
+   |         ^^^^^^^^^^^
+  = help: remove `/` and `%` from the name; other characters are allowed
+
+error[KL1008]: `Team_A` in `metadata.namespace` is not a valid namespace name: must contain only lowercase letters, digits and `-`, and start and end with a letter or digit
+  --> correctness/KL1008.yaml:49:14
+   |
+49 |   namespace: Team_A
+   |              ^^^^^^
+  = help: use lowercase letters, digits and `-`, for example `team-a`
+
+error[KL1008]: `Team_A` in `metadata.namespace` is not a valid namespace name: must contain only lowercase letters, digits and `-`, and start and end with a letter or digit
+  --> correctness/KL1008.yaml:75:14
+   |
+75 |   namespace: Team_A
+   |              ^^^^^^
+  = help: use lowercase letters, digits and `-`, for example `team-a`
+
+error[KL1008]: `Team_A` is not a valid `Namespace` name: must contain only lowercase letters, digits and `-`, and start and end with a letter or digit
+  --> correctness/KL1008.yaml:81:9
+   |
+81 |   name: Team_A
+   |         ^^^^^^
+  = help: use lowercase letters, digits and `-`, for example `team-a`
+
+error[KL1008]: `price-$5` is not a valid `ConfigMap` name: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start and end with a letter or digit
+   --> correctness/KL1008.yaml:145:9
+    |
+145 |   name: price-$5
+    |         ^^^^^^^^
+  = help: use lowercase letters, digits, `-` and `.`, for example `price-5`
+
+error[KL1008]: `a/b` is not a valid `PodDisruptionBudget` name: may not contain '/'
+   --> correctness/KL1008.yaml:151:9
+    |
+151 |   name: a/b
+    |         ^^^
+  = help: remove `/` and `%` from the name; other characters are allowed
+
+error[KL1008]: `a%b` is not a valid `PodDisruptionBudget` name: may not contain '%'
+   --> correctness/KL1008.yaml:156:9
+    |
+156 |   name: a%b
+    |         ^^^
+  = help: remove `/` and `%` from the name; other characters are allowed
+
+error[KL1008]: `..` is not a valid `PodDisruptionBudget` name: may not be '..'
+   --> correctness/KL1008.yaml:161:9
+    |
+161 |   name: ".."
+    |         ^^^^
+  = help: remove `/` and `%` from the name; other characters are allowed
+
+error[KL1008]: `web.v2` is not a valid `StatefulSet` name: must contain only lowercase letters, digits and `-`, and start and end with a letter or digit
+   --> correctness/KL1008.yaml:183:9
+    |
+183 |   name: web.v2
+    |         ^^^^^^
+  = help: use lowercase letters, digits and `-`, for example `web-v2`
+
+error[KL1008]: `Web` is not a valid `StatefulSet` name: must contain only lowercase letters, digits and `-`, and start and end with a letter or digit
+   --> correctness/KL1008.yaml:188:9
+    |
+188 |   name: Web
+    |         ^^^
+  = help: use lowercase letters, digits and `-`, for example `web`
+
+error[KL1008]: `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` is not a valid `StatefulSet` name: must be no more than 63 characters
+   --> correctness/KL1008.yaml:193:9
+    |
+193 |   name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: shorten the name to at most 63 characters
+
+error[KL1008]: `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` is not a valid `CronJob` name: must be no more than 52 characters
+   --> correctness/KL1008.yaml:210:9
+    |
+210 |   name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: shorten the name to at most 52 characters
+
+error[KL1008]: `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` is not a valid `Job` name: must be no more than 63 characters
+   --> correctness/KL1008.yaml:227:9
+    |
+227 |   name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: shorten the name to at most 63 characters
+
+error[KL1008]: `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` is not a valid `Job` name: must be no more than 63 characters
+   --> correctness/KL1008.yaml:232:9
+    |
+232 |   name: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: shorten the name to at most 63 characters
+
+error[KL1008]: `Bad_Name-` in `metadata.generateName` is not a valid `ConfigMap` name prefix: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start with a letter or digit
+   --> correctness/KL1008.yaml:259:17
+    |
+259 |   generateName: Bad_Name-
+    |                 ^^^^^^^^^
+  = help: use lowercase letters, digits, `-` and `.`, for example `bad-name-`
+
+error[KL1008]: `web_` in `metadata.generateName` is not a valid `Deployment` name prefix: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start with a letter or digit
+   --> correctness/KL1008.yaml:264:17
+    |
+264 |   generateName: web_
+    |                 ^^^^
+  = help: use lowercase letters, digits, `-` and `.`, for example `web-`
+
+error[KL1008]: `a.b-` in `metadata.generateName` is not a valid `Namespace` name prefix: must contain only lowercase letters, digits and `-`, and start with a letter or digit
+   --> correctness/KL1008.yaml:269:17
+    |
+269 |   generateName: a.b-
+    |                 ^^^^
+  = help: use lowercase letters, digits and `-`, for example `a-b-`
+
+error[KL1008]: `-` in `metadata.generateName` is not a valid `ConfigMap` name prefix: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start with a letter or digit
+   --> correctness/KL1008.yaml:274:17
+    |
+274 |   generateName: "-"
+    |                 ^^^
+  = help: use lowercase letters, digits, `-` and `.`, starting with a letter or digit, and optionally ending with `-`
+
+error[KL1008]: `a.-` in `metadata.generateName` is not a valid `ConfigMap` name prefix: a part between dots cannot start with `-`
+   --> correctness/KL1008.yaml:280:17
+    |
+280 |   generateName: a.-
+    |                 ^^^
+  = help: use lowercase letters, digits, `-` and `.`, for example `a-`
+
+error[KL1008]: `café-` in `metadata.generateName` is not a valid `ConfigMap` name prefix: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start with a letter or digit
+   --> correctness/KL1008.yaml:285:17
+    |
+285 |   generateName: "café-"
+    |                 ^^^^^^^
+  = help: use lowercase letters, digits, `-` and `.`, starting with a letter or digit, and optionally ending with `-`
+
+error[KL1008]: `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` in `metadata.generateName` is not a valid `ConfigMap` name prefix: must be no more than 253 characters
+   --> correctness/KL1008.yaml:291:17
+    |
+291 |   generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: shorten the prefix to at most 253 characters
+
+error[KL1008]: `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` in `metadata.generateName` is not a valid `Namespace` name prefix: must be no more than 63 characters
+   --> correctness/KL1008.yaml:296:17
+    |
+296 |   generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: shorten the prefix to at most 63 characters
+
+error[KL1008]: `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` in `metadata.generateName` is not a valid `Namespace` name prefix: must be no more than 63 characters
+   --> correctness/KL1008.yaml:301:17
+    |
+301 |   generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: shorten the prefix to at most 63 characters
+
+error[KL1008]: `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` in `metadata.generateName` is not a valid `StatefulSet` name prefix: must be no more than 63 characters
+   --> correctness/KL1008.yaml:306:17
+    |
+306 |   generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: shorten the prefix to at most 63 characters
+
+error[KL1008]: `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` in `metadata.generateName` is not a valid `Service` name prefix: must be no more than 63 characters
+   --> correctness/KL1008.yaml:311:17
+    |
+311 |   generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: shorten the prefix to at most 63 characters
+
+error[KL1008]: `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` in `metadata.generateName` is not a valid `CronJob` name prefix: must be no more than 47 characters
+   --> correctness/KL1008.yaml:353:17
+    |
+353 |   generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = help: shorten the prefix to at most 47 characters
+
+error[KL1008]: `a/b-` in `metadata.generateName` is not a valid `PodDisruptionBudget` name prefix: may not contain '/'
+   --> correctness/KL1008.yaml:381:17
+    |
+381 |   generateName: a/b-
+    |                 ^^^^
+  = help: remove `/` and `%` from the prefix; other characters are allowed
+
+error[KL1008]: `1abc-` in `metadata.generateName` is not a valid `Service` name prefix: must contain only lowercase letters, digits and `-`, and start with a letter
+   --> correctness/KL1008.yaml:389:17
+    |
+389 |   generateName: 1abc-
+    |                 ^^^^^
+  = help: use lowercase letters, digits and `-`, starting with a letter
+
+error[KL1008]: `Web-` in `metadata.generateName` is not a valid `Service` name prefix: must contain only lowercase letters, digits and `-`, and start with a letter
+   --> correctness/KL1008.yaml:394:17
+    |
+394 |   generateName: Web-
+    |                 ^^^^
+  = help: use lowercase letters, digits and `-`, for example `web-`
+
+error[KL1008]: `1-` in `metadata.generateName` is not a valid `Service` name prefix: must contain only lowercase letters, digits and `-`, and start with a letter
+   --> correctness/KL1008.yaml:401:17
+    |
+401 |   generateName: 1-
+    |                 ^^
+  = help: use lowercase letters, digits and `-`, starting with a letter
+
+error[KL1008]: `Bad_Gen-` in `metadata.generateName` is not a valid `ReplicationController` name prefix: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start with a letter or digit
+   --> correctness/KL1008.yaml:450:17
+    |
+450 |   generateName: Bad_Gen-
+    |                 ^^^^^^^^
+  = help: use lowercase letters, digits, `-` and `.`, for example `bad-gen-`
+
+error[KL1008]: `Bad_Gen-` in `metadata.generateName` is not a valid `ReplicationController` name prefix: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start with a letter or digit
+   --> correctness/KL1008.yaml:456:17
+    |
+456 |   generateName: Bad_Gen-
+    |                 ^^^^^^^^
+  = help: use lowercase letters, digits, `-` and `.`, for example `bad-gen-`
+
+error[KL1008]: `Bad_Gen-` in `metadata.generateName` is not a valid `ConfigMap` name prefix: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start with a letter or digit
+   --> correctness/KL1008.yaml:462:17
+    |
+462 |   generateName: Bad_Gen-
+    |                 ^^^^^^^^
+  = help: use lowercase letters, digits, `-` and `.`, for example `bad-gen-`
+
+error[KL1008]: `Bad_Name` is not a valid `ConfigMap` name: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start and end with a letter or digit
+   --> correctness/KL1008.yaml:468:9
+    |
+468 |   name: Bad_Name
+    |         ^^^^^^^^
+  = help: use lowercase letters, digits, `-` and `.`, for example `bad-name`
+
+error[KL1008]: `Bad_Prefix-` in `metadata.generateName` is not a valid `ConfigMap` name prefix: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start with a letter or digit
+   --> correctness/KL1008.yaml:469:17
+    |
+469 |   generateName: Bad_Prefix-
+    |                 ^^^^^^^^^^^
+  = help: use lowercase letters, digits, `-` and `.`, for example `bad-prefix-`
+
+error[KL1008]: `Bad_Flow-` in `metadata.generateName` is not a valid `ConfigMap` name prefix: must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start with a letter or digit
+   --> correctness/KL1008.yaml:472:60
+    |
+472 | {apiVersion: v1, kind: ConfigMap, metadata: {generateName: "Bad_Flow-"}}
+    |                                                            ^^^^^^^^^^^
+  = help: use lowercase letters, digits, `-` and `.`, for example `bad-flow-`
+
+42 finding(s) in 80 object(s)

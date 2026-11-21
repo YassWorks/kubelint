@@ -33,8 +33,8 @@ exit: 1
       "code": "KL1008",
       "name": "invalid-object-name",
       "severity": "error",
-      "message": "`café` is not a valid `Service` name: must contain only lowercase letters, digits and `-`, start with a letter and end with a letter or digit",
-      "help": "use lowercase letters, digits and `-`, starting with a letter",
+      "message": "`café` is not a valid `Service` name: must contain only lowercase letters, digits and `-`, and start and end with a letter or digit",
+      "help": "use lowercase letters, digits and `-`, starting and ending with a letter or digit",
       "location": {
         "path": "deploy/broken.yml",
         "start": {

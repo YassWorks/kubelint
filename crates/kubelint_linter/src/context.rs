@@ -2,6 +2,7 @@
 
 use kubelint_diagnostics::{Diagnostic, Label, Severity};
 use kubelint_k8s::Object;
+use kubelint_schema::KubernetesVersion;
 use kubelint_source::{FileId, SourceFile, TextRange};
 
 use crate::RuleMeta;
@@ -37,6 +38,7 @@ pub struct ObjectContext<'a> {
     file_id: FileId,
     file: &'a SourceFile,
     object: Object<'a>,
+    kubernetes_version: KubernetesVersion,
     reporter: Reporter<'a>,
 }
 
@@ -45,6 +47,7 @@ impl<'a> ObjectContext<'a> {
         file_id: FileId,
         file: &'a SourceFile,
         object: Object<'a>,
+        kubernetes_version: KubernetesVersion,
         meta: &'static RuleMeta,
         severity: Severity,
         diagnostics: &'a mut Vec<Diagnostic>,
@@ -53,6 +56,7 @@ impl<'a> ObjectContext<'a> {
             file_id,
             file,
             object,
+            kubernetes_version,
             reporter: Reporter {
                 meta,
                 severity,
@@ -68,6 +72,11 @@ impl<'a> ObjectContext<'a> {
     /// The file the object is in.
     pub fn file(&self) -> &'a SourceFile {
         self.file
+    }
+
+    /// The Kubernetes version the run checks against (`--kubernetes-version`).
+    pub fn kubernetes_version(&self) -> KubernetesVersion {
+        self.kubernetes_version
     }
 
     /// A diagnostic for the running rule pointing at `range` in this object's file, with

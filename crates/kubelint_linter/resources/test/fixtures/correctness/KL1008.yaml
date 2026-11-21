@@ -21,15 +21,14 @@ kind: Namespace
 metadata:
   name: team.payments
 ---
-# Reported: a Service name starting with a digit (a DNS-1035 label), and one with a
-# space.
-# e2e-skip 1.36: KL1008 ignores the version, and 1.36 accepts a leading digit
-# e2e-skip 1.37: KL1008 ignores the version, and 1.37 accepts a leading digit
+# Not reported: a Service name starting with a digit, accepted from 1.36 (a DNS-1035
+# label before, so reported for 1.34 and 1.35).
 apiVersion: v1
 kind: Service
 metadata:
   name: 1-api
 ---
+# Reported: a Service name with a space.
 apiVersion: v1
 kind: Service
 metadata:
@@ -381,10 +380,9 @@ kind: PodDisruptionBudget
 metadata:
   generateName: a/b-
 ---
-# Not reported: a Service prefix that starts with a digit is accepted from 1.36 only.
+# Not reported: a Service prefix that starts with a digit, accepted from 1.36 (reported
+# for 1.34 and 1.35).
 # Reported: a Service prefix with an uppercase letter.
-# e2e-skip 1.34: KL1008 ignores the version, and 1.34 rejects a leading digit
-# e2e-skip 1.35: KL1008 ignores the version, and 1.35 rejects a leading digit
 apiVersion: v1
 kind: Service
 metadata:
@@ -394,6 +392,21 @@ apiVersion: v1
 kind: Service
 metadata:
   generateName: Web-
+---
+# Not reported: a Service prefix of a digit and `-`, accepted from 1.36 (reported for
+# 1.34 and 1.35, where the generated name starts with a digit).
+apiVersion: v1
+kind: Service
+metadata:
+  generateName: 1-
+---
+# Not reported: with a `name`, the server checks the prefix without its trailing `-`, so
+# `1-` is accepted on every version.
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  generateName: 1-
 ---
 # Not reported: a placeholder in a generateName.
 # e2e-skip: a template placeholder, which its tool replaces before the server sees it
@@ -429,8 +442,7 @@ metadata:
   generateName: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-
 ---
 # Not reported: a ReplicationController with a `name` and a bad prefix is accepted from 1.35
-# and rejected by 1.34.
-# e2e-skip 1.34: KL1008 ignores the version, and 1.34 rejects this prefix
+# (reported for 1.34, which rejects it).
 apiVersion: v1
 kind: ReplicationController
 metadata:

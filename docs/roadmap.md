@@ -181,12 +181,6 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 
 ### Rules
 
-- KL1008 disagrees with the server on three version dependent cases, marked in the end
-  to end check: it reports a Service name that starts with a digit, which is valid from
-  1.36, it passes a Service `generateName` that starts with a digit, which 1.34 and 1.35
-  reject, and it stays silent on a ReplicationController `generateName` with invalid
-  characters when `name` is set, which 1.34 rejects. All three need the
-  `--kubernetes-version` flag.
 - No rule covers several `baseline` checks (see Rule ideas), so the default security
   rules check only part of `baseline`.
 - Some rule fixtures encode a verdict the API server gives differently, each marked in
