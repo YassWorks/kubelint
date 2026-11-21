@@ -1,4 +1,25 @@
-use super::{NameFormat, NameRule, mask_trailing_dash, suggestion};
+use kubelint_schema::KubernetesVersion;
+
+use super::{InvalidObjectName, NameFormat, NameRule, mask_trailing_dash, suggestion};
+use crate::testing::{check_fixture, check_fixture_at};
+
+fn version(text: &str) -> KubernetesVersion {
+    KubernetesVersion::parse(text).expect("a supported version")
+}
+
+#[test]
+fn service_and_replication_controller_names_follow_the_version() {
+    for version in [version("1.34"), version("1.35")] {
+        insta::assert_snapshot!(
+            format!("KL1008@{version}"),
+            check_fixture_at(&InvalidObjectName, version)
+        );
+    }
+    assert_eq!(
+        check_fixture_at(&InvalidObjectName, version("1.36")),
+        check_fixture(&InvalidObjectName)
+    );
+}
 
 #[test]
 fn suggestions() {

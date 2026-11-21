@@ -31,15 +31,17 @@ at apply time. Uppercase letters and underscores are the usual culprits.
 | --- | --- |
 | Most kinds | Lowercase letters, digits, `-` and `.`, at most 253 characters. Each part between dots starts and ends with a letter or digit. |
 | Namespace, StatefulSet | Lowercase letters, digits and `-`, at most 63 characters, starting and ending with a letter or digit. No dots. |
-| Service | The same as a Namespace, and it must start with a letter. |
+| Service | The same as a Namespace. Before Kubernetes 1.36, it must also start with a letter. |
 | CronJob | The same as most kinds, and at most 52 characters. Without a `name`, a `generateName` has at most 47. |
 | Job | The same as most kinds, and at most 63 characters unless `spec.manualSelector` is `true`. |
 | Role, ClusterRole, RoleBinding, ClusterRoleBinding, PodDisruptionBudget | Any name except `.` and `..`, without `/` or `%`, so `system:controller:foo` is fine. |
 
-Two `generateName` cases are not reported, because the API server's answer depends on its
-version. A Service prefix that starts with a digit is accepted from Kubernetes 1.36 and
-rejected before. A ReplicationController prefix with invalid characters is rejected only
-by 1.34 when the object also has a `name`.
+The checks follow the version set with `--kubernetes-version` or the
+`kubernetes-version` config key (the latest by default) where the API server changed. A
+Service name or prefix that starts with a digit is accepted from Kubernetes 1.36 and
+reported before. When the object also has a `name`, a ReplicationController prefix with
+invalid characters is reported only for 1.34, because later versions do not check it
+then.
 
 ## Example
 

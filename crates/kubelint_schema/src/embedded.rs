@@ -52,6 +52,20 @@ impl KubernetesVersion {
     pub fn as_str(self) -> &'static str {
         VERSIONS[self.0]
     }
+
+    /// The minor version number, for rules whose answer changed in a release.
+    ///
+    /// ```
+    /// use kubelint_schema::KubernetesVersion;
+    ///
+    /// assert_eq!(KubernetesVersion::parse("1.36").unwrap().minor(), 36);
+    /// ```
+    pub fn minor(self) -> u32 {
+        self.as_str()
+            .strip_prefix("1.")
+            .and_then(|minor| minor.parse().ok())
+            .expect("every listed version is `1.<minor>`")
+    }
 }
 
 impl fmt::Display for KubernetesVersion {

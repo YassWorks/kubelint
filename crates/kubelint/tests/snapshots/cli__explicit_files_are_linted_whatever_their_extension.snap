@@ -13,13 +13,13 @@ error[KL1001]: `Service` object has no `apiVersion`
   = help: add `apiVersion: v1`
   = note: rule `missing-api-version`
 
-error[KL1008]: `café` is not a valid `Service` name: must contain only lowercase letters, digits and `-`, start with a letter and end with a letter or digit
+error[KL1008]: `café` is not a valid `Service` name: must contain only lowercase letters, digits and `-`, and start and end with a letter or digit
  --> deploy/broken.yml:3:9
   |
 3 |   name: café
   |         ^^^^
   |
-  = help: use lowercase letters, digits and `-`, starting with a letter
+  = help: use lowercase letters, digits and `-`, starting and ending with a letter or digit
   = note: rule `invalid-object-name`
 
 error[KL0001]: invalid YAML: while parsing a block mapping, did not find expected key

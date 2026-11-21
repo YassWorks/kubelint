@@ -197,6 +197,7 @@ impl Linter {
                     id,
                     file,
                     lint_object.object,
+                    self.kubernetes_version,
                     meta,
                     enabled.severity,
                     &mut diagnostics,

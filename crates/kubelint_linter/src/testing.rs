@@ -15,6 +15,7 @@ use std::fmt::{self, Write as _};
 use std::path::PathBuf;
 
 use kubelint_diagnostics::{Diagnostic, Label};
+use kubelint_schema::KubernetesVersion;
 use kubelint_source::{SourceFile, TextRange};
 
 use crate::{EnabledRule, LintResult, Linter, Rule, RuleMeta};
@@ -30,10 +31,15 @@ pub(crate) fn fixture_path(meta: &RuleMeta) -> String {
 
 /// Lints the rule's fixture with only that rule enabled and renders the findings.
 pub(crate) fn check_fixture(rule: &'static dyn Rule) -> String {
+    check_fixture_at(rule, KubernetesVersion::LATEST)
+}
+
+/// [`check_fixture`] at `version`.
+pub(crate) fn check_fixture_at(rule: &'static dyn Rule, version: KubernetesVersion) -> String {
     let relative = fixture_path(rule.meta());
     // The display path uses `/` on every platform so snapshots match on Windows.
     let display = relative.trim_start_matches("resources/test/fixtures/");
-    check_source(rule, &SourceFile::new(display, read(&relative)))
+    check_source_at(rule, &SourceFile::new(display, read(&relative)), version)
 }
 
 /// Reads a test file given relative to the crate root. Panics when it is missing.
@@ -45,7 +51,18 @@ pub(crate) fn read(relative: &str) -> String {
 
 /// Lints one file with only `rule` enabled and renders the findings.
 pub(crate) fn check_source(rule: &'static dyn Rule, file: &SourceFile) -> String {
-    let result = Linter::new(vec![EnabledRule::new(rule)]).lint(std::slice::from_ref(file));
+    check_source_at(rule, file, KubernetesVersion::LATEST)
+}
+
+/// [`check_source`] at `version`.
+fn check_source_at(
+    rule: &'static dyn Rule,
+    file: &SourceFile,
+    version: KubernetesVersion,
+) -> String {
+    let result = Linter::new(vec![EnabledRule::new(rule)])
+        .with_kubernetes_version(version)
+        .lint(std::slice::from_ref(file));
     let mut out = String::new();
     render(&mut out, file, &result).expect("writing to a `String` cannot fail");
     out
