@@ -1,5 +1,4 @@
-# Reported: free text in a label value, a key with a space, and values YAML reads as a
-# number and a boolean.
+# Reported: free text in a label value and a key with a space.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,6 +6,14 @@ metadata:
   labels:
     owner: team@example.com
     Team Name: payments
+---
+# Reported: values YAML reads as a number and a boolean.
+# e2e-skip: a schema problem, which kubectl rejects before it sends the object
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flags
+  labels:
     version: 1.0
     canary: yes
 ---
@@ -22,8 +29,8 @@ metadata:
     example.com/: x
     track: -stable
 ---
-# Reported: a pod template label and a selector label of a Deployment, with values over
-# 63 characters and with a colon.
+# Reported: a selector label of a Deployment with a colon, and a pod template label over
+# 63 characters.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,6 +43,23 @@ spec:
     metadata:
       labels:
         app: web
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-build
+spec:
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
         build: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     spec:
       containers:
@@ -44,6 +68,25 @@ spec:
 ---
 # Reported: both CronJob templates, a ReplicationController's plain selector and a
 # Service selector.
+# e2e-skip: the server accepts it, and rejects each Job the CronJob controller makes
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report-job
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    metadata:
+      labels:
+        job type: report
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: report
+            image: report:1.0
+---
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -51,9 +94,6 @@ metadata:
 spec:
   schedule: "0 * * * *"
   jobTemplate:
-    metadata:
-      labels:
-        job type: report
     spec:
       template:
         metadata:
@@ -65,6 +105,7 @@ spec:
           - name: report
             image: report:1.0
 ---
+# e2e-skip: the server says only that the selector does not match the template labels
 apiVersion: v1
 kind: ReplicationController
 metadata:
@@ -110,6 +151,7 @@ spec:
 ---
 # Not reported: annotations take free text, and a custom resource's spec.selector is
 # its own business.
+# e2e-skip: a custom resource, unknown to the server
 apiVersion: example.com/v1
 kind: Service
 metadata:
@@ -121,6 +163,7 @@ spec:
     app: not a label
 ---
 # Not reported: placeholders of template tools, whose final text kubelint cannot see.
+# e2e-skip: a template placeholder, which its tool replaces before the server sees it
 apiVersion: v1
 kind: Pod
 metadata:

@@ -22,6 +22,7 @@ kind: Secret
 metadata:
   name: null
 ---
+# e2e-skip: the server makes a name from the blank prefix and rejects it as invalid
 apiVersion: v1
 kind: Pod
 metadata:
@@ -29,6 +30,7 @@ metadata:
   generateName: "  "
 ---
 # Reported: an empty metadata mapping on a custom resource.
+# e2e-skip: a custom resource, unknown to the server
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata: {}
@@ -64,32 +66,39 @@ metadata:
   generateName: migrate-
 ---
 # Not reported: a name of the wrong type is a schema problem.
+# e2e-skip: a schema problem, which kubectl rejects before it sends the object
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: 42
 ---
 # Not reported: metadata of the wrong type is a schema problem.
+# e2e-skip: a schema problem, which kubectl rejects before it sends the object
 apiVersion: v1
 kind: ConfigMap
 metadata: [web]
 ---
 # Not reported: configuration files that look like objects but have no metadata.
+# e2e-skip: a configuration file, unknown to the server
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - deployment.yaml
 ---
+# e2e-skip: a configuration file, unknown to the server
 apiVersion: v1
 kind: Config
 clusters: []
 ---
+# e2e-skip: a configuration file, unknown to the server
 apiVersion: kubelet.config.k8s.io/v1beta1
 kind: KubeletConfiguration
 ---
 # Not reported: no kind and no metadata (KL1002 reports the missing kind).
+# e2e-skip: `kubectl` refuses an object without `kind` before it sends it
 apiVersion: v1
 ---
 # Not reported: not a Kubernetes object.
+# e2e-skip: `kubectl` refuses it before it sends it
 name: build
 on: push

@@ -3,129 +3,129 @@ source: crates/kubelint_linter/src/rules/tests.rs
 expression: check_fixture(rule)
 ---
 error[KL1010]: label value `team@example.com` of `owner` is invalid: must be empty, or contain only letters, digits, `-`, `_` and `.`, and start and end with a letter or digit
- --> correctness/KL1010.yaml:8:12
+ --> correctness/KL1010.yaml:7:12
   |
-8 |     owner: team@example.com
+7 |     owner: team@example.com
   |            ^^^^^^^^^^^^^^^^
   = help: use letters, digits, `-`, `_` and `.`, for example `team-example.com`; free text belongs in an annotation
 
 error[KL1010]: label key `Team Name` is invalid: its name part must contain only letters, digits, `-`, `_` and `.`, and start and end with a letter or digit
- --> correctness/KL1010.yaml:9:5
+ --> correctness/KL1010.yaml:8:5
   |
-9 |     Team Name: payments
+8 |     Team Name: payments
   |     ^^^^^^^^^
   = help: write the key as an optional lowercase DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `Team-Name`
 
 error[KL1010]: label `version` has a value that YAML reads as a number, not a string
-  --> correctness/KL1010.yaml:10:14
+  --> correctness/KL1010.yaml:17:14
    |
-10 |     version: 1.0
+17 |     version: 1.0
    |              ^^^
   = help: quote the value: `version: "1.0"`
 
 error[KL1010]: label `canary` has a value that YAML reads as a boolean, not a string
-  --> correctness/KL1010.yaml:11:13
+  --> correctness/KL1010.yaml:18:13
    |
-11 |     canary: yes
+18 |     canary: yes
    |             ^^^
   = help: quote the value: `canary: "yes"`
 
 error[KL1010]: label key `Example.com/tier` is invalid: its prefix must contain only lowercase letters, digits, `-` and `.`, and each part between dots must start and end with a letter or digit
-  --> correctness/KL1010.yaml:20:5
+  --> correctness/KL1010.yaml:27:5
    |
-20 |     Example.com/tier: web
+27 |     Example.com/tier: web
    |     ^^^^^^^^^^^^^^^^
   = help: write the key as an optional lowercase DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `example.com/tier`
 
 error[KL1010]: label key `a/b/c` is invalid: may contain at most one `/`, between an optional DNS prefix and the name
-  --> correctness/KL1010.yaml:21:5
+  --> correctness/KL1010.yaml:28:5
    |
-21 |     a/b/c: x
+28 |     a/b/c: x
    |     ^^^^^
   = help: write the key as an optional lowercase DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `app.kubernetes.io/name`
 
 error[KL1010]: label key `example.com/` is invalid: its name part must be non-empty
-  --> correctness/KL1010.yaml:22:5
+  --> correctness/KL1010.yaml:29:5
    |
-22 |     example.com/: x
+29 |     example.com/: x
    |     ^^^^^^^^^^^^
   = help: write the key as an optional lowercase DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `app.kubernetes.io/name`
 
 error[KL1010]: label value `-stable` of `track` is invalid: must be empty, or contain only letters, digits, `-`, `_` and `.`, and start and end with a letter or digit
-  --> correctness/KL1010.yaml:23:12
+  --> correctness/KL1010.yaml:30:12
    |
-23 |     track: -stable
+30 |     track: -stable
    |            ^^^^^^^
   = help: use letters, digits, `-`, `_` and `.`, for example `stable`; free text belongs in an annotation
 
 error[KL1010]: selector label value `web: frontend` of `app` is invalid: must be empty, or contain only letters, digits, `-`, `_` and `.`, and start and end with a letter or digit
-  --> correctness/KL1010.yaml:34:12
+  --> correctness/KL1010.yaml:41:12
    |
-34 |       app: "web: frontend"
+41 |       app: "web: frontend"
    |            ^^^^^^^^^^^^^^^
   = help: use letters, digits, `-`, `_` and `.`, for example `web-frontend`; free text belongs in an annotation
 
 error[KL1010]: label value `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa...` of `build` is invalid: must be no more than 63 characters
-  --> correctness/KL1010.yaml:39:16
+  --> correctness/KL1010.yaml:63:16
    |
-39 |         build: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+63 |         build: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
    |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   = help: shorten the value to at most 63 characters, or move it to an annotation
 
 error[KL1010]: label key `job type` is invalid: its name part must contain only letters, digits, `-`, `_` and `.`, and start and end with a letter or digit
-  --> correctness/KL1010.yaml:56:9
+  --> correctness/KL1010.yaml:81:9
    |
-56 |         job type: report
+81 |         job type: report
    |         ^^^^^^^^
   = help: write the key as an optional lowercase DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `job-type`
 
 error[KL1010]: label value `every hour` of `run` is invalid: must be empty, or contain only letters, digits, `-`, `_` and `.`, and start and end with a letter or digit
-  --> correctness/KL1010.yaml:61:18
-   |
-61 |             run: "every hour"
-   |                  ^^^^^^^^^^^^
+   --> correctness/KL1010.yaml:101:18
+    |
+101 |             run: "every hour"
+    |                  ^^^^^^^^^^^^
   = help: use letters, digits, `-`, `_` and `.`, for example `every-hour`; free text belongs in an annotation
 
 error[KL1010]: selector label value `legacy app` of `app` is invalid: must be empty, or contain only letters, digits, `-`, `_` and `.`, and start and end with a letter or digit
-  --> correctness/KL1010.yaml:74:10
-   |
-74 |     app: legacy app
-   |          ^^^^^^^^^^
+   --> correctness/KL1010.yaml:115:10
+    |
+115 |     app: legacy app
+    |          ^^^^^^^^^^
   = help: use letters, digits, `-`, `_` and `.`, for example `legacy-app`; free text belongs in an annotation
 
 error[KL1010]: selector label value `web_` of `app.kubernetes.io/name` is invalid: must be empty, or contain only letters, digits, `-`, `_` and `.`, and start and end with a letter or digit
-  --> correctness/KL1010.yaml:90:29
-   |
-90 |     app.kubernetes.io/name: web_
-   |                             ^^^^
+   --> correctness/KL1010.yaml:131:29
+    |
+131 |     app.kubernetes.io/name: web_
+    |                             ^^^^
   = help: use letters, digits, `-`, `_` and `.`, for example `web`; free text belongs in an annotation
 
 error[KL1010]: label value `costs-$5` of `price` is invalid: must be empty, or contain only letters, digits, `-`, `_` and `.`, and start and end with a letter or digit
-   --> correctness/KL1010.yaml:145:12
+   --> correctness/KL1010.yaml:188:12
     |
-145 |     price: costs-$5
+188 |     price: costs-$5
     |            ^^^^^^^^
   = help: use letters, digits, `-`, `_` and `.`, for example `costs-5`; free text belongs in an annotation
 
 error[KL1010]: label value `{team}` of `team` is invalid: must be empty, or contain only letters, digits, `-`, `_` and `.`, and start and end with a letter or digit
-   --> correctness/KL1010.yaml:146:11
+   --> correctness/KL1010.yaml:189:11
     |
-146 |     team: "{team}"
+189 |     team: "{team}"
     |           ^^^^^^^^
   = help: use letters, digits, `-`, `_` and `.`, for example `team`; free text belongs in an annotation
 
 error[KL1010]: label key `bad label` is invalid: its name part must contain only letters, digits, `-`, `_` and `.`, and start and end with a letter or digit
-   --> correctness/KL1010.yaml:161:7
+   --> correctness/KL1010.yaml:204:7
     |
-161 |       bad label: x
+204 |       bad label: x
     |       ^^^^^^^^^
   = help: write the key as an optional lowercase DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `bad-label`
 
 error[KL1010]: label key `bad label` is invalid: its name part must contain only letters, digits, `-`, `_` and `.`, and start and end with a letter or digit
-   --> correctness/KL1010.yaml:184:17
+   --> correctness/KL1010.yaml:227:17
     |
-184 |   labels: {<<: {bad label: x}}
+227 |   labels: {<<: {bad label: x}}
     |                 ^^^^^^^^^
   = help: write the key as an optional lowercase DNS prefix and `/`, then up to 63 letters, digits, `-`, `_` and `.`, for example `bad-label`
 
-18 finding(s) in 13 object(s)
+18 finding(s) in 16 object(s)

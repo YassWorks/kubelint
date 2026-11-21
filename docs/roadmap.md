@@ -63,10 +63,12 @@ enum values, and removed or deprecated API versions.
 - [x] End to end check of the correctness rules KL1005, KL1006, KL1007, KL1009 and
   KL1011, each by the answer the server gives for its field and the stage that gives
   it (decoding, validation or a warning)
-- [ ] End to end check of the other correctness rules: KL1003, KL1008 and KL1010 (an
-  error naming the field), KL1001 and KL1002 (rejected by `kubectl` itself) and KL1004
-  (both objects in one request). Split or mark the fixtures listed under Known gaps
-  (Rules) first
+- [x] End to end check of KL1003, KL1008 and KL1010, each by the validation error that
+  names its field. KL1003 and KL1008 cases are sent with `kubectl create`, because
+  `kubectl apply` refuses objects without a `name`
+- [ ] End to end check of the other correctness rules: KL1001 and KL1002 (rejected by
+  `kubectl` itself) and KL1004 (both objects in one request). Split or mark the fixtures
+  listed under Known gaps (Rules) first
 - [ ] End to end check of the remaining rules (syntax, KL2008, KL2009, reliability): a
   case the rule passes is accepted, and a case it reports is accepted too unless the
   rule says the server rejects it
@@ -178,10 +180,12 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
 
 ### Rules
 
-- KL1008 disagrees with the server on two version dependent cases: it reports a Service
-  name that starts with a digit, which is valid from 1.36, and it stays silent on a
-  ReplicationController `generateName` with invalid characters when `name` is set, which
-  1.34 rejects. Both need the `--kubernetes-version` flag.
+- KL1008 disagrees with the server on three version dependent cases, marked in the end
+  to end check: it reports a Service name that starts with a digit, which is valid from
+  1.36, it passes a Service `generateName` that starts with a digit, which 1.34 and 1.35
+  reject, and it stays silent on a ReplicationController `generateName` with invalid
+  characters when `name` is set, which 1.34 rejects. All three need the
+  `--kubernetes-version` flag.
 - No rule covers several `baseline` checks (see Rule ideas), so the default security
   rules check only part of `baseline`.
 - Some rule fixtures encode a verdict the API server gives differently, so the end to
@@ -189,9 +193,9 @@ Small problems found along the way. Fix one when it fits a milestone, or schedul
   not an object, which kubectl refuses (`apiVersion not set`). KL1006 passes repeated
   empty or missing container names, which the server also reports as duplicates
   (`Duplicate value: ""`), marked in the end to end check. The server never names the
-  ReplicationController selector case of KL1010. It accepts the CronJob
-  `jobTemplate.metadata.labels` case of KL1010, but the CronJob controller copies those
-  labels into each Job, which the server rejects.
+  ReplicationController selector case of KL1010, and it accepts the CronJob
+  `jobTemplate.metadata.labels` case, though the CronJob controller copies those labels
+  into each Job, which the server rejects. Both are marked in the end to end check.
 - KL1005 passes a selector that `kubectl apply` and `kubectl create` both reject, for
   different expressions: `Exists` and `DoesNotExist` on template labels set to null
   (apply drops them, create keeps them as `""`).

@@ -22,16 +22,20 @@ fn splits_a_fixture_into_cases_with_their_verdict() {
                 case.line,
                 case.reported,
                 case.skip.as_deref(),
-                case.namespace.as_deref(),
+                case.namespaces
+                    .iter()
+                    .map(String::as_str)
+                    .collect::<Vec<_>>(),
             )
         })
         .collect();
     assert_eq!(
         summary,
         [
-            (1, true, None, Some("team-a")),
-            (11, false, Some("a custom resource"), None),
-            (18, false, None, None),
+            (1, true, None, vec!["team-a"]),
+            (11, false, Some("a custom resource"), vec![]),
+            (18, false, None, vec![]),
+            (28, false, None, vec!["team-b"]),
         ]
     );
     assert!(
@@ -90,6 +94,12 @@ const MISMATCH: &str = r#"The Deployment "a" is invalid: spec.template.metadata.
 const BAD_SELECTOR: &str = r#"The Deployment "a" is invalid: spec.selector: Invalid value: {"matchExpressions":[{"key":"k","operator":"In"}]}: invalid label selector"#;
 const HIDES: &str = r#"Warning: spec.containers[0].env[1]: hides previous definition of "A", which may be dropped when using apply"#;
 const CREATED: &str = "pod/a created (server dry run)";
+const NO_NAME: &str = r#"The ConfigMap "" is invalid: metadata.name: Required value: name or generateName is required"#;
+const BAD_NAME: &str = r#"The ConfigMap "A_b" is invalid: metadata.name: Invalid value: "A_b": a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters"#;
+const NO_NAMESPACE: &str =
+    r#"Error from server (NotFound): error when creating "a.yaml": namespaces "Team_A" not found"#;
+const JOB_NAME: &str = r#"The Job "a" is invalid: spec.template.labels: Invalid value: "aaaa": must be no more than 63 characters"#;
+const BAD_LABEL: &str = r#"The Pod "a" is invalid: metadata.labels: Invalid value: "a b": name part must consist of alphanumeric characters"#;
 
 /// Rule, reported, accepted, server output, expected mismatch.
 const ANSWERS: &[(&str, bool, bool, &str, Option<&str>)] = &[
@@ -156,6 +166,24 @@ const ANSWERS: &[(&str, bool, bool, &str, Option<&str>)] = &[
     ("KL1009", true, false, ENV_NAME, BEFORE),
     ("KL1009", false, false, ENV_NAME, BEFORE),
     ("KL1006", false, false, ARRAY, BEFORE),
+    ("KL1003", true, false, NO_NAME, None),
+    ("KL1003", false, false, BAD_NAME, None),
+    (
+        "KL1003",
+        true,
+        false,
+        BAD_NAME,
+        Some(
+            "reported, but the server does not say metadata.name: Required value: name or generateName is required",
+        ),
+    ),
+    ("KL1008", true, false, BAD_NAME, None),
+    ("KL1008", true, false, NO_NAMESPACE, None),
+    ("KL1008", true, false, JOB_NAME, None),
+    ("KL1008", false, false, NO_NAME, None),
+    ("KL1010", true, false, BAD_LABEL, None),
+    ("KL1010", false, false, MISMATCH, None),
+    ("KL1010", true, false, BAD_SELECTOR, BEFORE),
     ("KL1011", true, true, HIDES, None),
     ("KL1011", false, true, CREATED, None),
     ("KL1011", false, false, NAMELESS, BEFORE),
@@ -173,7 +201,7 @@ fn judges_server_answers() {
             text: String::new(),
             reported,
             skip: None,
-            namespace: None,
+            namespaces: Vec::new(),
         };
         let outcome = Outcome {
             accepted,

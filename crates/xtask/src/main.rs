@@ -138,7 +138,7 @@ fn git(dir: &Path, args: &[&str]) -> Result<String, Box<dyn Error>> {
     Ok(String::from_utf8(output.stdout)?.trim().to_owned())
 }
 
-/// Applies every case of the checked rules (or of `codes`) to the API server that
+/// Sends every case of the checked rules (or of `codes`) to the API server that
 /// `.github/scripts/e2e-apiserver.sh` started and fails when one disagrees with kubelint.
 /// It labels namespaces, so it refuses any other `KUBECONFIG`.
 fn run_e2e(codes: &[String]) -> Result<(), Box<dyn Error>> {
@@ -169,7 +169,14 @@ fn run_e2e(codes: &[String]) -> Result<(), Box<dyn Error>> {
         let cases = e2e::cases(rule, &std::fs::read_to_string(root.join(&path))?, version)
             .map_err(|error| format!("{path}: {error}"))?;
         let mut namespaces = vec!["default"];
-        namespaces.extend(cases.iter().filter_map(|case| case.namespace.as_deref()));
+        namespaces.extend(
+            cases
+                .iter()
+                .filter(|case| case.skip.is_none())
+                .flat_map(|case| case.namespaces.iter().map(String::as_str)),
+        );
+        namespaces.sort_unstable();
+        namespaces.dedup();
         for namespace in namespaces {
             let manifest = serde_json::json!({
                 "apiVersion": "v1",
@@ -185,7 +192,9 @@ fn run_e2e(codes: &[String]) -> Result<(), Box<dyn Error>> {
                 },
             });
             let outcome = kubectl(&["apply", "-f", "-"], Some(&manifest.to_string()))?;
-            if !outcome.accepted {
+            if outcome.output.contains(" is invalid:") {
+                println!("no namespace {namespace}: the server rejects the name");
+            } else if !outcome.accepted {
                 return Err(
                     format!("cannot create namespace {namespace}: {}", outcome.output).into(),
                 );
@@ -200,7 +209,10 @@ fn run_e2e(codes: &[String]) -> Result<(), Box<dyn Error>> {
             let file = dir.join(format!("{}-{}.yaml", check.code, case.line));
             std::fs::write(&file, &case.text)?;
             let file = file.to_string_lossy();
-            let outcome = kubectl(&["apply", "--dry-run=server", "-f", &file], None)?;
+            let outcome = kubectl(
+                &[check.request.as_str(), "--dry-run=server", "-f", &file],
+                None,
+            )?;
             match e2e::mismatch(check, case, &outcome) {
                 None => println!("ok       {place}"),
                 Some(reason) => {
