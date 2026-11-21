@@ -22,10 +22,16 @@ cd kubelint && cargo build
 
 ## The checks CI runs
 
-Run these before opening a PR. CI runs exactly the same commands.
+Run these before opening a PR. CI runs exactly the same commands, with
+`RUSTFLAGS="-D warnings"` set in every job, so set it in your shell too. Run
+`cargo fmt --all` first to apply the formatting that the first one checks.
 
 ```bash
-cargo fmt --all
+export RUSTFLAGS="-D warnings"
+```
+
+```bash
+cargo fmt --all --check
 ```
 
 ```bash

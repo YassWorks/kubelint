@@ -165,10 +165,15 @@ branch.
 
 ### 4.5 Verify locally
 
-All four must pass before you push:
+All four must pass before you push, with `RUSTFLAGS="-D warnings"` set as CI sets it in
+every job. Run `cargo fmt --all` first to apply the formatting that the first one checks.
 
 ```bash
-cargo fmt --all
+export RUSTFLAGS="-D warnings"
+```
+
+```bash
+cargo fmt --all --check
 ```
 
 ```bash
