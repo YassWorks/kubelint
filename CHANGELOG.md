@@ -4,6 +4,17 @@ Every release of kubelint, newest first. The nightly release workflow writes thi
 
 Older releases are listed on the [releases page](https://github.com/YassWorks/kubelint/releases).
 
+## [0.22.2] - 2026-11-22
+
+### Fixes
+
+- check KL1008 Service and ReplicationController names for the selected Kubernetes version (#150)
+
+### Other changes
+
+- check KL1001 and KL1002 against kubectl and the API server (#149)
+- check KL1003, KL1008 and KL1010 against the API server (#148)
+
 ## [0.22.1] - 2026-11-20
 
 ### Other changes
